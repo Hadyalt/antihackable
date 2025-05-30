@@ -37,6 +37,22 @@ class DbContext:
 
         # Create the User table
         self.create_table("User", user_schema)
+        # create the traveller table
+        traveller_schema = """
+            FirstName TEXT NOT NULL,
+            LastName TEXT NOT NULL, 
+            Birthday TEXT NOT NULL,
+            Gender TEXT NOT NULL,
+            StreetName TEXT NOT NULL,
+            HouseNumber TEXT NOT NULL,
+            ZipCode TEXT NOT NULL,
+            City TEXT NOT NULL,
+            EmailAddress TEXT NOT NULL,
+            MobilePhone TEXT NOT NULL,
+            DrivingLicenseNumber TEXT NOT NULL
+        """
+        self.create_table("Traveller", traveller_schema)
+        # You can add more tables here as needed
         self.close()
 
     def insert_User(self, user_data):
