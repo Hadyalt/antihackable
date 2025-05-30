@@ -39,6 +39,22 @@ class DbContext:
 
         # Create the User table
         self.create_table("User", user_schema)
+        # create the traveller table
+        traveller_schema = """
+            FirstName TEXT NOT NULL,
+            LastName TEXT NOT NULL, 
+            Birthday TEXT NOT NULL,
+            Gender TEXT NOT NULL,
+            StreetName TEXT NOT NULL,
+            HouseNumber TEXT NOT NULL,
+            ZipCode TEXT NOT NULL,
+            City TEXT NOT NULL,
+            EmailAddress TEXT NOT NULL,
+            MobilePhone TEXT NOT NULL,
+            DrivingLicenseNumber TEXT NOT NULL
+        """
+        self.create_table("Traveller", traveller_schema)
+        # You can add more tables here as needed
 
         # Create the AuditLog table
         audit_schema = """
@@ -48,6 +64,25 @@ class DbContext:
             Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         """
         self.create_table("AuditLog", audit_schema)
+
+        # Create the Scooter table
+        scooter_schema = """
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Brand TEXT NOT NULL,
+            Model TEXT NOT NULL,
+            SerialNumber TEXT NOT NULL UNIQUE,
+            TopSpeed REAL NOT NULL,
+            BatteryCapacity REAL NOT NULL,
+            StateOfCharge REAL NOT NULL,
+            TargetRangeSocMin REAL NOT NULL,
+            TargetRangeSocMax REAL NOT NULL,
+            LocationLat REAL NOT NULL,
+            LocationLong REAL NOT NULL,
+            OutOfService INTEGER NOT NULL DEFAULT 0,
+            Mileage REAL NOT NULL,
+            LastMaintenanceDate TEXT NOT NULL
+        """
+        self.create_table("Scooter", scooter_schema)
 
         # Insert master account if it doesn't exist
         cursor = self.connection.cursor()
