@@ -26,18 +26,59 @@ class DbContext:
             print("No database connection. Call connect() first.")
 
     def initialize_database(self):
-        """Initialize the database by creating all required tables."""
+        """Initialize the database by creating all required tables and the master account."""
         self.connect()
 
-        # Define the schema for the User (Charge Detail Record) table
+        # Define the schema for the User table with a role and is_active flag
         user_schema = """
             Username TEXT PRIMARY KEY,
-            Password TEXT NOT NULL
+            Password TEXT NOT NULL,
+            Role TEXT NOT NULL DEFAULT 'user',
+            IsActive INTEGER NOT NULL DEFAULT 1
         """
 
         # Create the User table
         self.create_table("User", user_schema)
+
+        # Create the AuditLog table
+        audit_schema = """
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Username TEXT NOT NULL,
+            Action TEXT NOT NULL,
+            Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        """
+        self.create_table("AuditLog", audit_schema)
+
+        # Insert master account if it doesn't exist
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM User WHERE Username = ?", ("super_admin",))
+        if not cursor.fetchone():
+            master_data = {
+                "Username": "super_admin",
+                "Password": "Admin_123?",
+                "Role": "superadmin",
+                "IsActive": 1
+            }
+            columns = ", ".join(master_data.keys())
+            placeholders = ", ".join(["?"] * len(master_data))
+            sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
+            cursor.execute(sql, list(master_data.values()))
+            self.connection.commit()
+            print("Super admin account created.")
+
         self.close()
+    
+    def log_action(self, username, action):
+        """Log an action for auditing purposes."""
+        if self.connection:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "INSERT INTO AuditLog (Username, Action) VALUES (?, ?)",
+                (username, action)
+            )
+            self.connection.commit()
+        else:
+            print("No database connection. Call connect() first.")
 
     def insert_User(self, user_data):
         """Insert a new User record into the database."""
