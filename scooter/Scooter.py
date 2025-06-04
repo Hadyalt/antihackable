@@ -26,7 +26,7 @@ def main(role):
     db.connect()
 
     while True:
-        show_menu()
+        show_menu(role)
         choice = input("Choose an option: ")
 
         # ADMIN MENU
