@@ -25,6 +25,23 @@ class SuperAdmin:
         }
         self.db_context.insert_User(system_data)
         return user_name
+    
+    def update_system_admin(self):
+        sysAdmins = self.view_all_system_admins()
+        if not sysAdmins:
+            print("No system admins available to update.")
+            return
+        username_to_update = input("Enter the username of the system admin you want to update: ").strip()
+
+        # Check if the username exists in the sysAdmins list
+        matching_users = [user for user in sysAdmins if user[0] == username_to_update]
+        if not matching_users:
+            print(f"No system admin found with username '{username_to_update}'.")
+            return
+        print ("What do you want to update?")
+        print(f"1. Username: ({username_to_update})")
+        print(f"2. Password")
+        choice = input("Enter your choice (1 or 2): ").strip()
         
     def delete_system_admin(self):
         sysAdmins = self.view_all_system_admins()
