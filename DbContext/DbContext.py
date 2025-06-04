@@ -157,7 +157,7 @@ class DbContext:
             self.connection.commit()
             print("Scooter added successfully.")
         else:
-            print("No connection.")
+            print("No database connection. Call connect() first.")
 
     def get_all_scooters(self):
         if self.connection:
