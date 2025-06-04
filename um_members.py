@@ -1,67 +1,118 @@
+import os
+import sqlite3
+import hashlib
 from DbContext.DbContext import DbContext
-from models.Scooter import Scooter
 
+DB_PATH = "data.db"
 
-def show_menu():
-    print("""
-[1] Add Scooter
-[2] View Scooters
-[3] Update Scooter State of Charge
-[4] Delete Scooter
-[5] Exit
-""")
+# === SECURITY ===
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
+# === LOGIN ===
+def login():
+    print("\n" + "=" * 50)
+    print("🔐 URBAN MOBILITY - LOGIN")
+    print("=" * 50)
+    username = input("Username: ").strip()
+    password = input("Password: ").strip()
 
-def main():
-    db = DbContext()
-    db.connect()
+    # Hardcoded super admin
+    if username.lower() == "super_admin" and password == "Admin_123?":
+        print("✅ Super Admin login successful.")
+        return "super_admin"
 
-    while True:
-        show_menu()
-        choice = input("Choose an option: ")
+    # DB login
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT password, role FROM users WHERE LOWER(username) = ?", (username.lower(),))
+    result = cursor.fetchone()
+    conn.close()
 
-        if choice == "1":
-            scooter = Scooter(
-                brand=input("Brand: "),
-                model=input("Model: "),
-                serial_number=input("Serial Number: "),
-                top_speed=float(input("Top Speed (km/h): ")),
-                battery_capacity=float(input("Battery Capacity (Wh): ")),
-                state_of_charge=float(input("State of Charge (%): ")),
-                target_range_soc=(
-                    float(input("Target Range Min (%): ")),
-                    float(input("Target Range Max (%): ")),
-                ),
-                location=(float(input("Latitude: ")), float(input("Longitude: "))),
-                out_of_service=input("Out of Service? (y/n): ").lower() == "y",
-                mileage=float(input("Mileage (km): ")),
-                last_maintenance_date=input("Last Maintenance Date (YYYY-MM-DD): "),
-            )
-            db.insert_scooter(scooter)
-
-        elif choice == "2":
-            scooters = db.get_all_scooters()
-            for s in scooters:
-                print(s)
-
-        elif choice == "3":
-            sn = input("Serial Number to update: ")
-            new_soc = float(input("New State of Charge (%): "))
-            db.update_scooter_state(sn, new_soc)
-
-        elif choice == "4":
-            sn = input("Serial Number to delete: ")
-            db.delete_scooter(sn)
-
-        elif choice == "5":
-            print("Exiting.")
-            break
-
+    if result:
+        stored_hash, role = result
+        if hash_password(password) == stored_hash:
+            print(f"✅ Login successful. Welcome, {role}!")
+            return role
         else:
-            print("Invalid choice.")
+            print("❌ Incorrect password.")
+    else:
+        print("❌ Username not found.")
 
-    db.close()
+    return None
 
+# === ROLE-BASED MENU ===
+def show_main_menu(role):
+    print("\n" + "=" * 50)
+    print(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}")
+    print("=" * 50)
+    print("Choose an option:\n")
 
+    if role == "super_admin":
+        print("1. Manage System Admins")
+        print("2. Manage Service Engineers")
+        print("3. Manage Travellers")
+        print("4. Manage Scooters")
+        print("5. View Logs")
+        print("6. Backup & Restore")
+        print("7. Exit")
+    elif role == "system_admin":
+        print("1. Manage Service Engineers")
+        print("2. Manage Travellers")
+        print("3. Manage Scooters")
+        print("4. View Logs")
+        print("5. Backup & Restore")
+        print("6. Exit")
+    elif role == "service_engineer":
+        print("1. Update Scooter Info")
+        print("2. Manage Travellers")
+        print("3. Change My Password")
+        print("4. Exit")
+    else:
+        print("Invalid role.")
+        return
+
+    choice = input("\nEnter your choice: ")
+    print(f"🛠️ You selected option {choice}. (You can add function calls here.)")
+
+# === MAIN MENU BEFORE LOGIN ===
+def pre_login_menu():
+    print("=" * 50)
+    print("⚙️  URBAN MOBILITY CONSOLE")
+    print("=" * 50)
+    print("1. Initialize Database")
+    print("2. Login to System")
+    print("3. Run scooter.py")
+    print("4. Exit")
+
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        db_context = DbContext()
+        db_context.initialize_database()
+        print("✅ Database initialized.")
+    elif choice == "2":
+        role = login()
+        if role:
+            while True:
+                show_main_menu(role)
+                again = input("\nReturn to menu? (y/n): ").strip().lower()
+                if again != "y":
+                    print("👋 Logging out...\n")
+                    break
+    elif choice == "3":
+        scooter_path = os.path.join(os.path.dirname(__file__), "scooter/scooter.py")
+        if os.path.exists(scooter_path):
+            os.system(f'python "{scooter_path}"')
+        else:
+            print("❌ scooter.py not found.")
+    elif choice == "4":
+        print("👋 Exiting system.")
+        exit()
+    else:
+        print("❌ Invalid choice.")
+
+# === START APP ===
 if __name__ == "__main__":
-    main()
+    while True:
+        pre_login_menu()
