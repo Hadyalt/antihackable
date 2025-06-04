@@ -1,8 +1,29 @@
+import hashlib
 from DbContext.DbContext import DbContext
 import re
 
 class Verification:
-    def verify_UserName(username):
+    def hash_password(password):
+        return hashlib.sha256(password.encode()).hexdigest()
+    
+    def check_username_exists(username):
+        db = DbContext()
+        connection = db.connect()
+        """Retrieve a User record by username."""
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT Username FROM User WHERE Lower(Username) = ?", (username,))
+            user = cursor.fetchone()
+            if user is not None:
+                return user
+            else:
+                return None
+        else:
+            print("No database connection.")
+            return "Error"
+        
+    def verify_username(username):
+        db = DbContext()
         username = username.lower()
 
         # Check length constraints
@@ -21,7 +42,7 @@ class Verification:
             return False
 
         # Check uniqueness in the database (assumes case-insensitive uniqueness)
-        if DbContext.get_User(username) is not None:
+        if Verification.check_username_exists(username) is not None:
             print("Username already exists in the database.")
             return False
         return True
@@ -45,5 +66,4 @@ class Verification:
             return False
         if not re.search(r'[~!@#$%&_+=`|\(){}\[\]:;\'<>,\.?/]', password):
             return False
-
         return True

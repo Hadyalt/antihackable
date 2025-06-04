@@ -7,20 +7,19 @@ class DbContext:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         # Construct the correct db path
         self.db_name = os.path.join(base_dir, db_name)
-        print("Database path:", self.db_name)
+        # print("Database path:", self.db_name)
         self.connection = None
 
     def connect(self):
         """Establish a connection to the SQLite database."""
         self.connection = sqlite3.connect(self.db_name)
-        print(f"Connected to {self.db_name}")
+        return self.connection
 
     def create_table(self, table_name, schema):
         if self.connection:
             cursor = self.connection.cursor()
             cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})")
             self.connection.commit()
-            print(f"Table '{table_name}' created or already exists.")
         else:
             print("No database connection. Call connect() first.")
 
@@ -59,8 +58,6 @@ class DbContext:
             MobilePhone TEXT NOT NULL,
             DrivingLicenseNumber TEXT NOT NULL
         """
-        self.create_table("Traveller", traveller_schema)
-        # You can add more tables here as needed
         self.create_table("Traveller", traveller_schema)
 
         # Create the AuditLog table
@@ -135,28 +132,9 @@ class DbContext:
             print(f"Inserted new User record with ID: {user_data['Username']}")
         else:
             print("No database connection. Call connect() first.")
-        self.connection.close()
-
-    def get_User(self, username):
-        self.connection = sqlite3.connect(self.db_name)
-        """Retrieve a User record by username."""
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM User WHERE Username = ?", (username,))
-            user = cursor.fetchone()
-            if user:
-                print(f"Retrieved User: {user}")
-                return user
-            else:
-                print(f"No User found with username: {username}")
-                return None
-        else:
-            print("No database connection. Call connect() first.")
-            return None
-        
+        self.connection.close()        
 
     def close(self):
         """Close the database connection."""
         if self.connection:
             self.connection.close()
-            print(f"Connection to {self.db_name} closed.")
