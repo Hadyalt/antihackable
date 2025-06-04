@@ -1,6 +1,7 @@
 from Scooter_data import Scooter_data
 from models.Scooter import Scooter
 
+
 def show_menu():
     print("""
 [1] Add Scooter

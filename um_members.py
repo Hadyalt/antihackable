@@ -1,5 +1,5 @@
 from DbContext.DbContext import DbContext
-import os
+from scooter.Scooter import Scooter
 
 def main_menu():
     print("Choose an option:")
@@ -11,11 +11,8 @@ def main_menu():
         db_context.initialize_database()
         print("Database initialized successfully.")
     elif choice == "2":
-        scooter_path = os.path.join(os.path.dirname(__file__), "scooter/scooter.py")
-        if os.path.exists(scooter_path):
-            os.system(f'python "{scooter_path}"')
-        else:
-            print("scooter.py not found.")
+        scooter = Scooter()
+        scooter.run()
     else:
         print("Invalid choice.")
 
