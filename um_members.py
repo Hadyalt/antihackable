@@ -1,5 +1,5 @@
 from DbContext.DbContext import DbContext
-from scooter.Scooter import Scooter
+from scooter import Scooter
 
 def main_menu():
     print("Choose an option:")
@@ -11,8 +11,7 @@ def main_menu():
         db_context.initialize_database()
         print("Database initialized successfully.")
     elif choice == "2":
-        scooter = Scooter()
-        scooter.run()
+        Scooter.main()
     else:
         print("Invalid choice.")
 
