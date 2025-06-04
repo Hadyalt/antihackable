@@ -73,7 +73,15 @@ def show_main_menu(role):
         return
 
     choice = input("\nEnter your choice: ")
-    print(f"🛠️ You selected option {choice}. (You can add function calls here.)")
+    if role == "super_admin":
+        print(f"You selected option {choice} for managing system Administrators.")
+        print("1. Create System Admin Account")
+        print("2. Update existing System Admin Account")
+        print("3. Delete System Admin Account")
+        print("4. Reset the password for an existing System Admin Account")
+        
+
+        
 
 # === MAIN MENU BEFORE LOGIN ===
 def pre_login_menu():
