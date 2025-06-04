@@ -37,8 +37,16 @@ class DbContext:
             IsActive INTEGER NOT NULL DEFAULT 1
         """
 
+        traveller_schema = """
+            Username TEXT PRIMARY KEY,
+            Password TEXT NOT NULL,
+            Role TEXT NOT NULL DEFAULT 'user',
+            IsActive INTEGER NOT NULL DEFAULT 1
+        """
+
         # Create the User table
         self.create_table("User", user_schema)
+        self.create_table("Traveller", traveller_schema)
 
         # Create the AuditLog table
         audit_schema = """
@@ -81,6 +89,7 @@ class DbContext:
             print("No database connection. Call connect() first.")
 
     def insert_User(self, user_data):
+        self.connection = sqlite3.connect(self.db_name)
         """Insert a new User record into the database."""
         if self.connection:
             cursor = self.connection.cursor()
@@ -92,6 +101,25 @@ class DbContext:
             print(f"Inserted new User record with ID: {user_data['Username']}")
         else:
             print("No database connection. Call connect() first.")
+        self.connection.close()
+
+    def get_User(self, username):
+        self.connection = sqlite3.connect(self.db_name)
+        """Retrieve a User record by username."""
+        if self.connection:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM User WHERE Username = ?", (username,))
+            user = cursor.fetchone()
+            if user:
+                print(f"Retrieved User: {user}")
+                return user
+            else:
+                print(f"No User found with username: {username}")
+                return None
+        else:
+            print("No database connection. Call connect() first.")
+            return None
+        
 
     def close(self):
         """Close the database connection."""
