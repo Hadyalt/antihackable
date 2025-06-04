@@ -1,11 +1,10 @@
 
 from DbContext.DbContext import DbContext
+from Login.verification import Verification
 
 
 class SuperAdmin:
-    def __init__(self, name, password):
-        self.name = name
-        self.password = password
+    def __init__(self):
         self.db_context = DbContext()
 
     def create_system_admin(self, user_name, password):
