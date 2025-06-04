@@ -280,8 +280,6 @@ class DbContext:
         else:
             print("No connection.")
 
-
-
     def close(self):
         """Close the database connection."""
         if self.connection:

@@ -15,6 +15,7 @@ def show_menu():
 
 def main():
     db = DbContext()
+    db.initialize_database()
     db.connect()
 
     while True:
@@ -66,6 +67,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-    main_menu = MainMenu()
-    main_menu.run()
+    
 
