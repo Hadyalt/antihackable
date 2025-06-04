@@ -1,7 +1,7 @@
-import os
 import sqlite3
 import hashlib
 from DbContext.DbContext import DbContext
+from scooter import Scooter
 
 DB_PATH = "data.db"
 
@@ -101,11 +101,7 @@ def pre_login_menu():
                     print("👋 Logging out...\n")
                     break
     elif choice == "3":
-        scooter_path = os.path.join(os.path.dirname(__file__), "scooter/scooter.py")
-        if os.path.exists(scooter_path):
-            os.system(f'python "{scooter_path}"')
-        else:
-            print("❌ scooter.py not found.")
+        Scooter.main()
     elif choice == "4":
         print("👋 Exiting system.")
         exit()
