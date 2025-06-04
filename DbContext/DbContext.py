@@ -1,7 +1,6 @@
 import sqlite3
 import os
 
-
 class DbContext:
     def __init__(self, db_name="data.db"):
         # Get the parent directory of the current file's directory
@@ -155,130 +154,6 @@ class DbContext:
             print("No database connection. Call connect() first.")
             return None
         
-
-
-    def insert_scooter(self, scooter):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute("""
-                INSERT INTO Scooter (
-                    Brand, Model, SerialNumber, TopSpeed, BatteryCapacity,
-                    StateOfCharge, TargetRangeSocMin, TargetRangeSocMax,
-                    LocationLat, LocationLong, OutOfService,
-                    Mileage, LastMaintenanceDate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                scooter.brand,
-                scooter.model,
-                scooter.serial_number,
-                scooter.top_speed,
-                scooter.battery_capacity,
-                scooter.state_of_charge,
-                scooter.target_range_soc[0],
-                scooter.target_range_soc[1],
-                scooter.location[0],
-                scooter.location[1],
-                int(scooter.out_of_service),
-                scooter.mileage,
-                scooter.last_maintenance_date
-            ))
-            self.connection.commit()
-            print("Scooter added successfully.")
-        else:
-            print("No database connection. Call connect() first.")
-
-    def get_all_scooters(self):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM Scooter")
-            return cursor.fetchall()
-        else:
-            print("No connection.")
-            return []
-
-    def update_scooter_state(self, serial_number, new_soc):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute(
-                "UPDATE Scooter SET StateOfCharge = ? WHERE SerialNumber = ?",
-                (new_soc, serial_number)
-            )
-            self.connection.commit()
-            print("Scooter updated.")
-        else:
-            print("No connection.")
-
-    def delete_scooter(self, serial_number):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute("DELETE FROM Scooter WHERE SerialNumber = ?", (serial_number,))
-            self.connection.commit()
-            print("Scooter deleted.")
-        else:
-            print("No connection.")
-
-
-
-
-    def insert_scooter(self, scooter):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute("""
-                INSERT INTO Scooter (
-                    Brand, Model, SerialNumber, TopSpeed, BatteryCapacity,
-                    StateOfCharge, TargetRangeSocMin, TargetRangeSocMax,
-                    LocationLat, LocationLong, OutOfService,
-                    Mileage, LastMaintenanceDate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                scooter.brand,
-                scooter.model,
-                scooter.serial_number,
-                scooter.top_speed,
-                scooter.battery_capacity,
-                scooter.state_of_charge,
-                scooter.target_range_soc[0],
-                scooter.target_range_soc[1],
-                scooter.location[0],
-                scooter.location[1],
-                int(scooter.out_of_service),
-                scooter.mileage,
-                scooter.last_maintenance_date
-            ))
-            self.connection.commit()
-            print("Scooter added successfully.")
-        else:
-            print("No database connection. Call connect() first.")
-
-    def get_all_scooters(self):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM Scooter")
-            return cursor.fetchall()
-        else:
-            print("No connection.")
-            return []
-
-    def update_scooter_state(self, serial_number, new_soc):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute(
-                "UPDATE Scooter SET StateOfCharge = ? WHERE SerialNumber = ?",
-                (new_soc, serial_number)
-            )
-            self.connection.commit()
-            print("Scooter updated.")
-        else:
-            print("No connection.")
-
-    def delete_scooter(self, serial_number):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute("DELETE FROM Scooter WHERE SerialNumber = ?", (serial_number,))
-            self.connection.commit()
-            print("Scooter deleted.")
-        else:
-            print("No connection.")
 
     def close(self):
         """Close the database connection."""
