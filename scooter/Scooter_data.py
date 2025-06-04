@@ -1,51 +1,72 @@
 import sqlite3
 import os
 
-
 class Scooter_data:
     def __init__(self, db_name="data.db"):
-        # Get the parent directory of the current file's directory
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        # Construct the correct db path
         self.db_name = os.path.join(base_dir, db_name)
         print("Database path:", self.db_name)
         self.connection = None
 
     def connect(self):
-        """Establish a connection to the SQLite database."""
         self.connection = sqlite3.connect(self.db_name)
+        self.create_table_if_not_exists()
         print(f"Connected to {self.db_name}")
+
+    def create_table_if_not_exists(self):
+        cursor = self.connection.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Scooter (
+                Brand TEXT,
+                Model TEXT,
+                SerialNumber TEXT PRIMARY KEY,
+                TopSpeed REAL,
+                BatteryCapacity REAL,
+                StateOfCharge REAL,
+                TargetRangeSocMin REAL,
+                TargetRangeSocMax REAL,
+                LocationLat REAL,
+                LocationLong REAL,
+                OutOfService INTEGER,
+                Mileage REAL,
+                LastMaintenanceDate TEXT
+            )
+        """)
+        self.connection.commit()
 
     def insert_scooter(self, scooter):
         if self.connection:
             cursor = self.connection.cursor()
-            cursor.execute(
-                """
-                INSERT INTO Scooter (
-                    Brand, Model, SerialNumber, TopSpeed, BatteryCapacity,
-                    StateOfCharge, TargetRangeSocMin, TargetRangeSocMax,
-                    LocationLat, LocationLong, OutOfService,
-                    Mileage, LastMaintenanceDate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    scooter.brand,
-                    scooter.model,
-                    scooter.serial_number,
-                    scooter.top_speed,
-                    scooter.battery_capacity,
-                    scooter.state_of_charge,
-                    scooter.target_range_soc[0],
-                    scooter.target_range_soc[1],
-                    scooter.location[0],
-                    scooter.location[1],
-                    int(scooter.out_of_service),
-                    scooter.mileage,
-                    scooter.last_maintenance_date,
-                ),
-            )
-            self.connection.commit()
-            print("Scooter added successfully.")
+            try:
+                cursor.execute(
+                    """
+                    INSERT INTO Scooter (
+                        Brand, Model, SerialNumber, TopSpeed, BatteryCapacity,
+                        StateOfCharge, TargetRangeSocMin, TargetRangeSocMax,
+                        LocationLat, LocationLong, OutOfService,
+                        Mileage, LastMaintenanceDate
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    (
+                        scooter.brand,
+                        scooter.model,
+                        scooter.serial_number,
+                        scooter.top_speed,
+                        scooter.battery_capacity,
+                        scooter.state_of_charge,
+                        scooter.target_range_soc[0],
+                        scooter.target_range_soc[1],
+                        scooter.location[0],
+                        scooter.location[1],
+                        int(scooter.out_of_service),
+                        scooter.mileage,
+                        scooter.last_maintenance_date,
+                    ),
+                )
+                self.connection.commit()
+                print("Scooter added successfully.")
+            except sqlite3.IntegrityError:
+                print("Error: Serial number already exists")
         else:
             print("No database connection. Call connect() first.")
 
@@ -58,9 +79,34 @@ class Scooter_data:
             print("No connection.")
             return []
 
+    def get_scooter_by_serial(self, serial_number):
+        if self.connection:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "SELECT * FROM Scooter WHERE SerialNumber = ?", 
+                (serial_number,)
+            )
+            return cursor.fetchone()
+        else:
+            print("No connection.")
+            return None
+
     def update_scooter_fields(self, serial_number, **fields):
         if not self.connection:
             print("No connection.")
+            return False
+
+        # Valid column check
+        allowed_columns = {
+            "Brand", "Model", "SerialNumber", "TopSpeed", 
+            "BatteryCapacity", "StateOfCharge", "TargetRangeSocMin",
+            "TargetRangeSocMax", "LocationLat", "LocationLong",
+            "OutOfService", "Mileage", "LastMaintenanceDate"
+        }
+        
+        invalid_fields = [f for f in fields if f not in allowed_columns]
+        if invalid_fields:
+            print(f"Invalid fields: {', '.join(invalid_fields)}")
             return False
 
         set_clause = ", ".join([f"{key} = ?" for key in fields])
@@ -70,7 +116,8 @@ class Scooter_data:
         try:
             cursor = self.connection.cursor()
             cursor.execute(
-                f"UPDATE Scooter SET {set_clause} WHERE SerialNumber = ?", values
+                f"UPDATE Scooter SET {set_clause} WHERE SerialNumber = ?", 
+                values
             )
             if cursor.rowcount == 0:
                 print("Error: Scooter not found")
