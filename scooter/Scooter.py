@@ -3,6 +3,7 @@ from scooter.Scooter_data import Scooter_data
 from datetime import datetime
 
 
+
 def show_menu(role):
     if role in ["super_admin", "system_admin"]:
         print("""
