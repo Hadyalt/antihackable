@@ -1,5 +1,6 @@
 from models.Scooter import Scooter
 from scooter.Scooter_data import Scooter_data
+from datetime import datetime
 
 
 def show_menu():
@@ -21,21 +22,117 @@ def main():
         choice = input("Choose an option: ")
 
         if choice == "1":
+            # Define Rotterdam geographic bounds
+            ROTTERDAM_BOUNDS = {
+                'min_lat': 51.85, 'max_lat': 52.0,
+                'min_lon': 4.3, 'max_lon': 4.6
+            }
+
+            brand = input("Brand: ")
+            model = input("Model: ")
+
+            # Validate Serial Number (10-17 alphanumeric characters)
+            while True:
+                serial_number = input("Serial Number (10-17 alphanumeric chars): ").strip()
+                if 10 <= len(serial_number) <= 17 and serial_number.isalnum():
+                    break
+                print("Error: Must be 10-17 alphanumeric characters")
+
+            # Validate Top Speed (positive number)
+            while True:
+                try:
+                    top_speed = float(input("Top Speed (km/h): "))
+                    if top_speed > 0:
+                        break
+                    print("Error: Must be a positive number")
+                except ValueError:
+                    print("Error: Invalid number format")
+
+            # Validate Battery Capacity (positive number)
+            while True:
+                try:
+                    battery_capacity = float(input("Battery Capacity (Wh): "))
+                    if battery_capacity > 0:
+                        break
+                    print("Error: Must be a positive number")
+                except ValueError:
+                    print("Error: Invalid number format")
+
+            # Validate State of Charge (0-100%)
+            while True:
+                try:
+                    state_of_charge = float(input("State of Charge (%): "))
+                    if 0 <= state_of_charge <= 100:
+                        break
+                    print("Error: Must be 0-100%")
+                except ValueError:
+                    print("Error: Invalid number format")
+
+            # Validate Target Range SOC (min < max, both 0-100%)
+            while True:
+                try:
+                    min_soc = float(input("Target Range Min (%): "))
+                    max_soc = float(input("Target Range Max (%): "))
+                    if 0 <= min_soc <= max_soc <= 100:
+                        target_range_soc = (min_soc, max_soc)
+                        break
+                    print("Error: Min must be ≤ Max (both 0-100%)")
+                except ValueError:
+                    print("Error: Invalid number format")
+
+            # Validate Location (5 decimal places, within Rotterdam)
+            while True:
+                try:
+                    lat = round(float(input("Latitude: ")), 5)
+                    lon = round(float(input("Longitude: ")), 5)
+                    if (ROTTERDAM_BOUNDS['min_lat'] <= lat <= ROTTERDAM_BOUNDS['max_lat'] and 
+                        ROTTERDAM_BOUNDS['min_lon'] <= lon <= ROTTERDAM_BOUNDS['max_lon']):
+                        location = (lat, lon)
+                        break
+                    print(f"Error: Must be within Rotterdam (Lat: 51.85-52.00, Lon: 4.30-4.60)")
+                except ValueError:
+                    print("Error: Invalid coordinate format")
+
+            # Validate Out-of-Service status (y/n)
+            while True:
+                oos_input = input("Out of Service? (y/n): ").lower().strip()
+                if oos_input in ('y', 'n'):
+                    out_of_service = (oos_input == 'y')
+                    break
+                print("Error: Enter 'y' or 'n'")
+
+            # Validate Mileage (non-negative)
+            while True:
+                try:
+                    mileage = float(input("Mileage (km): "))
+                    if mileage >= 0:
+                        break
+                    print("Error: Cannot be negative")
+                except ValueError:
+                    print("Error: Invalid number format")
+
+            # Validate Last Maintenance Date (ISO 8601)
+            while True:
+                last_maintenance_date = input("Last Maintenance Date (YYYY-MM-DD): ").strip()
+                try:
+                    datetime.strptime(last_maintenance_date, '%Y-%m-%d')
+                    break
+                except ValueError:
+                    print("Error: Use YYYY-MM-DD format")
+
+            # Create Scooter object and insert into DB
             scooter = Scooter(
-                brand=input("Brand: "),
-                model=input("Model: "),
-                serial_number=input("Serial Number: "),
-                top_speed=float(input("Top Speed (km/h): ")),
-                battery_capacity=float(input("Battery Capacity (Wh): ")),
-                state_of_charge=float(input("State of Charge (%): ")),
-                target_range_soc=(
-                    float(input("Target Range Min (%): ")),
-                    float(input("Target Range Max (%): ")),
-                ),
-                location=(float(input("Latitude: ")), float(input("Longitude: "))),
-                out_of_service=input("Out of Service? (y/n): ").lower() == "y",
-                mileage=float(input("Mileage (km): ")),
-                last_maintenance_date=input("Last Maintenance Date (YYYY-MM-DD): "),
+                brand=brand,
+                model=model,
+                serial_number=serial_number,
+                top_speed=top_speed,
+                battery_capacity=battery_capacity,
+                state_of_charge=state_of_charge,
+                target_range_soc=target_range_soc,
+                location=location,
+                out_of_service=out_of_service,
+                mileage=mileage,
+                last_maintenance_date=last_maintenance_date,
             )
             db.insert_scooter(scooter)
 
