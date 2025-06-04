@@ -73,6 +73,9 @@ def show_main_menu(role):
         return
 
     choice = input("\nEnter your choice: ")
+    if role == "super_admin":
+        if choice == "4":
+            Scooter.main(role)
     print(f"🛠️ You selected option {choice}. (You can add function calls here.)")
 
 # === MAIN MENU BEFORE LOGIN ===
