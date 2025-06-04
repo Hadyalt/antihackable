@@ -1,6 +1,7 @@
 import sqlite3
 import os
 
+
 class Scooter_data:
     def __init__(self, db_name="data.db"):
         # Get the parent directory of the current file's directory
@@ -57,17 +58,29 @@ class Scooter_data:
             print("No connection.")
             return []
 
-    def update_scooter_state(self, serial_number, new_soc):
-        if self.connection:
+    def update_scooter_fields(self, serial_number, **fields):
+        if not self.connection:
+            print("No connection.")
+            return False
+
+        set_clause = ", ".join([f"{key} = ?" for key in fields])
+        values = list(fields.values())
+        values.append(serial_number)
+
+        try:
             cursor = self.connection.cursor()
             cursor.execute(
-                "UPDATE Scooter SET StateOfCharge = ? WHERE SerialNumber = ?",
-                (new_soc, serial_number),
+                f"UPDATE Scooter SET {set_clause} WHERE SerialNumber = ?", values
             )
+            if cursor.rowcount == 0:
+                print("Error: Scooter not found")
+                return False
             self.connection.commit()
-            print("Scooter updated.")
-        else:
-            print("No connection.")
+            print("Update successful!")
+            return True
+        except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return False
 
     def delete_scooter(self, serial_number):
         if self.connection:
