@@ -2,6 +2,7 @@ import sqlite3
 import hashlib
 from DbContext.DbContext import DbContext
 from scooter import Scooter
+from SuperAdmin import super_admin_menu as SuperMenu
 
 DB_PATH = "data.db"
 
@@ -49,13 +50,7 @@ def show_main_menu(role):
     print("Choose an option:\n")
 
     if role == "super_admin":
-        print("1. Manage System Admins")
-        print("2. Manage Service Engineers")
-        print("3. Manage Travellers")
-        print("4. Manage Scooters")
-        print("5. View Logs")
-        print("6. Backup & Restore")
-        print("7. Exit")
+        SuperMenu.super_admin_menu()
     elif role == "system_admin":
         print("1. Manage Service Engineers")
         print("2. Manage Travellers")
@@ -71,47 +66,41 @@ def show_main_menu(role):
     else:
         print("Invalid role.")
         return
-
     choice = input("\nEnter your choice: ")
-    if role == "super_admin":
-        if choice == "4":
-            Scooter.main(role = "super_admin")
-    print(f"🛠️ You selected option {choice}. (You can add function calls here.)")
+    
+        
+
+        
 
 # === MAIN MENU BEFORE LOGIN ===
 def pre_login_menu():
-    print("=" * 50)
-    print("⚙️  URBAN MOBILITY CONSOLE")
-    print("=" * 50)
-    print("1. Initialize Database")
-    print("2. Login to System")
-    print("3. Run scooter.py")
-    print("4. Exit")
+    while True:
+        print("=" * 50)
+        print("⚙️  URBAN MOBILITY CONSOLE")
+        print("=" * 50)
+        print("1. Login to System")
+        print("2. Exit")
 
-    choice = input("Enter your choice: ")
+        choice = input("Enter your choice: ")
 
-    if choice == "1":
-        db_context = DbContext()
-        db_context.initialize_database()
-        print("✅ Database initialized.")
-    elif choice == "2":
-        role = login()
-        if role:
-            while True:
-                show_main_menu(role)
-                again = input("\nReturn to menu? (y/n): ").strip().lower()
-                if again != "y":
-                    print("👋 Logging out...\n")
-                    break
-    elif choice == "3":
-        Scooter.main()
-    elif choice == "4":
-        print("👋 Exiting system.")
-        exit()
-    else:
-        print("❌ Invalid choice.")
+        if choice == "1":
+            role = login()
+            if role:
+                while True:
+                    show_main_menu(role)
+                    again = input("\nReturn to menu? (y/n): ").strip().lower()
+                    if again != "y":
+                        print("👋 Logging out...\n")
+                        break
+        elif choice == "2":
+            print("👋 Exiting system.")
+            exit()
+        else:
+            print("❌ Invalid choice.")
 
 # === START APP ===
 if __name__ == "__main__":
+    db_context = DbContext()
+    db_context.initialize_database()
     while True:
         pre_login_menu()
