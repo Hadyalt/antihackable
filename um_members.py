@@ -100,7 +100,7 @@ def pre_login_menu():
 
 # === START APP ===
 if __name__ == "__main__":
+    db_context = DbContext()
+    db_context.initialize_database()
     while True:
-        db_context = DbContext()
-        db_context.initialize_database()
         pre_login_menu()
