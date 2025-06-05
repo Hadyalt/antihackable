@@ -26,7 +26,7 @@ def login():
     # DB login
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT password, role FROM users WHERE LOWER(username) = ?", (username.lower(),))
+    cursor.execute("SELECT password, role FROM User WHERE LOWER(username) = ?", (username.lower(),))
     result = cursor.fetchone()
     conn.close()
 
@@ -49,9 +49,9 @@ def show_main_menu(role):
     print("=" * 50)
     print("Choose an option:\n")
 
-    if role == "super_admin":
+    if role == "superadmin":
         SuperMenu.super_admin_menu()
-    elif role == "system_admin":
+    elif role == "systemadmin":
         print("1. Manage Service Engineers")
         print("2. Manage Travellers")
         print("3. Manage Scooters")
