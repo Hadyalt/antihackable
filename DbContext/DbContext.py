@@ -35,13 +35,6 @@ class DbContext:
             IsActive INTEGER NOT NULL DEFAULT 1
         """
 
-        traveller_schema = """
-            Username TEXT PRIMARY KEY,
-            Password TEXT NOT NULL,
-            Role TEXT NOT NULL DEFAULT 'user',
-            IsActive INTEGER NOT NULL DEFAULT 1
-        """
-
         # Create the User table
         self.create_table("User", user_schema)
         # create the traveller table
