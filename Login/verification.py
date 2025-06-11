@@ -50,20 +50,26 @@ class Verification:
     def verify_Password(password):
         # Check length constraints
         if len(password) < 12 or len(password) > 30:
+            print("Password must be between 12 and 30 characters.")
             return False
 
         # Define allowed characters
         allowed_chars = r"^[a-zA-Z0-9~!@#$%&_+=`|\(){}\[\]:;'<>,\.?/]*$"
         if not re.match(allowed_chars, password):
+            print("Password can only contain letters, digits, and special characters.")
             return False
 
         # Check for at least one lowercase, one uppercase, one digit, and one special character
         if not re.search(r'[a-z]', password):
+            print("Password must contain at least one lowercase letter.")
             return False
         if not re.search(r'[A-Z]', password):
+            print("Password must contain at least one uppercase letter.")
             return False
         if not re.search(r'[0-9]', password):
+            print("Password must contain at least one digit.")
             return False
         if not re.search(r'[~!@#$%&_+=`|\(){}\[\]:;\'<>,\.?/]', password):
+            print("Password must contain at least one special character.")
             return False
         return True

@@ -21,7 +21,7 @@ def login():
     # Hardcoded super admin
     if username.lower() == "super_admin" and password == "Admin_123?":
         print("✅ Super Admin login successful.")
-        return "super_admin"
+        return "superadmin"
 
     # DB login
     conn = sqlite3.connect(DB_PATH)
