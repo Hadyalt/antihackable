@@ -15,11 +15,11 @@ def system_admin_menu():
         print("8. Exit")
         choice = input("\nEnter your choice: ")
         
-        if choice == "2":
+        if choice == "1":
             sysAd.view_all_users()
         elif choice == "2":
             sysAd.create_service_engineer()
-        elif choice == "7":
+        elif choice == "8":
             print("Exiting...")
             break
         else:
