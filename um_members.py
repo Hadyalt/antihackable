@@ -3,6 +3,7 @@ import hashlib
 from DbContext.DbContext import DbContext
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
+from systemAdmin import system_admin_menu as SystemMenu
 
 DB_PATH = "data.db"
 
@@ -52,12 +53,7 @@ def show_main_menu(role):
     if role == "superadmin":
         SuperMenu.super_admin_menu()
     elif role == "systemadmin":
-        print("1. Manage Service Engineers")
-        print("2. Manage Travellers")
-        print("3. Manage Scooters")
-        print("4. View Logs")
-        print("5. Backup & Restore")
-        print("6. Exit")
+        SystemMenu.system_admin_menu()
     elif role == "service_engineer":
         print("1. Update Scooter Info")
         print("2. Manage Travellers")
