@@ -1,3 +1,4 @@
+from Login.verification import Verification
 from serviceEngineer.ServiceEngineer import ServiceEngineer
 
 
@@ -20,14 +21,16 @@ def main(username):
         
         if choice == '1':
             print("\n** Password Reset **")
-            new_password = input("Enter new password: ")
+            verified_password = False
+            while not verified_password:
+                password = input("Enter new password: ")
+                verified_password = Verification.verify_Password(password)
             confirm_password = input("Confirm new password: ")
-            
-            if new_password != confirm_password:
+            if confirm_password != password:
                 print("Error: Passwords do not match!")
-                continue
-                
-            engineer.reset_password(current_user, new_password)
+                print("Process cancelled.")
+                break  
+            engineer.reset_password(current_user, password)
             print("Password reset completed. Check system messages for status.")
             
         elif choice == '2':

@@ -3,6 +3,7 @@ import hashlib
 from DbContext.DbContext import DbContext
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
+from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
 
 
@@ -54,14 +55,9 @@ def show_main_menu(role, username):
     if role == "superadmin":
         SuperMenu.super_admin_menu()
     elif role == "systemadmin":
-        print("1. Manage Service Engineers")
-        print("2. Manage Travellers")
-        print("3. Manage Scooters")
-        print("4. View Logs")
-        print("5. Backup & Restore")
-        print("6. Exit")
-    elif role == "service_engineer":
-        ServiceEngineer_menu(username)
+        SystemMenu.system_admin_menu()
+    elif role == "serviceengineer":
+        ServiceEngineer_menu.main(username)
     else:
         print("Invalid role.")
         return

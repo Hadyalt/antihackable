@@ -6,7 +6,7 @@ class ServiceEngineer:
         self.db_context = DbContext()
 
     def reset_password(self, username, new_password):
-        if not Verification.verify_user(username):
+        if not Verification.verify_username(username):
             print("User verification failed.")
             return
 
