@@ -77,7 +77,7 @@ def pre_login_menu():
         choice = input("Enter your choice: ")
 
         if choice == "1":
-            role,username = login()
+            role, username = login()
             if role:
                 while True:
                     show_main_menu(role, username)
