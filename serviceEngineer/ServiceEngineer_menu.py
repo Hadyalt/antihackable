@@ -43,7 +43,7 @@ def main(username):
             break
 
         else:
-            print("Invalid selection. Please choose 1 or 2.")
+            print("Invalid selection. Please choose a number between 1 and 4.")
 
 
 if __name__ == "__main__":
