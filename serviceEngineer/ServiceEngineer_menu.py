@@ -19,7 +19,7 @@ def main(username):
     while True:
         choice = display_menu()
         
-        if choice == '1':
+        if choice == '3':
             print("\n** Password Reset **")
             verified_password = False
             while not verified_password:
@@ -33,7 +33,7 @@ def main(username):
             engineer.reset_password(current_user, password)
             print("Password reset completed. Check system messages for status.")
             
-        elif choice == '2':
+        elif choice == '4':
             print("Exiting Service Engineer Portal. Goodbye!")
             break
             
