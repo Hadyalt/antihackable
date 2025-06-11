@@ -16,6 +16,8 @@ def system_admin_menu():
         choice = input("\nEnter your choice: ")
         
         if choice == "2":
+            sysAd.view_all_users()
+        elif choice == "2":
             sysAd.create_service_engineer()
         elif choice == "7":
             print("Exiting...")

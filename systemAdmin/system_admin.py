@@ -24,3 +24,6 @@ class systemAdmin:
         }
         self.db_context.insert_User(system_data)
         return user_name
+    
+    def view_all_users(self):
+        
