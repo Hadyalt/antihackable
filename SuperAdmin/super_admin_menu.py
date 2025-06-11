@@ -35,10 +35,10 @@ def super_admin_system_admin_menu():
         
         if choice == "1":
             print("\n-- Create System Admin --")
-            user_name = sa.create_system_admin()
+            sa.create_system_admin()
         elif choice == "2":
             print("Updating existing System Admin Account...")
-            # Implement update logic here
+            sa.update_system_admin()
         elif choice == "3":
             print("Deleting System Admin Account...")
             sa.delete_system_admin()

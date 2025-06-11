@@ -25,6 +25,40 @@ class SuperAdmin:
         }
         self.db_context.insert_User(system_data)
         return user_name
+    
+    def update_system_admin(self):
+        sysAdmins = self.view_all_system_admins()
+        if not sysAdmins:
+            print("No system admins available to update.")
+            return
+        username_to_update = input("Enter the username of the system admin you want to update: ").strip()
+
+        # Check if the username exists in the sysAdmins list
+        matching_users = [user for user in sysAdmins if user[0].lower() == username_to_update.lower()]
+        if not matching_users:
+            print(f"No system admin found with username '{username_to_update}'.")
+            return
+        print ("What do you want to update?")
+        print(f"1. Username: ({username_to_update})")
+        print(f"2. Password")
+        choice = input("Enter your choice (1 or 2): ").strip()
+        if choice == "1":
+            new_username = input("Enter the new username: ").strip()
+            if Verification.verify_username(new_username):
+                self.set_new_username(username_to_update, new_username)
+                print(f"System admin {username_to_update} updated to {new_username}.")
+            else:
+                print("Invalid username format. Please try again.")
+        elif choice == "2":
+            new_password = input("Enter the new password: ").strip()
+            if Verification.verify_Password(new_password):
+                hashed_password = Verification.hash_password(new_password)
+                self.reset_password(username_to_update, hashed_password)
+                print(f"Password for system admin {username_to_update} has been updated to {new_password}.")
+            else:
+                print("Invalid password format. Please try again.")
+        else:
+            print("Invalid choice. Please try again.")
         
     def delete_system_admin(self):
         sysAdmins = self.view_all_system_admins()
@@ -34,7 +68,7 @@ class SuperAdmin:
         username_to_delete = input("Enter the username of the system admin you want to delete: ").strip()
 
         # Check if the username exists in the sysAdmins list
-        matching_users = [user for user in sysAdmins if user[0] == username_to_delete]  # assumes username is in column 0
+        matching_users = [user for user in sysAdmins if user[0].lower() == username_to_delete.lower()]  # assumes username is in column 0
 
         if not matching_users:
             print(f"No system admin found with username '{username_to_delete}'.")
@@ -60,7 +94,7 @@ class SuperAdmin:
             if users:
                 print(f"Retrieved {len(users)} system admin(s):")
                 for user in users:
-                    print(user)
+                    print(f"- {user[0]}")
                 return users
             else:
                 print("No system admin accounts found.")
@@ -68,5 +102,23 @@ class SuperAdmin:
         else:
             print("No database connection.")
             return "Error"
+    
+    def set_new_username(self, old_username, new_username):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = ? AND Role = ?", (new_username, old_username, "systemadmin"))
+            connection.commit()
+        else:
+            print("Failed to connect to the database.")
+    
+    def reset_password(self, username, new_password):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET Password = ? WHERE Username = ? AND Role = ?", (new_password, username, "systemadmin"))
+            connection.commit()
+        else:
+            print("Failed to connect to the database.")
 
         
