@@ -24,7 +24,7 @@ def login():
     # Hardcoded super admin
     if username.lower() == "super_admin" and password == "Admin_123?":
         print("✅ Super Admin login successful.")
-        return "superadmin", "super_admin"
+        return "superadmin" , "super_admin"
 
     # DB login
     conn = sqlite3.connect(DB_PATH)
@@ -77,7 +77,7 @@ def pre_login_menu():
         choice = input("Enter your choice: ")
 
         if choice == "1":
-            role,username = login()
+            role, username = login()
             if role:
                 while True:
                     show_main_menu(role, username)
