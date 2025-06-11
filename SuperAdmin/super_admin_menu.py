@@ -44,7 +44,8 @@ def super_admin_system_admin_menu():
             sa.delete_system_admin()
         elif choice == "4":
             print("Resetting password for existing System Admin Account...")
-            # Implement password reset logic here
+            sa.reset_password_sysadmin()
+
         elif choice == "5":
             break
         else:

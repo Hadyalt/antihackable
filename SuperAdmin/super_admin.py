@@ -53,7 +53,7 @@ class SuperAdmin:
             new_password = input("Enter the new password: ").strip()
             if Verification.verify_Password(new_password):
                 hashed_password = Verification.hash_password(new_password)
-                self.reset_password(username_to_update, hashed_password)
+                self.reset_passwordfunc(username_to_update, hashed_password)
                 print(f"Password for system admin {username_to_update} has been updated to {new_password}.")
             else:
                 print("Invalid password format. Please try again.")
@@ -112,13 +112,35 @@ class SuperAdmin:
         else:
             print("Failed to connect to the database.")
     
-    def reset_password(self, username, new_password):
+    def reset_passwordfunc(self, username, new_password):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Password = ? WHERE Username = ? AND Role = ?", (new_password, username, "systemadmin"))
+            cursor.execute(
+                "UPDATE User SET Password = ?, RessetedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
+                (new_password, username, "systemadmin")
+            )  
             connection.commit()
         else:
             print("Failed to connect to the database.")
 
-        
+    def reset_password_sysadmin(self):
+        sysAdmins = self.view_all_system_admins()
+        if not sysAdmins:
+            print("No system admins available to reset password.")
+            return
+        username_to_reset = input("Enter the username of the system admin whose password you want to reset: ").strip()
+
+        # Check if the username exists in the sysAdmins list
+        matching_users = [user for user in sysAdmins if user[0].lower() == username_to_reset.lower()]
+        if not matching_users:
+            print(f"No system admin found with username '{username_to_reset}'.")
+            return
+
+        new_password = input("Enter the new temporary password: ").strip()
+        if Verification.verify_Password(new_password):
+            hashed_password = Verification.hash_password(new_password)
+            self.reset_passwordfunc(username_to_reset, hashed_password)
+            print(f"Password for system admin {username_to_reset} has been reset.")
+        else:
+            print("Invalid password format. Please try again.")
