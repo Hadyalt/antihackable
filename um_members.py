@@ -43,7 +43,7 @@ def login():
     else:
         print("❌ Username not found.")
 
-    return None
+    return None, None
 
 # === ROLE-BASED MENU ===
 def show_main_menu(role, username):
