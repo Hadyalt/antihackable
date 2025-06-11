@@ -1,5 +1,5 @@
 from serviceEngineer.ServiceEngineer import ServiceEngineer
-import getpass
+
 
 def display_menu():
     print("\n==== Service Engineer Menu ====")
@@ -20,8 +20,8 @@ def main(username):
         
         if choice == '1':
             print("\n** Password Reset **")
-            new_password = getpass.getpass("Enter new password: ")
-            confirm_password = getpass.getpass("Confirm new password: ")
+            new_password = input("Enter new password: ")
+            confirm_password = input("Confirm new password: ")
             
             if new_password != confirm_password:
                 print("Error: Passwords do not match!")
