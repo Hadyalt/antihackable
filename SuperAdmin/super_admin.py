@@ -77,7 +77,7 @@ class SuperAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET IsActive = 0 WHERE Username = ? AND Role = ?", (username_to_delete, "systemadmin"))
+            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username_to_delete, "systemadmin"))
             connection.commit()
             print(f"System admin '{username_to_delete}' has been deleted.")
         else:
@@ -107,7 +107,7 @@ class SuperAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = ? AND Role = ?", (new_username, old_username, "systemadmin"))
+            cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_username, old_username, "systemadmin"))
             connection.commit()
         else:
             print("Failed to connect to the database.")
@@ -116,7 +116,7 @@ class SuperAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Password = ? WHERE Username = ? AND Role = ?", (new_password, username, "systemadmin"))
+            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, "systemadmin"))
             connection.commit()
         else:
             print("Failed to connect to the database.")
