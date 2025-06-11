@@ -4,6 +4,8 @@ from DbContext.DbContext import DbContext
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
+from serviceEngineer import ServiceEngineer_menu
+
 
 DB_PATH = "data.db"
 
@@ -35,7 +37,7 @@ def login():
         stored_hash, role = result
         if hash_password(password) == stored_hash:
             print(f"✅ Login successful. Welcome, {role}!")
-            return role
+            return role, username
         else:
             print("❌ Incorrect password.")
     else:
@@ -44,7 +46,7 @@ def login():
     return None
 
 # === ROLE-BASED MENU ===
-def show_main_menu(role):
+def show_main_menu(role, username):
     print("\n" + "=" * 50)
     print(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}")
     print("=" * 50)
@@ -55,16 +57,11 @@ def show_main_menu(role):
     elif role == "systemadmin":
         SystemMenu.system_admin_menu()
     elif role == "service_engineer":
-        print("1. Update Scooter Info")
-        print("2. Manage Travellers")
-        print("3. Change My Password")
-        print("4. Exit")
+        ServiceEngineer_menu(username)
     else:
         print("Invalid role.")
         return
     choice = input("\nEnter your choice: ")
-    
-        
 
         
 
@@ -80,10 +77,10 @@ def pre_login_menu():
         choice = input("Enter your choice: ")
 
         if choice == "1":
-            role = login()
+            role,username = login()
             if role:
                 while True:
-                    show_main_menu(role)
+                    show_main_menu(role, username)
                     again = input("\nReturn to menu? (y/n): ").strip().lower()
                     if again != "y":
                         print("👋 Logging out...\n")
