@@ -1,6 +1,6 @@
 import sqlite3
-import hashlib
 from DbContext.DbContext import DbContext
+from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
@@ -9,10 +9,6 @@ from DbContext.backup_utils import create_backup, list_backups, restore_backup
 
 
 DB_PATH = "data.db"
-
-# === SECURITY ===
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
 
 # === LOGIN ===
 def login():
@@ -25,18 +21,19 @@ def login():
     # Hardcoded super admin
     if username.lower() == "super_admin" and password == "Admin_123?":
         print("✅ Super Admin login successful.")
-        return "superadmin" , "super_admin"
+        return "superadmin" , "super_Admin"
 
-    # DB login
+    # DB login (encrypted username)
+    enc_username = encrypt(username)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT password, role FROM User WHERE LOWER(username) = ?", (username.lower(),))
+    cursor.execute("SELECT password, role FROM User WHERE Username = ?", (enc_username,))
     result = cursor.fetchone()
     conn.close()
 
     if result:
         stored_hash, role = result
-        if hash_password(password) == stored_hash:
+        if verify_password(password, stored_hash):
             print(f"✅ Login successful. Welcome, {role}!")
             return role, username
         else:

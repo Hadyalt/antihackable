@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from DbContext.crypto_utils import encrypt, decrypt
 
 class DbContext:
     def __init__(self, db_name="data.db"):
@@ -86,12 +87,14 @@ class DbContext:
         self.close()
     
     def log_action(self, username, action):
-        """Log an action for auditing purposes."""
+        """Log an action for auditing purposes (encrypt fields)."""
         if self.connection:
             cursor = self.connection.cursor()
+            enc_username = encrypt(username)
+            enc_action = encrypt(action)
             cursor.execute(
                 "INSERT INTO AuditLog (Username, Action) VALUES (?, ?)",
-                (username, action)
+                (enc_username, enc_action)
             )
             self.connection.commit()
         else:
@@ -99,9 +102,13 @@ class DbContext:
 
     def insert_User(self, user_data):
         self.connection = sqlite3.connect(self.db_name)
-        """Insert a new User record into the database."""
+        """Insert a new User record into the database (encrypt Username)."""
         if self.connection:
             cursor = self.connection.cursor()
+            # Encrypt Username
+            user_data = user_data.copy()
+            if 'Username' in user_data:
+                user_data['Username'] = encrypt(user_data['Username'])
             columns = ", ".join(user_data.keys())
             placeholders = ", ".join(["?"] * len(user_data))
             sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
@@ -111,6 +118,7 @@ class DbContext:
         else:
             print("No database connection. Call connect() first.")
         self.connection.close()        
+
 
     def close(self):
         """Close the database connection."""
