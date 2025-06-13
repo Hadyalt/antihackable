@@ -27,7 +27,7 @@ def super_admin_menu(username):
             print("Invalid choice. Please try again.")
 
 def super_admin_service_engineer_menu():
-    sysAd = systemAdmin()
+    sa = SuperAdmin()
     
     while True:
         print("\nSERVICE ENGINEER MANAGEMENT")
@@ -42,7 +42,7 @@ def super_admin_service_engineer_menu():
         
         if choice == "1":
             print("\n-- Create System Admin --")
-            sysAd.create_service_engineer()
+            sa.create_service_engineer()
         elif choice == "2":
             print("Updating existing System Admin Account...")
             
@@ -50,9 +50,9 @@ def super_admin_service_engineer_menu():
             print("Deleting System Admin Account...")
             
         elif choice == "4":
-            print("Resetting password for existing service engineer Account...")
+            print("Resetting password for existing Service Engineer Account...")
             # Implement password reset logic here
-            sysAd.reset_password_service_engineer()
+            sa.reset_password_service_engineer()
         elif choice == "5":
             break
         else:
