@@ -1,5 +1,5 @@
-
 from DbContext.DbContext import DbContext
+from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from Login.verification import Verification
 
 
@@ -16,10 +16,10 @@ class SuperAdmin:
         while not verified_password:
             password = input("Enter password: ")
             verified_password = Verification.verify_Password(password)
-        hashed_password = Verification.hash_password(password)
+        hashed = hash_password(password)
         system_data = {
-            "Username": user_name,
-            "Password": hashed_password,
+            "Username": encrypt(user_name),
+            "Password": hashed,
             "Role": "systemadmin",
             "IsActive": 1
         }
@@ -32,9 +32,7 @@ class SuperAdmin:
             print("No system admins available to update.")
             return
         username_to_update = input("Enter the username of the system admin you want to update: ").strip()
-
-        # Check if the username exists in the sysAdmins list
-        matching_users = [user for user in sysAdmins if user[0].lower() == username_to_update.lower()]
+        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update.lower()]
         if not matching_users:
             print(f"No system admin found with username '{username_to_update}'.")
             return
@@ -52,9 +50,9 @@ class SuperAdmin:
         elif choice == "2":
             new_password = input("Enter the new password: ").strip()
             if Verification.verify_Password(new_password):
-                hashed_password = Verification.hash_password(new_password)
-                self.reset_password_function(username_to_update, hashed_password, "systemadmin")
-                print(f"Password for system admin {username_to_update} has been updated to {new_password}.")
+                hashed = hash_password(new_password)
+                self.reset_password_function(username_to_update, hashed, "systemadmin")
+                print(f"Password for system admin {username_to_update} has been updated.")
             else:
                 print("Invalid password format. Please try again.")
         else:
@@ -66,18 +64,15 @@ class SuperAdmin:
             print("No system admins available to delete.")
             return
         username_to_delete = input("Enter the username of the system admin you want to delete: ").strip()
-
-        # Check if the username exists in the sysAdmins list
-        matching_users = [user for user in sysAdmins if user[0].lower() == username_to_delete.lower()]  # assumes username is in column 0
-
+        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_delete.lower()]
         if not matching_users:
             print(f"No system admin found with username '{username_to_delete}'.")
             return
-
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username_to_delete, "systemadmin"))
+            enc_username = encrypt(username_to_delete)
+            cursor.execute("UPDATE User SET IsActive = 0 WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
             connection.commit()
             print(f"System admin '{username_to_delete}' has been deleted.")
         else:
@@ -94,7 +89,7 @@ class SuperAdmin:
             if users:
                 print(f"Retrieved {len(users)} system admin(s):")
                 for user in users:
-                    print(f"- {user[0]}")
+                    print(f"- {decrypt(user[0])}")
                 return users
             else:
                 print("No system admin accounts found.")
@@ -124,7 +119,9 @@ class SuperAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_username, old_username, "systemadmin"))
+            enc_old = encrypt(old_username)
+            enc_new = encrypt(new_username)
+            cursor.execute("UPDATE User SET Username = ? WHERE Username = ? AND Role = ?", (enc_new, enc_old, "systemadmin"))
             connection.commit()
         else:
             print("Failed to connect to the database.")
@@ -133,10 +130,11 @@ class SuperAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
+            enc_username = encrypt(username)
             cursor.execute(
-                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE LOWER(Username) = LOWER(?) AND Role = ?",
-                (new_password, username, role)
-            )  
+                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
+                (new_password, enc_username, role)
+            )
             connection.commit()
         else:
             print("Failed to connect to the database.")

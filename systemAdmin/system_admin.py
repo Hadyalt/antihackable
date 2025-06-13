@@ -1,4 +1,5 @@
 from DbContext.DbContext import DbContext
+from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from Login.verification import Verification
 
 
@@ -11,7 +12,8 @@ class systemAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
+            enc_username = encrypt(username)
+            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
             result = cursor.fetchone()
             connection.close()
             if result:
@@ -24,7 +26,8 @@ class systemAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET ResettedPasswordCheck = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
+            enc_username = encrypt(username)
+            cursor.execute("UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
             connection.commit()
             connection.close()
             
@@ -39,10 +42,10 @@ class systemAdmin:
         while not verified_password:
             password = input("Enter password: ")
             verified_password = Verification.verify_Password(password)
-        hashed_password = Verification.hash_password(password)
+        hashed = hash_password(password)
         system_data = {
-            "Username": user_name,
-            "Password": hashed_password,
+            "Username": encrypt(user_name),
+            "Password": hashed,
             "Role": "serviceengineer",
             "IsActive": 1
         }
@@ -58,12 +61,12 @@ class systemAdmin:
             if users:
                 print("\nAll User Accounts:")
                 for user in users:
-                    print(f"Username: {user[0]}, Role: {user[1]}")
+                    print(f"- {decrypt(user[0])} ({user[1]})")
             else:
                 print("No user accounts found.")
             connection.close()
         else:
-            print("No database connection.")
+            print("Failed to connect to the database.")
         return
     
     def view_all_service_engineers(self):
