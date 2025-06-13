@@ -1,6 +1,7 @@
 import sqlite3
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
+from DbContext.encrypted_logger import EncryptedLogger
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
@@ -20,6 +21,8 @@ def login():
     # Hardcoded super admin
     if username.lower() == "super_admin" and password == "Admin_123?":
         print("✅ Super Admin login successful.")
+        logger = EncryptedLogger()
+        logger.log_entry("super_admin", "Logged in", " ", "No")
         return "superadmin" , "super_Admin"
 
     # DB login (encrypted username)
