@@ -7,7 +7,6 @@ from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
 from DbContext.backup_utils import create_backup, list_backups, restore_backup
 
-
 DB_PATH = "data.db"
 
 # === LOGIN ===
