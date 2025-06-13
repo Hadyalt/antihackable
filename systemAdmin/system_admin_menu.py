@@ -47,9 +47,9 @@ def system_admin_service_engineer_menu():
     while True:
         print("\nSERVICE ENGINEER MANAGEMENT")
         print("1. Create Service Engineer Account")
-        print("2. Update existing System Admin Account")
-        print("3. Delete System Admin Account")
-        print("4. Reset the password for an existing System Admin Account")
+        print("2. Update existing Service Engineer Account")
+        print("3. Delete Service Engineer Account")
+        print("4. Reset the password for an existing Service Engineer Account")
         print("5. Go Back")
         choice = input("\nEnter your choice: ")
         
@@ -60,11 +60,12 @@ def system_admin_service_engineer_menu():
             print("Updating existing Service Engineer Account...")
             sysAd.update_service_engineer()
         elif choice == "3":
-            print("Deleting System Admin Account...")
+            print("Deleting Service Engineer Account...")
             sysAd.delete_service_engineer()
         elif choice == "4":
-            print("Resetting password for existing System Admin Account...")
+            print("Resetting password for existing Service Engineer Account...")
             # Implement password reset logic here
+            sysAd.reset_password_service_engineer()
         elif choice == "5":
             break
         else:
