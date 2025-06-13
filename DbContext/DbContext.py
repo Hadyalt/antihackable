@@ -31,6 +31,7 @@ class DbContext:
         user_schema = """
             Username TEXT PRIMARY KEY,
             Password TEXT NOT NULL,
+            ResettedPasswordCheck INTEGER NOT NULL DEFAULT 0,
             Role TEXT NOT NULL DEFAULT 'user',
             IsActive INTEGER NOT NULL DEFAULT 1
         """
@@ -81,23 +82,7 @@ class DbContext:
         """
         self.create_table("Scooter", scooter_schema)
 
-        # Insert master account if it doesn't exist
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM User WHERE Username = ?", ("super_admin",))
-        if not cursor.fetchone():
-            master_data = {
-                "Username": "super_admin",
-                "Password": "Admin_123?",
-                "Role": "superadmin",
-                "IsActive": 1
-            }
-            columns = ", ".join(master_data.keys())
-            placeholders = ", ".join(["?"] * len(master_data))
-            sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
-            cursor.execute(sql, list(master_data.values()))
-            self.connection.commit()
-            print("Super admin account created.")
-
+        
         self.close()
     
     def log_action(self, username, action):
