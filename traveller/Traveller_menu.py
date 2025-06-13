@@ -29,8 +29,16 @@ def traveller_menu():
             print("\nGender:")
             print("[1] Male")
             print("[2] Female")
-            gender_choice = input("Select gender: ").strip()
-            gender = "Male" if gender_choice == "1" else "Female"
+            while True:
+                gender_choice = input("Select gender (1 or 2): ").strip()
+                if gender_choice == "1":
+                    gender = "Male"
+                    break
+                elif gender_choice == "2":
+                    gender = "Female"
+                    break
+                else:
+                    print("Invalid input. Please select 1 for Male or 2 for Female.")
 
             street_name = input("Street Name: ").strip()
             house_number = input("House Number: ").strip()
