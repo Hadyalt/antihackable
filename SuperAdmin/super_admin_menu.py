@@ -1,3 +1,4 @@
+from DbContext.encrypted_logger import EncryptedLogger
 from SuperAdmin.super_admin import SuperAdmin
 from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
@@ -23,6 +24,11 @@ def super_admin_menu(username):
             super_admin_service_engineer_menu()
         elif choice == "3":
             traveller_menu()
+        elif choice == "4":
+            break
+        elif choice == "5":
+            logger = EncryptedLogger()
+            logger.read_logs(table_format=True)
         elif choice == "7":
             print("Exiting...")
             break
