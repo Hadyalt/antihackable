@@ -31,8 +31,29 @@ def main(username):
     current_user = username  # Replace with actual logged-in username
 
     engineer = ServiceEngineer()
-
+    # Check if the service engineer has a reset password
+    # if sysAd.check_reset_password(username):
+    #         print("You have a reset password, please reset it before proceeding.")
+    #         verified_password = False
+    #         while not verified_password:
+    #             password = input("Enter password: ")
+    #             verified_password = Verification.verify_Password(password)
+    #         hashed_password = Verification.hash_password(password)
+    #         sysAd.reset_password_function(username, hashed_password, "systemadmin")
+    #         sysAd.reset_resetted_password_check(username)
+    #         print("Password reset completed. You can now proceed with the menu options.")
+    if engineer.check_reset_password(current_user):
+        print("You have a reset password, please reset it before proceeding.")
+        verified_password = False
+        while not verified_password:
+            password = input("Enter password: ")
+            verified_password = Verification.verify_Password(password)
+        hashed_password = Verification.hash_password(password)
+        engineer.reset_password(current_user, hashed_password)
+        engineer.reset_resetted_password_check(current_user)
+        print("Password reset completed. You can now proceed with the menu options.")
     while True:
+
         choice = display_menu()
 
         if choice == "3":

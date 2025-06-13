@@ -53,9 +53,9 @@ def show_main_menu(role, username):
     print("Choose an option:\n")
 
     if role == "superadmin":
-        SuperMenu.super_admin_menu()
+        SuperMenu.super_admin_menu(username)
     elif role == "systemadmin":
-        SystemMenu.system_admin_menu()
+        SystemMenu.system_admin_menu(username)
     elif role == "serviceengineer":
         ServiceEngineer_menu.main(username)
     else:

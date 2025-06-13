@@ -1,9 +1,25 @@
+from Login.verification import Verification
 from systemAdmin.system_admin import systemAdmin
 
-def system_admin_menu():
+def system_admin_menu(username):
+    current_user = username  # Replace with actual logged-in username
+    print(f"\nWelcome, {current_user}!")
     sysAd= systemAdmin()
     
     while True:
+        # check the database if the systemadmin has a reset password
+        if sysAd.check_reset_password(username):
+            print("You have a reset password, please reset it before proceeding.")
+            verified_password = False
+            while not verified_password:
+                password = input("Enter password: ")
+                verified_password = Verification.verify_Password(password)
+            hashed_password = Verification.hash_password(password)
+            sysAd.reset_password_function(username, hashed_password, "systemadmin")
+            sysAd.reset_resetted_password_check(username)
+            print("Password reset completed. You can now proceed with the menu options.")
+        print("\nWelcome to the System Admin Menu")
+        print("Please select an option:")
         print("\nSYSTEM ADMIN MENU")
         print("1. View all user accounts")
         print("2. Manage Service Engineers")

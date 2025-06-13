@@ -31,7 +31,7 @@ class DbContext:
         user_schema = """
             Username TEXT PRIMARY KEY,
             Password TEXT NOT NULL,
-            RessetedPasswordCheck INTEGER NOT NULL DEFAULT 0,
+            ResettedPasswordCheck INTEGER NOT NULL DEFAULT 0,
             Role TEXT NOT NULL DEFAULT 'user',
             IsActive INTEGER NOT NULL DEFAULT 1
         """
