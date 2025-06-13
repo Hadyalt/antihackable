@@ -53,7 +53,7 @@ class SuperAdmin:
             new_password = input("Enter the new password: ").strip()
             if Verification.verify_Password(new_password):
                 hashed_password = Verification.hash_password(new_password)
-                self.reset_password(username_to_update, hashed_password)
+                self.reset_password_function(username_to_update, hashed_password, "systemadmin")
                 print(f"Password for system admin {username_to_update} has been updated to {new_password}.")
             else:
                 print("Invalid password format. Please try again.")
@@ -102,7 +102,24 @@ class SuperAdmin:
         else:
             print("No database connection.")
             return "Error"
-    
+    def view_all_service_engineers(self):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT Username FROM User WHERE Role = ? AND IsActive = 1", ("serviceengineer",))
+            users = cursor.fetchall()
+            
+            if users:
+                print(f"Retrieved {len(users)} service engineer(s):")
+                for user in users:
+                    print(f"- {user[0]}")
+                return users
+            else:
+                print("No service engineer accounts found.")
+                return []
+        else:
+            print("No database connection.")
+            return "Error"
     def set_new_username(self, old_username, new_username):
         connection = self.db_context.connect()
         if connection:
@@ -112,13 +129,56 @@ class SuperAdmin:
         else:
             print("Failed to connect to the database.")
     
-    def reset_password(self, username, new_password):
+    def reset_password_function(self, username, new_password, role):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, "systemadmin"))
+            cursor.execute(
+                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE LOWER(Username) = LOWER(?) AND Role = ?",
+                (new_password, username, role)
+            )  
             connection.commit()
         else:
             print("Failed to connect to the database.")
 
-        
+    def reset_password_sysadmin(self):
+        sysAdmins = self.view_all_system_admins()
+        if not sysAdmins:
+            print("No system admins available to reset password.")
+            return
+        username_to_reset = input("Enter the username of the system admin whose password you want to reset: ").strip()
+
+        # Check if the username exists in the sysAdmins list
+        matching_users = [user for user in sysAdmins if user[0].lower() == username_to_reset.lower()]
+        if not matching_users:
+            print(f"No system admin found with username '{username_to_reset}'.")
+            return
+
+        new_password = input("Enter the new temporary password: ").strip()
+        if Verification.verify_Password(new_password):
+            hashed_password = Verification.hash_password(new_password)
+            self.reset_password_function(username_to_reset, hashed_password, "systemadmin")
+            print(f"Password for system admin {username_to_reset} has been reset.")
+        else:
+            print("Invalid password format. Please try again.")
+    
+    def reset_password_service_engineer(self):
+        service_engineers = self.view_all_service_engineers()
+        if not service_engineers:
+            print("No service engineers available to reset password.")
+            return
+        username_to_reset = input("Enter the username of the service engineer whose password you want to reset: ").strip()
+
+        # Check if the username exists in the service_engineers list
+        matching_users = [user for user in service_engineers if user[0].lower() == username_to_reset.lower()]
+        if not matching_users:
+            print(f"No service engineer found with username '{username_to_reset}'.")
+            return
+
+        new_password = input("Enter the new temporary password: ").strip()
+        if Verification.verify_Password(new_password):
+            hashed_password = Verification.hash_password(new_password)
+            self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
+            print(f"Password for service engineer {username_to_reset} has been reset.")
+        else:
+            print("Invalid password format. Please try again.")

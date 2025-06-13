@@ -3,7 +3,9 @@ from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
 
 
-def super_admin_menu():
+def super_admin_menu(username):
+    current_user = username
+    print(f"\nWelcome, {current_user}!")
     while True:
         print("\nSUPER ADMIN MENU")
         print("1. Manage System Admins")
@@ -28,11 +30,14 @@ def super_admin_menu():
             print("Invalid choice. Please try again.")
 
 def super_admin_service_engineer_menu():
-    sysAd = systemAdmin()
+    sa = SuperAdmin()
     
     while True:
         print("\nSERVICE ENGINEER MANAGEMENT")
         print("1. Create Service Engineer Account")
+        print("2. Update existing Service Engineer Account")
+        print("3. Delete Service Engineer Account")
+        print("4. Reset the password for an existing Service Engineer Account")
         
         print("5. Go Back")
         
@@ -40,7 +45,7 @@ def super_admin_service_engineer_menu():
         
         if choice == "1":
             print("\n-- Create System Admin --")
-            sysAd.create_service_engineer()
+            sa.create_service_engineer()
         elif choice == "2":
             print("Updating existing System Admin Account...")
             
@@ -48,8 +53,9 @@ def super_admin_service_engineer_menu():
             print("Deleting System Admin Account...")
             
         elif choice == "4":
-            print("Resetting password for existing System Admin Account...")
+            print("Resetting password for existing Service Engineer Account...")
             # Implement password reset logic here
+            sa.reset_password_service_engineer()
         elif choice == "5":
             break
         else:
@@ -79,7 +85,8 @@ def super_admin_system_admin_menu():
             sa.delete_system_admin()
         elif choice == "4":
             print("Resetting password for existing System Admin Account...")
-            # Implement password reset logic here
+            sa.reset_password_sysadmin()
+
         elif choice == "5":
             break
         else:

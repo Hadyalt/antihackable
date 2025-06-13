@@ -5,7 +5,31 @@ from Login.verification import Verification
 class systemAdmin:
     def __init__(self):
         self.db_context = DbContext()
-    
+
+    # check if the user has a reset password variable called ResettedPasswordCheck using only the username
+    def check_reset_password(self, username):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
+            result = cursor.fetchone()
+            connection.close()
+            if result:
+                return result[0]
+            else:
+                print(f"No user found with username '{username}'.")
+                return None
+
+    def reset_resetted_password_check(self, username):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET ResettedPasswordCheck = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
+            connection.commit()
+            connection.close()
+            
+        else:
+            print("Failed to connect to the database.")
     def create_service_engineer(self):
         verified_username = False
         while not verified_username:
@@ -184,17 +208,26 @@ class systemAdmin:
         else:
             print("Failed to connect to the database.")
             return False
-    
-    def reset_password(self, username, new_password):
+
+    def reset_password_function(self, username, new_password, role):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, "serviceengineer"))
+            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, role))
             connection.commit()
             return True
         else:
             print("Failed to connect to the database.")
             return False
+    
+    def reset_password_function(self, username, new_password, role):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, role))
+            connection.commit()
+        else:
+            print("Failed to connect to the database.")
     
     def reset_password_system(self, username, new_password):
         connection = self.db_context.connect()
@@ -206,3 +239,24 @@ class systemAdmin:
         else:
             print("Failed to connect to the database.")
             return False
+
+    def reset_password_service_engineer(self):
+        service_engineers = self.view_all_service_engineers()
+        if not service_engineers:
+            print("No service engineers available to reset password.")
+            return
+        username_to_reset = input("Enter the username of the service engineer whose password you want to reset: ").strip()
+
+        # Check if the username exists in the service_engineers list
+        matching_users = [user for user in service_engineers if user[0].lower() == username_to_reset.lower()]
+        if not matching_users:
+            print(f"No service engineer found with username '{username_to_reset}'.")
+            return
+
+        new_password = input("Enter the new temporary password: ").strip()
+        if Verification.verify_Password(new_password):
+            hashed_password = Verification.hash_password(new_password)
+            self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
+            print(f"Password for service engineer {username_to_reset} has been reset.")
+        else:
+            print("Invalid password format. Please try again.")

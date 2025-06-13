@@ -4,6 +4,7 @@ from DbContext.DbContext import DbContext
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
+from DbContext.backup_utils import create_backup, list_backups, restore_backup
 
 DB_PATH = "data.db"
 
@@ -51,17 +52,83 @@ def show_main_menu(role, username):
     print("Choose an option:\n")
 
     if role == "superadmin":
-        SuperMenu.super_admin_menu()
+        print("1. Super Admin Menu")
+        print("2. Backup & Restore")
+        print("3. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            SuperMenu.super_admin_menu(username)
+        elif choice == "2":
+            backup_menu(role)
+        elif choice == "3":
+            exit()
+        else:
+            print("Invalid choice.")
     elif role == "systemadmin":
-        SystemMenu.system_admin_menu(username)
+        print("1. System Admin Menu")
+        print("2. Backup & Restore")
+        print("3. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            SystemMenu.system_admin_menu(username)
+        elif choice == "2":
+            backup_menu(role)
+        elif choice == "3":
+            exit()
+        else:
+            print("Invalid choice.")
     elif role == "serviceengineer":
         ServiceEngineer_menu.main(username)
     else:
         print("Invalid role.")
         return
-    choice = input("\nEnter your choice: ")
 
-        
+def backup_menu(role):
+    print("\n=== BACKUP & RESTORE MENU ===")
+    print("1. Create Backup")
+    print("2. List Backups")
+    print("3. Restore Backup")
+    print("4. Exit Backup Menu")
+    while True:
+        choice = input("Enter your choice: ").strip()
+        if choice == "1":
+            backup_path = create_backup()
+            print(f"Backup created: {backup_path}")
+        elif choice == "2":
+            backups = list_backups()
+            if backups:
+                print("Available backups:")
+                for b in backups:
+                    print(f"- {b}")
+            else:
+                print("No backups found.")
+        elif choice == "3":
+            backups = list_backups()
+            if not backups:
+                print("No backups to restore.")
+                continue
+            print("Available backups:")
+            for idx, b in enumerate(backups, 1):
+                print(f"{idx}. {b}")
+            sel = input("Select backup number to restore: ").strip()
+            try:
+                sel_idx = int(sel) - 1
+                if sel_idx < 0 or sel_idx >= len(backups):
+                    print("Invalid selection.")
+                    continue
+                # Super Admin can restore any, System Admin only the latest
+                if role == "systemadmin" and sel_idx != len(backups) - 1:
+                    print("System Admin can only restore the latest backup.")
+                    continue
+                restore_backup(backups[sel_idx])
+                print("Restore complete. Please restart the application.")
+                exit()
+            except Exception as e:
+                print(f"Restore failed: {e}")
+        elif choice == "4":
+            break
+        else:
+            print("Invalid choice.")
 
 # === MAIN MENU BEFORE LOGIN ===
 def pre_login_menu():
