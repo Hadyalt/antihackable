@@ -55,7 +55,7 @@ def show_main_menu(role, username):
     if role == "superadmin":
         SuperMenu.super_admin_menu()
     elif role == "systemadmin":
-        SystemMenu.system_admin_menu()
+        SystemMenu.system_admin_menu(username)
     elif role == "serviceengineer":
         ServiceEngineer_menu.main(username)
     else:
