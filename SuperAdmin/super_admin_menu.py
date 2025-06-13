@@ -1,5 +1,6 @@
 from SuperAdmin.super_admin import SuperAdmin
 from systemAdmin.system_admin import systemAdmin
+from traveller.Traveller_menu import traveller_menu
 
 
 def super_admin_menu():
@@ -18,6 +19,8 @@ def super_admin_menu():
             super_admin_system_admin_menu()
         elif choice == "2":
             super_admin_service_engineer_menu()
+        elif choice == "3":
+            traveller_menu()
         elif choice == "7":
             print("Exiting...")
             break
