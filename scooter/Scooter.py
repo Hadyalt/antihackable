@@ -2,8 +2,6 @@ from models.Scooter import Scooter
 from scooter.Scooter_data import Scooter_data
 from datetime import datetime
 
-
-
 def show_menu(role):
     if role in ["superadmin", "systemadmin"]:
         print("""
@@ -161,9 +159,17 @@ def main(role):
                 db.insert_scooter(scooter)
 
             elif choice == "2":
-                scooters = db.get_all_scooters()
-                for s in scooters:
-                    print(s)
+                search_term = input("Enter search term (leave blank for all): ").strip()
+                if search_term:
+                    scooters = db.search_scooters(search_term)
+                else:
+                    scooters = db.get_all_scooters()
+
+                if scooters:
+                    for s in scooters:
+                        print(s)
+                else:
+                    print("No matching scooters found")
 
             elif choice == "3":
                 sn = input("Serial Number to update: ")
@@ -348,10 +354,18 @@ def main(role):
 
         # SERVICE ENGINEER MENU
         elif role == "serviceengineer":
-            if choice == "1":
-                scooters = db.get_all_scooters()
-                for s in scooters:
-                    print(s)
+            if choice == "1":  # View Scooters
+                search_term = input("Enter search term (leave blank for all): ").strip()
+                if search_term:
+                    scooters = db.search_scooters(search_term)
+                else:
+                    scooters = db.get_all_scooters()
+
+                if scooters:
+                    for s in scooters:
+                        print(s)
+                else:
+                    print("No matching scooters found")
 
             elif choice == "2":
                 sn = input("Serial Number to update: ")

@@ -5,7 +5,7 @@ from scooter import Scooter
 
 def display_menu():
     print("\n==== Service Engineer Menu ====")
-    print("1. Update Scooter Info")
+    print("1. Scooter Menu")
     print("2. Change My Password")
     print("3. Exit")
     return input("Enter your choice (1-4): ").strip()
