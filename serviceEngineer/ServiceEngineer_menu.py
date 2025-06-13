@@ -1,13 +1,13 @@
 from Login.verification import Verification
 from serviceEngineer.ServiceEngineer import ServiceEngineer
+from scooter import Scooter
 
 
 def display_menu():
     print("\n==== Service Engineer Menu ====")
-    print("1. Update Scooter Info")
-    print("2. Manage Travellers")
-    print("3. Change My Password")
-    print("4. Exit")
+    print("1. Scooter Menu")
+    print("2. Change My Password")
+    print("3. Exit")
     return input("Enter your choice (1-4): ").strip()
 
 
@@ -55,11 +55,23 @@ def main(username):
     while True:
 
         choice = display_menu()
+        if choice == "1":
+            Scooter.main("serviceengineer")
 
-        if choice == "3":
+        elif choice == "2":
             reset_password_flow(engineer, current_user)
 
-        elif choice == "4":
+        elif choice == "3":
+            print("Exiting Service Engineer Portal. Goodbye!")
+            break
+
+        else:
+            print("Invalid selection. Please choose a number between 1 and 3.")
+
+        if choice == "2":
+            reset_password_flow(engineer, current_user)
+
+        elif choice == "3":
             print("Exiting Service Engineer Portal. Goodbye!")
             break
 

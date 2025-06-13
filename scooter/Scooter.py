@@ -2,10 +2,8 @@ from models.Scooter import Scooter
 from scooter.Scooter_data import Scooter_data
 from datetime import datetime
 
-
-
 def show_menu(role):
-    if role in ["super_admin", "system_admin"]:
+    if role in ["superadmin", "systemadmin"]:
         print("""
 [1] Add Scooter
 [2] View Scooters
@@ -13,7 +11,7 @@ def show_menu(role):
 [4] Delete Scooter
 [5] Exit
 """)
-    elif role == "service_engineer":
+    elif role == "serviceengineer":
         print("""
 [1] View Scooters
 [2] Update Scooter
@@ -30,7 +28,7 @@ def main(role):
         choice = input("Choose an option: ")
 
         # ADMIN MENU
-        if role in ["super_admin", "system_admin"]:
+        if role in ["superadmin", "systemadmin"]:
             if choice == "1":
                 # Define Rotterdam geographic bounds
                 ROTTERDAM_BOUNDS = {
@@ -161,9 +159,17 @@ def main(role):
                 db.insert_scooter(scooter)
 
             elif choice == "2":
-                scooters = db.get_all_scooters()
-                for s in scooters:
-                    print(s)
+                search_term = input("Enter search term (leave blank for all): ").strip()
+                if search_term:
+                    scooters = db.search_scooters(search_term)
+                else:
+                    scooters = db.get_all_scooters()
+
+                if scooters:
+                    for s in scooters:
+                        print(s)
+                else:
+                    print("No matching scooters found")
 
             elif choice == "3":
                 sn = input("Serial Number to update: ")
@@ -347,11 +353,19 @@ def main(role):
                 print("Invalid choice.")
 
         # SERVICE ENGINEER MENU
-        elif role == "service_engineer":
-            if choice == "1":
-                scooters = db.get_all_scooters()
-                for s in scooters:
-                    print(s)
+        elif role == "serviceengineer":
+            if choice == "1":  # View Scooters
+                search_term = input("Enter search term (leave blank for all): ").strip()
+                if search_term:
+                    scooters = db.search_scooters(search_term)
+                else:
+                    scooters = db.get_all_scooters()
+
+                if scooters:
+                    for s in scooters:
+                        print(s)
+                else:
+                    print("No matching scooters found")
 
             elif choice == "2":
                 sn = input("Serial Number to update: ")

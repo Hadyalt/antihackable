@@ -1,6 +1,7 @@
 import sqlite3
 import os
 
+
 class Scooter_data:
     def __init__(self, db_name="data.db"):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -83,8 +84,7 @@ class Scooter_data:
         if self.connection:
             cursor = self.connection.cursor()
             cursor.execute(
-                "SELECT * FROM Scooter WHERE SerialNumber = ?", 
-                (serial_number,)
+                "SELECT * FROM Scooter WHERE SerialNumber = ?", (serial_number,)
             )
             return cursor.fetchone()
         else:
@@ -98,12 +98,21 @@ class Scooter_data:
 
         # Valid column check
         allowed_columns = {
-            "Brand", "Model", "SerialNumber", "TopSpeed", 
-            "BatteryCapacity", "StateOfCharge", "TargetRangeSocMin",
-            "TargetRangeSocMax", "LocationLat", "LocationLong",
-            "OutOfService", "Mileage", "LastMaintenanceDate"
+            "Brand",
+            "Model",
+            "SerialNumber",
+            "TopSpeed",
+            "BatteryCapacity",
+            "StateOfCharge",
+            "TargetRangeSocMin",
+            "TargetRangeSocMax",
+            "LocationLat",
+            "LocationLong",
+            "OutOfService",
+            "Mileage",
+            "LastMaintenanceDate",
         }
-        
+
         invalid_fields = [f for f in fields if f not in allowed_columns]
         if invalid_fields:
             print(f"Invalid fields: {', '.join(invalid_fields)}")
@@ -116,8 +125,7 @@ class Scooter_data:
         try:
             cursor = self.connection.cursor()
             cursor.execute(
-                f"UPDATE Scooter SET {set_clause} WHERE SerialNumber = ?", 
-                values
+                f"UPDATE Scooter SET {set_clause} WHERE SerialNumber = ?", values
             )
             if cursor.rowcount == 0:
                 print("Error: Scooter not found")
@@ -139,6 +147,27 @@ class Scooter_data:
             print("Scooter deleted.")
         else:
             print("No connection.")
+
+    def search_scooters(self, search_term):
+        if not self.connection:
+            print("No connection.")
+            return []
+
+        term = f"%{search_term}%"
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            SELECT * FROM Scooter 
+            WHERE 
+                Brand LIKE ? OR
+                Model LIKE ? OR
+                SerialNumber LIKE ? OR
+                LocationLat LIKE ? OR
+                LocationLong LIKE ?
+            """,
+            (term, term, term, term, term),
+        )
+        return cursor.fetchall()
 
     def close(self):
         if self.connection:

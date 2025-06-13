@@ -119,7 +119,7 @@ class systemAdmin:
         else:
             print("Invalid choice. Please try again.")
     
-    def delete_service_engineer(self):
+    def delete_service_engineer(self): #Delete by setting IsActive to 0
         servEng = self.view_all_service_engineers()
         if not servEng:
             print("No service engineers available to delete.")
@@ -141,6 +141,51 @@ class systemAdmin:
             print(f"service engineer '{username_to_delete}' has been deleted.")
         else:
             print("Failed to connect to the database.")
+    
+    # def delete_service_engineer(self): #Delete by removing the record
+    #     servEng = self.view_all_service_engineers()
+    #     if not servEng:
+    #         print("No service engineers available to delete.")
+    #         return
+    #     username_to_delete = input("Enter the username of the service engineer you want to delete: ").strip()
+
+    #     # Check if the username exists in the servEng list
+    #     matching_users = [user for user in servEng if user[0].lower() == username_to_delete.lower()]  # assumes username is in column 0
+
+    #     if not matching_users:
+    #         print(f"No service engineer found with username '{username_to_delete}'.")
+    #         return
+
+    #     connection = self.db_context.connect()
+    #     if connection:
+    #         cursor = connection.cursor()
+    #         cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username_to_delete, "serviceengineer"))
+    #         connection.commit()
+    #         print(f"service engineer '{username_to_delete}' has been deleted.")
+    #     else:
+    #         print("Failed to connect to the database.")
+    
+    def delete_account(self, username): #Delete by setting IsActive to 0
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
+            connection.commit()
+            return True
+        else:
+            print("Failed to connect to the database.")
+            return False
+    
+    # def delete_account(self, username): #Delete by removing the record
+    #     connection = self.db_context.connect()
+    #     if connection:
+    #         cursor = connection.cursor()
+    #         cursor.execute("DELETE User WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
+    #         connection.commit()
+    #         return True
+    #     else:
+    #         print("Failed to connect to the database.")
+    #         return False
 
     def set_new_username(self, old_username, new_username):
         connection = self.db_context.connect()
@@ -148,9 +193,33 @@ class systemAdmin:
             cursor = connection.cursor()
             cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_username, old_username, "serviceengineer"))
             connection.commit()
+            return True
         else:
             print("Failed to connect to the database.")
+            return False
+    
+    def set_new_username_system(self, old_username, new_username):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_username, old_username, "systemadmin"))
+            connection.commit()
+            return True
+        else:
+            print("Failed to connect to the database.")
+            return False
 
+    def reset_password_function(self, username, new_password, role):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, role))
+            connection.commit()
+            return True
+        else:
+            print("Failed to connect to the database.")
+            return False
+    
     def reset_password_function(self, username, new_password, role):
         connection = self.db_context.connect()
         if connection:
@@ -159,6 +228,17 @@ class systemAdmin:
             connection.commit()
         else:
             print("Failed to connect to the database.")
+    
+    def reset_password_system(self, username, new_password):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, "systemadmin"))
+            connection.commit()
+            return True
+        else:
+            print("Failed to connect to the database.")
+            return False
 
     def reset_password_service_engineer(self):
         service_engineers = self.view_all_service_engineers()
