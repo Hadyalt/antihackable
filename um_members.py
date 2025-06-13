@@ -1,12 +1,10 @@
 import sqlite3
 import hashlib
 from DbContext.DbContext import DbContext
-from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
 from DbContext.backup_utils import create_backup, list_backups, restore_backup
-
 
 DB_PATH = "data.db"
 
