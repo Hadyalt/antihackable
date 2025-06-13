@@ -1,4 +1,6 @@
 from SuperAdmin.super_admin import SuperAdmin
+from systemAdmin.system_admin import systemAdmin
+
 
 def super_admin_menu():
     while True:
@@ -14,8 +16,38 @@ def super_admin_menu():
         
         if choice == "1":
             super_admin_system_admin_menu()
+        elif choice == "2":
+            super_admin_service_engineer_menu()
         elif choice == "7":
             print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+def super_admin_service_engineer_menu():
+    sysAd = systemAdmin()
+    
+    while True:
+        print("\nSERVICE ENGINEER MANAGEMENT")
+        print("1. Create Service Engineer Account")
+        
+        print("5. Go Back")
+        
+        choice = input("\nEnter your choice: ")
+        
+        if choice == "1":
+            print("\n-- Create System Admin --")
+            sysAd.create_service_engineer()
+        elif choice == "2":
+            print("Updating existing System Admin Account...")
+            
+        elif choice == "3":
+            print("Deleting System Admin Account...")
+            
+        elif choice == "4":
+            print("Resetting password for existing System Admin Account...")
+            # Implement password reset logic here
+        elif choice == "5":
             break
         else:
             print("Invalid choice. Please try again.")
