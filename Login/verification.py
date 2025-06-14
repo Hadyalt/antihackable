@@ -1,6 +1,7 @@
 import hashlib
 from DbContext.DbContext import DbContext
 import re
+from DbContext.crypto_utils import encrypt
 
 class Verification:
     def hash_password(password):
@@ -9,10 +10,11 @@ class Verification:
     def check_username_exists(username):
         db = DbContext()
         connection = db.connect()
-        """Retrieve a User record by username."""
+        """Retrieve a User record by username hash."""
+        username_hash = hashlib.sha256(username.encode()).hexdigest()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT Username FROM User WHERE Lower(Username) = ?", (username,))
+            cursor.execute("SELECT Username FROM User WHERE UsernameHash = ?", (username_hash,))
             user = cursor.fetchone()
             if user is not None:
                 return user
@@ -24,7 +26,6 @@ class Verification:
         
     def verify_username(username):
         db = DbContext()
-        username = username.lower()
 
         # Check length constraints
         if len(username) < 8 or len(username) > 10:
@@ -71,5 +72,15 @@ class Verification:
             return False
         if not re.search(r'[~!@#$%&_+=`|\(){}\[\]:;\'<>,\.?/]', password):
             print("Password must contain at least one special character.")
+            return False
+        return True
+
+    def verify_name(name):
+        if not name:
+            print("Name cannot be empty.")
+            return False
+        # Allow only letters, hyphens, apostrophes, and spaces
+        if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ'\- ]{1,50}", name):
+            print("Invalid characters in name. Please use letters, hyphens (-), or apostrophes (').")
             return False
         return True

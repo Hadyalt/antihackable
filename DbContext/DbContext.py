@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import hashlib
 from DbContext.crypto_utils import encrypt, decrypt
 
 class DbContext:
@@ -31,7 +32,11 @@ class DbContext:
         # Define the schema for the User table with a role and is_active flag
         user_schema = """
             Username TEXT PRIMARY KEY,
+            UsernameHash TEXT NOT NULL UNIQUE,
             Password TEXT NOT NULL,
+            FirstName TEXT NOT NULL,
+            LastName TEXT NOT NULL,
+            RegistrationDate TEXT NOT NULL DEFAULT (datetime('now')),
             ResettedPasswordCheck INTEGER NOT NULL DEFAULT 0,
             Role TEXT NOT NULL DEFAULT 'user',
             IsActive INTEGER NOT NULL DEFAULT 1
@@ -55,15 +60,6 @@ class DbContext:
         """
         self.create_table("Traveller", traveller_schema)
 
-        # Create the AuditLog table
-        audit_schema = """
-            Id INTEGER PRIMARY KEY AUTOINCREMENT,
-            Username TEXT NOT NULL,
-            Action TEXT NOT NULL,
-            Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        """
-        self.create_table("AuditLog", audit_schema)
-
         # Create the Scooter table
         scooter_schema = """
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,8 +78,6 @@ class DbContext:
             LastMaintenanceDate TEXT NOT NULL
         """
         self.create_table("Scooter", scooter_schema)
-
-        
         self.close()
     
     def log_action(self, username, action):
@@ -102,19 +96,20 @@ class DbContext:
 
     def insert_User(self, user_data):
         self.connection = sqlite3.connect(self.db_name)
-        """Insert a new User record into the database (encrypt Username)."""
+        """Insert a new User record into the database (encrypt Username, store UsernameHash)."""
         if self.connection:
             cursor = self.connection.cursor()
-            # Encrypt Username
             user_data = user_data.copy()
             if 'Username' in user_data:
-                user_data['Username'] = encrypt(user_data['Username'])
+                username_plain = user_data['Username']
+                user_data['UsernameHash'] = hashlib.sha256(username_plain.encode()).hexdigest()
+                user_data['Username'] = encrypt(username_plain)
             columns = ", ".join(user_data.keys())
             placeholders = ", ".join(["?"] * len(user_data))
             sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
             cursor.execute(sql, list(user_data.values()))
             self.connection.commit()
-            print(f"Inserted new User record with ID: {user_data['Username']}")
+            print(f"Inserted new User record")
         else:
             print("No database connection. Call connect() first.")
         self.connection.close()        

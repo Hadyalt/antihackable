@@ -2,6 +2,7 @@ from DbContext.encrypted_logger import EncryptedLogger
 from SuperAdmin.super_admin import SuperAdmin
 from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
+from scooter.Scooter import main
 
 
 def super_admin_menu(username):
@@ -25,7 +26,7 @@ def super_admin_menu(username):
         elif choice == "3":
             traveller_menu()
         elif choice == "4":
-            break
+            main()
         elif choice == "5":
             logger = EncryptedLogger()
             logger.read_logs(table_format=True)
