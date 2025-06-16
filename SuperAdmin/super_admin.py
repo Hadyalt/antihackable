@@ -57,7 +57,7 @@ class SuperAdmin:
         print("3. Update First Name")
         print("4. Update Last Name")
         print("5. Go Back")
-        choice = input("Enter your choice (1, 2, 3 or 4): ").strip()
+        choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
         if choice == "1":
             new_username = input("Enter the new username: ").strip()
             if Verification.verify_username(new_username):
@@ -148,7 +148,7 @@ class SuperAdmin:
             if users:
                 print(f"Retrieved {len(users)} service engineer(s):")
                 for user in users:
-                    print(f"- {user[0]}")
+                    print(f"- {decrypt(user[0])}")
                 return users
             else:
                 print("No service engineer accounts found.")
