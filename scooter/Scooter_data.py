@@ -162,6 +162,8 @@ class Scooter_data:
     def close(self):
         if self.connection:
             self.connection.close()
-            print("Database connection closed.")
+            #print("Database connection closed.")
+            return
         else:
-            print("No connection to close.")
+            #print("No connection to close.")
+            return

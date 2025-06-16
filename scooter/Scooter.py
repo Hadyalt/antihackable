@@ -26,11 +26,10 @@ def main(role, username):
     db.connect()
 
     while True:
-        show_menu(role)
-        choice = input("Choose an option: ")
-
         # ADMIN MENU
         if role in ["superadmin", "systemadmin"]:
+            show_menu(role)
+            choice = input("Choose an option: ")
             if choice == "1":
                 add_scooter(username)
             elif choice == "2":
@@ -63,7 +62,10 @@ def main(role, username):
 
         # SERVICE ENGINEER MENU
         elif role == "serviceengineer":
+            show_menu(role)
+            choice = input("Choose an option: ")
             Scooter_Menu_SerEng(choice)
+            break
 
         # INVALID ROLE
         else:
