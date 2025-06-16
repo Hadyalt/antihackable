@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from DbContext.crypto_utils import decrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from traveller.Traveller import Traveller
@@ -42,9 +44,30 @@ def add_traveller(creator):
     db.connect()
 
     print("\nAdd New Traveller")
-    first_name = input("First Name: ").strip()
-    last_name = input("Last Name: ").strip()
-    birthday = input("Birthday (YYYY-MM-DD): ").strip()
+    # First name validation
+    while True:
+        first_name = input("First Name: ").strip()
+        if first_name and first_name.isalpha():
+            break
+        else:
+            print("First name must only contain letters and cannot be empty. Please try again.")
+
+    # Last name validation
+    while True:
+        last_name = input("Last Name: ").strip()
+        if last_name and last_name.isalpha():
+            break
+        else:
+            print("Last name must only contain letters and cannot be empty. Please try again.")
+
+    # Birthday validation
+    while True:
+        birthday = input("Birthday (YYYY-MM-DD): ").strip()
+        try:
+            datetime.strptime(birthday, "%Y-%m-%d")
+            break
+        except ValueError:
+            print("Invalid date format. Please use YYYY-MM-DD.")
 
     print("\nGender:")
     print("[1] Male")
@@ -60,13 +83,31 @@ def add_traveller(creator):
         else:
             print("Invalid input. Please select 1 for Male or 2 for Female.")
 
-    street_name = input("Street Name: ").strip()
-    house_number = input("House Number: ").strip()
+    # Street name validation
+    while True:
+        street_name = input("Street Name: ").strip()
+        if street_name:
+            break
+        else:
+            print("Street name cannot be empty. Please try again.")
 
-    zip_code = input("Zip Code (DDDDXX format): ").strip().upper()
+    # House number validation
+    while True:
+        house_number = input("House Number: ").strip()
+        if house_number.isdigit():
+            break
+        else:
+            print("House number must be digits only. Please try again.")
+
+    # Zip code validation loop
+    while True:
+        zip_code = input("Zip Code (DDDDXX format): ").strip().upper()
+        if db.validate_zip_code(zip_code):
+            break
+        else:
+            print("Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again.")
 
     display_cities(db.cities)
-    
     city = None
     while city is None:
         try:
@@ -77,15 +118,35 @@ def add_traveller(creator):
             print("Invalid city selection")
             display_cities(db.cities)
 
-    email = input("Email: ").strip()
+    # Email validation
+    email_regex = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    while True:
+        email = input("Email: ").strip()
+        if re.match(email_regex, email):
+            break
+        else:
+            print("Invalid email format. Please try again.")
 
-    phone = input("Phone (8 digits only): ").strip()
+    # Phone validation loop
+    while True:
+        phone = input("Phone (8 digits only): ").strip()
+        try:
+            db.format_phone(phone)
+            break
+        except ValueError as e:
+            print(f"{e} Please try again.")
 
-    driving_license = (
-        input("Driving License (XXDDDDDDD or XDDDDDDDD format): ")
-        .strip()
-        .upper()
-    )
+    # Driving license validation loop
+    while True:
+        driving_license = (
+            input("Driving License (XXDDDDDDD or XDDDDDDDD format): ")
+            .strip()
+            .upper()
+        )
+        if db.validate_driving_license(driving_license):
+            break
+        else:
+            print("Invalid Driving License format. Please try again.")
 
     # Attempt to add traveller
     db.insert_traveller(
