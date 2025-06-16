@@ -222,6 +222,6 @@ class SuperAdmin:
             self.reset_password_function(username_to_reset, hashed_password, "systemadmin")
             print(f"Password for system admin {username_to_reset} has been reset.")
             logger = EncryptedLogger()
-            logger.log_entry(f"super_admin", "Resetted the password of a Service Engineer Account", f"username: {username_to_reset} had his password reset", "No")
+            logger.log_entry(f"super_admin", "Resetted the password of a System Admin Account", f"username: {username_to_reset} had his password reset", "No")
         else:
             print("Invalid password format. Please try again.")
