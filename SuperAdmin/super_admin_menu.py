@@ -49,10 +49,9 @@ def super_admin_system_admin_menu():
         print("1. Create System Admin Account")
         print("2. Update existing System Admin Account")
         print("3. Delete System Admin Account")
-        print("4. Reset the password for an existing System Admin Account")
-        print("5. Go Back")
+        print("4. Go Back")
         
-        choice = input("\nEnter your choice: ")
+        choice = input("\nEnter your choice: ").strip()
         
         if choice == "1":
             print("\n-- Create System Admin --")
@@ -64,10 +63,6 @@ def super_admin_system_admin_menu():
             print("Deleting System Admin Account...")
             sa.delete_system_admin()
         elif choice == "4":
-            print("Resetting password for existing System Admin Account...")
-            sa.reset_password_sysadmin()
-
-        elif choice == "5":
             break
         else:
             print("Invalid choice. Please try again.")

@@ -1,6 +1,5 @@
 import sqlite3
 import os
-import hashlib
 from DbContext.crypto_utils import encrypt, decrypt
 
 class DbContext:
@@ -32,7 +31,6 @@ class DbContext:
         # Define the schema for the User table with a role and is_active flag
         user_schema = """
             Username TEXT PRIMARY KEY,
-            UsernameHash TEXT NOT NULL UNIQUE,
             Password TEXT NOT NULL,
             FirstName TEXT NOT NULL,
             LastName TEXT NOT NULL,
@@ -96,14 +94,12 @@ class DbContext:
 
     def insert_User(self, user_data):
         self.connection = sqlite3.connect(self.db_name)
-        """Insert a new User record into the database (encrypt Username, store UsernameHash)."""
+        """Insert a new User record into the database (encrypt Username)."""
         if self.connection:
             cursor = self.connection.cursor()
             user_data = user_data.copy()
             if 'Username' in user_data:
-                username_plain = user_data['Username']
-                user_data['UsernameHash'] = hashlib.sha256(username_plain.encode()).hexdigest()
-                user_data['Username'] = encrypt(username_plain)
+                user_data['Username'] = encrypt(user_data['Username'])
             columns = ", ".join(user_data.keys())
             placeholders = ", ".join(["?"] * len(user_data))
             sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"

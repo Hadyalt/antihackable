@@ -1,3 +1,4 @@
+import hashlib
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
@@ -46,20 +47,20 @@ class SuperAdmin:
         if not sysAdmins:
             print("No system admins available to update.")
             return
-        username_to_update = input("Enter the username of the system admin you want to update: ").strip()
-        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update.lower()]
+        username_to_update = input("Enter the username of the system admin you want to update: ").strip().lower()
+        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update]
         if not matching_users:
             print(f"No system admin found with username '{username_to_update}'.")
             return
-        print ("What do you want to update?")
-        print(f"1. Username: ({username_to_update})")
-        print("2. Password")
-        print("3. First Name")
-        print("4. Last Name")
+        print ("What do you want to do")
+        print(f"1. Update Username: ({matching_users[0][0]})")
+        print("2. Reset Password")
+        print("3. Update First Name")
+        print("4. Update Last Name")
         print("5. Go Back")
         choice = input("Enter your choice (1, 2, 3 or 4): ").strip()
         if choice == "1":
-            new_username = input("Enter the new username: ").strip()
+            new_username = input("Enter the new username: ").strip().lower()
             if Verification.verify_username(new_username):
                 self.set_new_username(username_to_update, new_username)
                 print(f"System admin {username_to_update} updated to {new_username}.")
@@ -161,67 +162,43 @@ class SuperAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            enc_old = encrypt(old_username)
             enc_new = encrypt(new_username)
-            cursor.execute("UPDATE User SET Username = ? WHERE Username = ? AND Role = ?", (enc_new, enc_old, "systemadmin"))
+            cursor.execute("UPDATE User SET Username = ? WHERE Username = ? AND Role = ?", (enc_new, old_username, "systemadmin"))
             connection.commit()
         else:
             print("Failed to connect to the database.")
     
     def set_new_first_name(self, username, new_first_name):
         connection = self.db_context.connect()
+        username_hash = hashlib.sha256(username.encode()).hexdigest()
         if connection:
             cursor = connection.cursor()
-            enc_username = encrypt(username)
             enc_first_name = encrypt(new_first_name)
-            cursor.execute("UPDATE User SET FirstName = ? WHERE Username = ? AND Role = ?", (enc_first_name, enc_username, "systemadmin"))
+            cursor.execute("UPDATE User SET FirstName = ? WHERE UsernameHash = ? AND Role = ?", (enc_first_name, username_hash, "systemadmin"))
             connection.commit()
         else:
             print("Failed to connect to the database.")
     
     def set_new_last_name(self, username, new_last_name):
         connection = self.db_context.connect()
+        username_hash = hashlib.sha256(username.encode()).hexdigest()
         if connection:
             cursor = connection.cursor()
-            enc_username = encrypt(username)
             enc_last_name = encrypt(new_last_name)
-            cursor.execute("UPDATE User SET LastName = ? WHERE Username = ? AND Role = ?", (enc_last_name, enc_username, "systemadmin"))
+            cursor.execute("UPDATE User SET LastName = ? WHERE UsernameHash = ? AND Role = ?", (enc_last_name, username_hash, "systemadmin"))
             connection.commit()
         else:
             print("Failed to connect to the database.")
     
     def reset_password_function(self, username, new_password, role):
         connection = self.db_context.connect()
+        username_hash = hashlib.sha256(username.encode()).hexdigest()
         if connection:
             cursor = connection.cursor()
-            enc_username = encrypt(username)
             cursor.execute(
-                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
-                (new_password, enc_username, role)
+                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE UsernameHash = ? AND Role = ?",
+                (new_password, username_hash, role)
             )
             connection.commit()
         else:
             print("Failed to connect to the database.")
-
-    def reset_password_sysadmin(self):
-        sysAdmins = self.view_all_system_admins()
-        if not sysAdmins:
-            print("No system admins available to reset password.")
-            return
-        username_to_reset = input("Enter the username of the system admin whose password you want to reset: ").strip()
-
-        # Check if the username exists in the sysAdmins list
-        matching_users = [user for user in sysAdmins if user[0].lower() == username_to_reset.lower()]
-        if not matching_users:
-            print(f"No system admin found with username '{username_to_reset}'.")
-            return
-
-        new_password = input("Enter the new temporary password: ").strip()
-        if Verification.verify_Password(new_password):
-            hashed_password = Verification.hash_password(new_password)
-            self.reset_password_function(username_to_reset, hashed_password, "systemadmin")
-            print(f"Password for system admin {username_to_reset} has been reset.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"super_admin", "Resetted the password of a System Admin Account", f"username: {username_to_reset} had his password reset", "No")
-        else:
-            print("Invalid password format. Please try again.")
