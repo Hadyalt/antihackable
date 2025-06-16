@@ -1,3 +1,4 @@
+from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 from Login.verification import Verification
 from systemAdmin.system_admin import systemAdmin
@@ -20,17 +21,15 @@ def system_admin_menu(username):
             sysAd.reset_password_function(username, hashed_password, "systemadmin")
             sysAd.reset_resetted_password_check(username)
             print("Password reset completed. You can now proceed with the menu options.")
-        print("\nWelcome to the System Admin Menu")
-        print("Please select an option:")
+        
         print("\nSYSTEM ADMIN MENU")
         print("1. View all user accounts")
         print("2. Manage Service Engineers")
-        print("3. Edit your account")   
-        print("4. Backup & Restore")
-        print("5. View Logs")
-        print("6. Manage Travellers")
-        print("7. Manage Scooters")
-        print("8. Exit")
+        print("3. Edit your account") 
+        print("4. Manage Travellers")
+        print("5. Manage Scooters")  
+        print("6. View Logs")
+        print("7. Exit")
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
@@ -39,9 +38,12 @@ def system_admin_menu(username):
             system_admin_service_engineer_menu(username)
         elif choice == "3":
             username = edit_account_menu(username)
-        elif choice == "8":
+        elif choice == "6":
+            logger = EncryptedLogger()
+            logger.read_logs(table_format=True)
+        elif choice == "7":
             print("Exiting...")
-            break
+            return
         else:
             print("Invalid choice. Please try again.")
 

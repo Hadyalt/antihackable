@@ -68,7 +68,8 @@ def show_main_menu(role, username):
         elif choice == "2":
             backup_menu(role)
         elif choice == "3":
-            exit()
+            print("👋 Logging out.")
+            return
         else:
             print("Invalid choice.")
     elif role == "systemadmin":
@@ -133,7 +134,7 @@ def backup_menu(role):
             except Exception as e:
                 print(f"Restore failed: {e}")
         elif choice == "4":
-            break
+            return
         else:
             print("Invalid choice.")
 
@@ -153,10 +154,7 @@ def pre_login_menu():
             if role:
                 while True:
                     show_main_menu(role, username)
-                    again = input("\nReturn to menu? (y/n): ").strip().lower()
-                    if again != "y":
-                        print("👋 Logging out...\n")
-                        break
+                    break
         elif choice == "2":
             print("👋 Exiting system.")
             exit()
