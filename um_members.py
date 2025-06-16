@@ -12,37 +12,62 @@ DB_PATH = "data.db"
 
 # === LOGIN ===
 def login():
-    print("\n" + "=" * 50)
-    print("🔐 URBAN MOBILITY - LOGIN")
-    print("=" * 50)
-    username = input("Username: ").strip()
-    password = input("Password: ").strip()
+    logger = EncryptedLogger()
+    max_attempts = 5
+    for attempt in range(1, max_attempts + 1):
+        print("\n" + "=" * 50)
+        print("🔐 URBAN MOBILITY - LOGIN")
+        print("=" * 50)
+        username = input("Username: ").strip()
+        password = input("Password: ").strip()
 
-    # Hardcoded super admin
-    if username.lower() == "super_admin" and password == "Admin_123?":
-        print("✅ Super Admin login successful.")
-        logger = EncryptedLogger()
-        logger.log_entry("super_admin", "Logged in", " ", "No")
-        return "superadmin" , "super_Admin"
+        # Hardcoded super admin
+        if username.lower() == "super_admin" and password == "Admin_123?":
+            print("✅ Super Admin login successful.")
+            logger.log_entry("super_admin", "Logged in", " ", "No")
+            return "superadmin" , "super_Admin"
 
-    # DB login (encrypted username)
-    enc_username = encrypt(username)
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT password, role FROM User WHERE Username = ?", (enc_username,))
-    result = cursor.fetchone()
-    conn.close()
-
-    if result:
-        stored_hash, role = result
-        if verify_password(password, stored_hash):
-            print(f"✅ Login successful. Welcome, {role}!")
-            return role, username
+        # Fetch all users and decrypt usernames
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Username FROM User")
+        users = cursor.fetchall()
+        found_enc_username = None
+        for (enc_username,) in users:
+            try:
+                dec_username = decrypt(enc_username)
+                if dec_username == username:
+                    found_enc_username = enc_username
+                    break
+            except Exception:
+                continue
+        if not found_enc_username:
+            print("❌ Username not found.")
+            logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
+            conn.close()
         else:
-            print("❌ Incorrect password.")
-    else:
-        print("❌ Username not found.")
-
+            # Now fetch password and role for the found encrypted username
+            cursor.execute("SELECT password, role FROM User WHERE Username = ?", (found_enc_username,))
+            result = cursor.fetchone()
+            conn.close()
+            if result:
+                stored_hash, role = result
+                if verify_password(password, stored_hash):
+                    print(f"✅ Login successful. Welcome, {role}!")
+                    logger.log_entry(username, "Login attempt", "Success", "No")
+                    return role, username
+                else:
+                    print("❌ Incorrect password.")
+                    logger.log_entry(username, "Login attempt", "Incorrect password", "Yes" if attempt >= 4 else "No")
+            else:
+                print("❌ Username not found.")
+                logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
+        if attempt < max_attempts:
+            print(f"Attempt {attempt} of {max_attempts}. Try again.")
+        else:
+            print("❌ Too many failed login attempts. Exiting.")
+            logger.log_entry(username, "Login attempt", "Max attempts reached - exiting", "Yes")
+            exit()
     return None, None
 
 # === ROLE-BASED MENU ===
