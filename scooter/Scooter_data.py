@@ -1,39 +1,17 @@
 import sqlite3
 import os
 
+from DbContext.encrypted_logger import EncryptedLogger
+
 
 class Scooter_data:
     def __init__(self, db_name="data.db"):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.db_name = os.path.join(base_dir, db_name)
-        print("Database path:", self.db_name)
         self.connection = None
 
     def connect(self):
         self.connection = sqlite3.connect(self.db_name)
-        self.create_table_if_not_exists()
-        print(f"Connected to {self.db_name}")
-
-    def create_table_if_not_exists(self):
-        cursor = self.connection.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Scooter (
-                Brand TEXT,
-                Model TEXT,
-                SerialNumber TEXT PRIMARY KEY,
-                TopSpeed REAL,
-                BatteryCapacity REAL,
-                StateOfCharge REAL,
-                TargetRangeSocMin REAL,
-                TargetRangeSocMax REAL,
-                LocationLat REAL,
-                LocationLong REAL,
-                OutOfService INTEGER,
-                Mileage REAL,
-                LastMaintenanceDate TEXT
-            )
-        """)
-        self.connection.commit()
 
     def insert_scooter(self, scooter):
         if self.connection:
@@ -45,8 +23,8 @@ class Scooter_data:
                         Brand, Model, SerialNumber, TopSpeed, BatteryCapacity,
                         StateOfCharge, TargetRangeSocMin, TargetRangeSocMax,
                         LocationLat, LocationLong, OutOfService,
-                        Mileage, LastMaintenanceDate
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        Mileage, LastMaintenanceDate, InServiceDate
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DateTime('now'))
                 """,
                     (
                         scooter.brand,
@@ -75,6 +53,15 @@ class Scooter_data:
         if self.connection:
             cursor = self.connection.cursor()
             cursor.execute("SELECT * FROM Scooter")
+            return cursor.fetchall()
+        else:
+            print("No connection.")
+            return []
+    
+    def get_all_serial_numbers(self):
+        if self.connection:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT SerialNumber FROM Scooter")
             return cursor.fetchall()
         else:
             print("No connection.")
@@ -137,7 +124,7 @@ class Scooter_data:
             print(f"Database error: {e}")
             return False
 
-    def delete_scooter(self, serial_number):
+    def delete_scooter(self, serial_number, deletor):
         if self.connection:
             cursor = self.connection.cursor()
             cursor.execute(
@@ -145,6 +132,9 @@ class Scooter_data:
             )
             self.connection.commit()
             print("Scooter deleted.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")
+            
         else:
             print("No connection.")
 
