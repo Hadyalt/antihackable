@@ -17,7 +17,8 @@ def super_admin_menu(username):
         print("4. Manage Scooters")
         print("5. View Logs")
         print("6. View All user accounts")
-        print("7. Exit")
+        print("7. Activate Inactive Accounts")
+        print("8. Exit")
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
@@ -36,6 +37,9 @@ def super_admin_menu(username):
             print("\n-- View All User Accounts --")
             sysAd.view_all_users()
         elif choice == "7":
+            sa = SuperAdmin()
+            sa.activate_inactive_account()
+        elif choice == "8":
             print("Exiting...")
             break
         else:
