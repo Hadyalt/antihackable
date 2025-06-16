@@ -7,14 +7,25 @@ from Login.verification import Verification
 class systemAdmin:
     def __init__(self):
         self.db_context = DbContext()
+    
+    def get_username(self, username):
+        users = self.view_all_users_no_print()
+        if not users:
+            print("No users found in the system.")
+            return
+        matching_users = [user for user in users if decrypt(user[0]).lower() == username.lower()]
+        if not matching_users:
+            print(f"No user found with username '{username}'.")
+            return
+        return matching_users[0][0]
 
     # check if the user has a reset password variable called ResettedPasswordCheck using only the username
     def check_reset_password(self, username):
+        user = self.get_username(username)
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            enc_username = encrypt(username)
-            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
+            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (user, "systemadmin"))
             result = cursor.fetchone()
             connection.close()
             if result:
@@ -83,6 +94,20 @@ class systemAdmin:
         else:
             print("Failed to connect to the database.")
         return users
+
+    def view_all_users_no_print(self):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
+            users = cursor.fetchall()
+            if users:
+                return users
+            else:
+                print("No user accounts found.")
+            connection.close()
+        else:
+            print("Failed to connect to the database.")
     
     def view_all_service_engineers(self):
         connection = self.db_context.connect()

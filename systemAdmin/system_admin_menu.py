@@ -1,7 +1,10 @@
+from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 from Login.verification import Verification
 from systemAdmin.system_admin import systemAdmin
+from traveller.Traveller_menu import traveller_menu
 from um_members import pre_login_menu
+from scooter.Scooter import main
 
 def system_admin_menu(username):
     current_user = username  # Replace with actual logged-in username
@@ -20,17 +23,15 @@ def system_admin_menu(username):
             sysAd.reset_password_function(username, hashed_password, "systemadmin")
             sysAd.reset_resetted_password_check(username)
             print("Password reset completed. You can now proceed with the menu options.")
-        print("\nWelcome to the System Admin Menu")
-        print("Please select an option:")
+        
         print("\nSYSTEM ADMIN MENU")
         print("1. View all user accounts")
         print("2. Manage Service Engineers")
-        print("3. Edit your account")   
-        print("4. Backup & Restore")
-        print("5. View Logs")
-        print("6. Manage Travellers")
-        print("7. Manage Scooters")
-        print("8. Exit")
+        print("3. Edit your account") 
+        print("4. Manage Travellers")
+        print("5. Manage Scooters")  
+        print("6. View Logs")
+        print("7. Exit")
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
@@ -39,9 +40,16 @@ def system_admin_menu(username):
             system_admin_service_engineer_menu(username)
         elif choice == "3":
             username = edit_account_menu(username)
-        elif choice == "8":
+        elif choice == "4":
+            traveller_menu(username)
+        elif choice == "5":
+            main("systemadmin", username)
+        elif choice == "6":
+            logger = EncryptedLogger()
+            logger.read_logs(table_format=True)
+        elif choice == "7":
             print("Exiting...")
-            break
+            return
         else:
             print("Invalid choice. Please try again.")
 
@@ -69,7 +77,7 @@ def system_admin_service_engineer_menu(username):
         elif choice == "4":
             print("Resetting password for existing Service Engineer Account...")
             # Implement password reset logic here
-            sysAd.reset_password_service_engineer()
+            sysAd.reset_password_service_engineer(username)
         elif choice == "5":
             return
         else:
@@ -90,8 +98,11 @@ def edit_account_menu(username):
             while not verified_username:
                 new_username = input("Enter username: ")
                 verified_username = Verification.verify_username(new_username)
-            if sysAd.set_new_username_system(username, new_username):
+            user = sysAd.get_username(username)
+            if sysAd.set_new_username_system(user, new_username):
                 print("Username updated successfully.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Updated his own username", f"Old: {username}, New: {new_username}", "No")
                 username = new_username
             else:
                 print("Failed to update username.")
@@ -101,13 +112,19 @@ def edit_account_menu(username):
                 new_password = input("Enter new password: ")
                 verified_password = Verification.verify_Password(new_password)
             hashed_password = Verification.hash_password(new_password)
-            if sysAd.reset_password_system(username, hashed_password):
+            user = sysAd.get_username(username)
+            if sysAd.reset_password_system(user, hashed_password):
                 print("Password updated successfully.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Updated his own password", f" ", "No")
             else:
                 print("Failed to update password.")
         elif choice == "3":
-            sysAd.delete_account(username)
+            user = sysAd.get_username(username)
+            sysAd.delete_account(user)
             print("Account deleted successfully. returning to main menu.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{username}", "Deleted his own account", f" ", "No")
             pre_login_menu()
         elif choice == "4":
             return username  # Go back to the previous menu

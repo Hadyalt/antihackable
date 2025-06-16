@@ -27,7 +27,7 @@ def super_admin_menu(username):
         elif choice == "3":
             traveller_menu(username)
         elif choice == "4":
-            main()
+            main("superadmin", username)
         elif choice == "5":
             logger = EncryptedLogger()
             logger.read_logs(table_format=True)
