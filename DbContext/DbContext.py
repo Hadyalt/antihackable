@@ -79,6 +79,7 @@ class DbContext:
         """
         self.create_table("Scooter", scooter_schema)
         self.close()
+        
     
     def log_action(self, username, action):
         """Log an action for auditing purposes (encrypt fields)."""
