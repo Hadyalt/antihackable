@@ -141,6 +141,28 @@ class Traveller:
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM Traveller")
         return cursor.fetchall()
+    
+    def search_travellers(self, search_term):
+        if not self.connection:
+            print("No connection.")
+            return []
+
+        term = f"%{search_term}%"
+        cursor = self.connection.cursor()
+        cursor.execute(
+            """
+            SELECT * FROM Traveller
+            WHERE 
+                FirstName LIKE ? OR
+                LastName LIKE ? OR
+                Email LIKE ? OR
+                City LIKE ? OR
+                Phone LIKE ? OR
+                DrivingLicenseNumber LIKE ?
+            """,
+            (term, term, term, term, term, term),
+        )
+        return cursor.fetchall()
 
     def get_traveller_by_id(self, traveller_id):
         cursor = self.connection.cursor()

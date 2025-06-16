@@ -80,21 +80,17 @@ def traveller_menu():
             )
 
         elif choice == "2":
-            travellers = db.get_all_travellers()
-            if travellers:
-                print("\nTraveller List:")
-                print("-" * 100)
-                print(
-                    "ID  | First Name   | Last Name    | Email                | Phone         | City"
-                )
-                print("-" * 100)
-                for t in travellers:
-                    print(
-                        f"{t[0]:<4}| {t[1]:<12}| {t[2]:<12}| {t[9]:<20}| {t[10]:<14}| {t[8]}"
-                    )
-                print("-" * 100)
+            search_term = input("Enter search term (leave blank for all): ").strip()
+            if search_term:
+                scooters = db.search_travellers(search_term)
             else:
-                print("No travellers found.")
+                scooters = db.get_all_travellers()
+
+            if scooters:
+                for s in scooters:
+                    print(s)
+            else:
+                print("No matching travellers found")
 
         elif choice == "3":
             tid = input("Traveller ID to update: ").strip()
