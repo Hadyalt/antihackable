@@ -7,6 +7,7 @@ from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
 from DbContext.backup_utils import create_backup, list_backups, restore_backup
+from systemAdmin.system_admin import systemAdmin
 
 DB_PATH = "data.db"
 
@@ -25,24 +26,29 @@ def login():
         logger.log_entry("super_admin", "Logged in", " ", "No")
         return "superadmin" , "super_Admin"
 
-    # DB login (encrypted username)
-    enc_username = encrypt(username)
+    # DB login (fetch all users, decrypt usernames, and check for match)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT password, role FROM User WHERE Username = ?", (enc_username,))
-    result = cursor.fetchone()
+    cursor.execute("SELECT Username, Password, Role FROM User")
+    users = cursor.fetchall()
     conn.close()
 
-    if result:
-        stored_hash, role = result
-        if verify_password(password, stored_hash):
-            print(f"✅ Login successful. Welcome, {role}!")
-            return role, username
-        else:
-            print("❌ Incorrect password.")
-    else:
+    user_found = False
+    for enc_username_db, stored_hash, role in users:
+        try:
+            username_db = decrypt(enc_username_db)
+        except Exception:
+            continue  # skip if decryption fails
+        if username_db == username:
+            user_found = True
+            if verify_password(password, stored_hash):
+                print(f"✅ Login successful. Welcome, {role}!")
+                return role, username
+            else:
+                print("❌ Incorrect password.")
+                return None, None
+    if not user_found:
         print("❌ Username not found.")
-
     return None, None
 
 # === ROLE-BASED MENU ===

@@ -1,6 +1,9 @@
 import sqlite3
 import os
 
+from DbContext.crypto_utils import decrypt
+from DbContext.encrypted_logger import EncryptedLogger
+
 
 class Traveller:
     def __init__(self, db_name="data.db"):
@@ -21,29 +24,7 @@ class Traveller:
         ]
 
     def connect(self):
-        self.connection = sqlite3.connect(self.db_name)
-        self.create_table_if_not_exists()
-
-    def create_table_if_not_exists(self):
-        cursor = self.connection.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Traveller (
-                TravellerID INTEGER PRIMARY KEY AUTOINCREMENT,
-                FirstName TEXT NOT NULL,
-                LastName TEXT NOT NULL,
-                Birthday TEXT NOT NULL,
-                Gender TEXT NOT NULL,
-                StreetName TEXT NOT NULL,
-                HouseNumber TEXT NOT NULL,
-                ZipCode TEXT NOT NULL,
-                City TEXT NOT NULL,
-                Email TEXT UNIQUE NOT NULL,
-                Phone TEXT NOT NULL,
-                DrivingLicenseNumber TEXT NOT NULL,
-                RegisteredDate TEXT NOT NULL
-            )
-        """)
-        self.connection.commit()
+        self.connection = sqlite3.connect(self.db_name)    
 
     def validate_zip_code(self, zip_code):
         # Format: 4 digits + 2 uppercase letters
@@ -194,11 +175,13 @@ class Traveller:
         self.connection.commit()
         print("Traveller updated.")
 
-    def delete_traveller(self, traveller_id):
+    def delete_traveller(self, traveller_id, deletor):
         cursor = self.connection.cursor()
         cursor.execute("DELETE FROM Traveller WHERE TravellerID = ?", (traveller_id,))
         self.connection.commit()
         print("Traveller deleted.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " " , "No")
 
     def close(self):
         if self.connection:

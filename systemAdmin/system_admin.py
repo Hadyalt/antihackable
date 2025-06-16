@@ -82,7 +82,7 @@ class systemAdmin:
             connection.close()
         else:
             print("Failed to connect to the database.")
-        return
+        return users
     
     def view_all_service_engineers(self):
         connection = self.db_context.connect()
