@@ -15,9 +15,11 @@ DB_PATH = "data.db"
 def login():
     logger = EncryptedLogger()
     max_attempts = 5
-    # Use a persistent attribute to store timeout duration between login calls
+    # Use persistent attributes to store timeout duration and failed attempts per username
     if not hasattr(login, "timeout_duration"):
         login.timeout_duration = 15  # start at 15 seconds
+    if not hasattr(login, "user_attempts"):
+        login.user_attempts = {}  # {username: failed_attempts}
     while True:
         for attempt in range(1, max_attempts + 1):
             print("\n" + "=" * 50)
@@ -30,8 +32,9 @@ def login():
             if username.lower() == "super_admin" and password == "Admin_123?":
                 print("✅ Super Admin login successful.")
                 logger.log_entry("super_admin", "Logged in", " ", "No")
-                # Reset timeout on successful login
+                # Reset timeout and attempts on successful login
                 login.timeout_duration = 15
+                login.user_attempts.clear()
                 return "superadmin" , "super_Admin"
 
             # Fetch all users and decrypt usernames
@@ -54,23 +57,53 @@ def login():
                 conn.close()
             else:
                 # Now fetch password and role for the found encrypted username
-                cursor.execute("SELECT password, role FROM User WHERE Username = ?", (found_enc_username,))
+                cursor.execute("SELECT password, role, IsActive FROM User WHERE Username = ?", (found_enc_username,))
                 result = cursor.fetchone()
-                conn.close()
                 if result:
-                    stored_hash, role = result
+                    stored_hash, role, is_active = result
+                    if not is_active:
+                        print("❌ This account is inactive. Please contact an administrator.")
+                        # Track and log every attempt to log in to an inactive account
+                        login.user_attempts[username] = login.user_attempts.get(username, 0) + 1
+                        logger.log_entry(username, "Login attempt", f"Attempted login to inactive account (attempt {login.user_attempts[username]})", "Yes")
+                        conn.close()
+                        # Increment the global attempt counter for timeout
+                        if attempt < max_attempts:
+                            print(f"Attempt {attempt} of {max_attempts}. Try again.")
+                            continue
+                        else:
+                            print(f"❌ Too many failed login attempts. Please wait {login.timeout_duration} seconds before trying again.")
+                            logger.log_entry(username, "Login attempt", f"Max attempts reached - timeout {login.timeout_duration}s", "Yes")
+                            logger.log_entry(username, "Login timeout", f"User timed out for {login.timeout_duration} seconds after 5 failed attempts", "Yes")
+                            time.sleep(login.timeout_duration)
+                            login.timeout_duration *= 2  # double the timeout for next time
+                            break
                     if verify_password(password, stored_hash):
                         print(f"✅ Login successful. Welcome, {role}!")
                         logger.log_entry(username, "Login attempt", "Success", "No")
-                        # Reset timeout on successful login
+                        # Reset timeout and attempts on successful login
                         login.timeout_duration = 15
+                        login.user_attempts.pop(username, None)
+                        conn.close()
                         return role, username
                     else:
                         print("❌ Incorrect password.")
                         logger.log_entry(username, "Login attempt", "Incorrect password", "Yes" if attempt >= 4 else "No")
+                        # Track failed attempts for this username
+                        login.user_attempts[username] = login.user_attempts.get(username, 0) + 1
+                        # If 5 wrong attempts for a valid username, deactivate and log
+                        if login.user_attempts[username] >= 5:
+                            print("❌ Too many failed attempts for this user. Account is now inactive.")
+                            logger.log_entry(username, "Account locked", "User made 5 failed login attempts. Account set to inactive.", "Yes")
+                            cursor.execute("UPDATE User SET IsActive = 0 WHERE Username = ?", (found_enc_username,))
+                            conn.commit()
+                            conn.close()
+                            # Do not allow further attempts for this username in this session
+                            break
                 else:
                     print("❌ Username not found.")
                     logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
+                conn.close()
             if attempt < max_attempts:
                 print(f"Attempt {attempt} of {max_attempts}. Try again.")
             else:
