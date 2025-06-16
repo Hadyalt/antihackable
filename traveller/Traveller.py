@@ -1,11 +1,15 @@
 import sqlite3
 import os
 
+from DbContext.crypto_utils import decrypt
+from DbContext.encrypted_logger import EncryptedLogger
+
 
 class Traveller:
     def __init__(self, db_name="data.db"):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.db_name = os.path.join(base_dir, db_name)
+        print(f"[DEBUG] Database path: {self.db_name}")  # Debug print for DB path
         self.connection = None
         self.cities = [
             "Amsterdam",
@@ -21,29 +25,8 @@ class Traveller:
         ]
 
     def connect(self):
-        self.connection = sqlite3.connect(self.db_name)
-        self.create_table_if_not_exists()
-
-    def create_table_if_not_exists(self):
-        cursor = self.connection.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS Traveller (
-                TravellerID INTEGER PRIMARY KEY AUTOINCREMENT,
-                FirstName TEXT NOT NULL,
-                LastName TEXT NOT NULL,
-                Birthday TEXT NOT NULL,
-                Gender TEXT NOT NULL,
-                StreetName TEXT NOT NULL,
-                HouseNumber TEXT NOT NULL,
-                ZipCode TEXT NOT NULL,
-                City TEXT NOT NULL,
-                Email TEXT UNIQUE NOT NULL,
-                Phone TEXT NOT NULL,
-                DrivingLicenseNumber TEXT NOT NULL,
-                RegisteredDate TEXT NOT NULL
-            )
-        """)
-        self.connection.commit()
+        print(f"[DEBUG] Connecting to database: {self.db_name}")  # Debug print
+        self.connection = sqlite3.connect(self.db_name)    
 
     def validate_zip_code(self, zip_code):
         # Format: 4 digits + 2 uppercase letters
@@ -102,6 +85,7 @@ class Traveller:
                 raise ValueError("Invalid city selection")
 
             cursor = self.connection.cursor()
+            print("[DEBUG] Attempting to insert traveller...")  # Debug print
             cursor.execute(
                 """
                 INSERT INTO Traveller (
@@ -127,18 +111,22 @@ class Traveller:
             self.connection.commit()
             print("Traveller added successfully.")
             return True
-        except sqlite3.IntegrityError:
-            print("Error: Email already exists.")
+        except sqlite3.IntegrityError as e:
+            print(f"Error: Email already exists. [DEBUG] {e}")
             return False
         except ValueError as e:
             print(f"Validation Error: {e}")
             return False
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"[DEBUG] Exception occurred: {e}")
             return False
 
     def get_all_travellers(self):
+        print("[DEBUG] Fetching all travellers...")
         cursor = self.connection.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+        print(f"[DEBUG] Tables in DB: {tables}")
         cursor.execute("SELECT * FROM Traveller")
         return cursor.fetchall()
     
@@ -216,11 +204,13 @@ class Traveller:
         self.connection.commit()
         print("Traveller updated.")
 
-    def delete_traveller(self, traveller_id):
+    def delete_traveller(self, traveller_id, deletor):
         cursor = self.connection.cursor()
         cursor.execute("DELETE FROM Traveller WHERE TravellerID = ?", (traveller_id,))
         self.connection.commit()
         print("Traveller deleted.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " " , "No")
 
     def close(self):
         if self.connection:

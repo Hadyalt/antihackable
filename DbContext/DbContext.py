@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from DbContext.crypto_utils import encrypt, decrypt
 
 class DbContext:
     def __init__(self, db_name="data.db"):
@@ -31,6 +32,9 @@ class DbContext:
         user_schema = """
             Username TEXT PRIMARY KEY,
             Password TEXT NOT NULL,
+            FirstName TEXT NOT NULL,
+            LastName TEXT NOT NULL,
+            RegistrationDate TEXT NOT NULL DEFAULT (datetime('now')),
             ResettedPasswordCheck INTEGER NOT NULL DEFAULT 0,
             Role TEXT NOT NULL DEFAULT 'user',
             IsActive INTEGER NOT NULL DEFAULT 1
@@ -40,28 +44,21 @@ class DbContext:
         self.create_table("User", user_schema)
         # create the traveller table
         traveller_schema = """
+            TravellerID INTEGER PRIMARY KEY AUTOINCREMENT,
             FirstName TEXT NOT NULL,
-            LastName TEXT NOT NULL, 
+            LastName TEXT NOT NULL,
             Birthday TEXT NOT NULL,
             Gender TEXT NOT NULL,
             StreetName TEXT NOT NULL,
             HouseNumber TEXT NOT NULL,
             ZipCode TEXT NOT NULL,
             City TEXT NOT NULL,
-            EmailAddress TEXT NOT NULL,
-            MobilePhone TEXT NOT NULL,
-            DrivingLicenseNumber TEXT NOT NULL
+            Email TEXT UNIQUE NOT NULL,
+            Phone TEXT NOT NULL,
+            DrivingLicenseNumber TEXT NOT NULL,
+            RegisteredDate TEXT NOT NULL DEFAULT (datetime('now'))
         """
         self.create_table("Traveller", traveller_schema)
-
-        # Create the AuditLog table
-        audit_schema = """
-            Id INTEGER PRIMARY KEY AUTOINCREMENT,
-            Username TEXT NOT NULL,
-            Action TEXT NOT NULL,
-            Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        """
-        self.create_table("AuditLog", audit_schema)
 
         # Create the Scooter table
         scooter_schema = """
@@ -81,17 +78,18 @@ class DbContext:
             LastMaintenanceDate TEXT NOT NULL
         """
         self.create_table("Scooter", scooter_schema)
-
-        
         self.close()
+        
     
     def log_action(self, username, action):
-        """Log an action for auditing purposes."""
+        """Log an action for auditing purposes (encrypt fields)."""
         if self.connection:
             cursor = self.connection.cursor()
+            enc_username = encrypt(username)
+            enc_action = encrypt(action)
             cursor.execute(
                 "INSERT INTO AuditLog (Username, Action) VALUES (?, ?)",
-                (username, action)
+                (enc_username, enc_action)
             )
             self.connection.commit()
         else:
@@ -99,18 +97,22 @@ class DbContext:
 
     def insert_User(self, user_data):
         self.connection = sqlite3.connect(self.db_name)
-        """Insert a new User record into the database."""
+        """Insert a new User record into the database (encrypt Username)."""
         if self.connection:
             cursor = self.connection.cursor()
+            user_data = user_data.copy()
+            if 'Username' in user_data:
+                user_data['Username'] = encrypt(user_data['Username'])
             columns = ", ".join(user_data.keys())
             placeholders = ", ".join(["?"] * len(user_data))
             sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
             cursor.execute(sql, list(user_data.values()))
             self.connection.commit()
-            print(f"Inserted new User record with ID: {user_data['Username']}")
+            print(f"Inserted new User record")
         else:
             print("No database connection. Call connect() first.")
         self.connection.close()        
+
 
     def close(self):
         """Close the database connection."""

@@ -1,4 +1,5 @@
 from DbContext.DbContext import DbContext
+from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from Login.verification import Verification
 
 class ServiceEngineer:
@@ -6,14 +7,14 @@ class ServiceEngineer:
         self.db_context = DbContext()
 
     def reset_password(self, username, password):
-
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            hashed_password = Verification.hash_password(password)
+            hashed = hash_password(password)
+            enc_username = encrypt(username)
             cursor.execute(
                 "UPDATE User SET Password = ? WHERE Username = ? AND Role = ?",
-                (hashed_password, username, "serviceengineer")
+                (hashed, enc_username, "serviceengineer")
             )
             connection.commit()
         else:
@@ -23,9 +24,10 @@ class ServiceEngineer:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
+            enc_username = encrypt(username)
             cursor.execute(
-                "SELECT ResettedPasswordCheck FROM User WHERE LOWER(Username) = LOWER(?) AND Role = ?",
-                (username, "serviceengineer")
+                "SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?",
+                (enc_username, "serviceengineer")
             )
             result = cursor.fetchone()
             if result:
@@ -41,9 +43,10 @@ class ServiceEngineer:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
+            enc_username = encrypt(username)
             cursor.execute(
-                "UPDATE User SET ResettedPasswordCheck = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?",
-                (username, "serviceengineer")
+                "UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?",
+                (enc_username, "serviceengineer")
             )
             connection.commit()
         else:

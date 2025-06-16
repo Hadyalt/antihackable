@@ -1,3 +1,6 @@
+from DbContext.crypto_utils import encrypt, decrypt
+
+
 class Traveller:
     def __init__(
         self,
@@ -24,6 +27,28 @@ class Traveller:
         self.email_address = email_address
         self.mobile_phone = mobile_phone
         self.driving_license_number = driving_license_number
+
+    def encrypt_fields(self):
+        self.first_name = encrypt(self.first_name)
+        self.last_name = encrypt(self.last_name)
+        self.street_name = encrypt(self.street_name)
+        self.house_number = encrypt(self.house_number)
+        self.zip_code = encrypt(self.zip_code)
+        self.city = encrypt(self.city)
+        self.email_address = encrypt(self.email_address)
+        self.mobile_phone = encrypt(self.mobile_phone)
+        self.driving_license_number = encrypt(self.driving_license_number)
+
+    def decrypt_fields(self):
+        self.first_name = decrypt(self.first_name)
+        self.last_name = decrypt(self.last_name)
+        self.street_name = decrypt(self.street_name)
+        self.house_number = decrypt(self.house_number)
+        self.zip_code = decrypt(self.zip_code)
+        self.city = decrypt(self.city)
+        self.email_address = decrypt(self.email_address)
+        self.mobile_phone = decrypt(self.mobile_phone)
+        self.driving_license_number = decrypt(self.driving_license_number)
 
     def __repr__(self):
         return (
