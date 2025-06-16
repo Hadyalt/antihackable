@@ -107,15 +107,15 @@ class systemAdmin:
         if not servEng:
             print("No service engineers available to update.")
             return
-        username_to_update = input("Enter the username of the service engineer you want to update: ").strip()
+        username_to_update = input("Enter the username of the service engineer you want to update: ").strip().lower()
 
         # Check if the username exists in the servEng list
-        matching_users = [user for user in servEng if user[0].lower() == username_to_update.lower()]
+        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update]
         if not matching_users:
             print(f"No service engineer found with username '{username_to_update}'.")
             return
         print ("What do you want to update?")
-        print(f"1. Username: ({username_to_update})")
+        print(f"1. Username: ({decrypt(matching_users[0][0])})")
         print("2. Password")
         print("3. First Name")
         print("4. Last Name")
@@ -124,32 +124,32 @@ class systemAdmin:
         if choice == "1":
             new_username = input("Enter the new username: ").strip()
             if Verification.verify_username(new_username):
-                self.set_new_username(username_to_update, new_username)
-                print(f"Service Engineer {username_to_update} updated to {new_username}.")
+                self.set_new_username(matching_users[0][0], new_username)
+                print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
                 logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {username_to_update}, New: {new_username}", "No")
+                logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
             else:
                 print("Invalid username format. Please try again.")
         elif choice == "2":
             new_password = input("Enter the new password: ").strip()
             if Verification.verify_Password(new_password):
                 hashed_password = Verification.hash_password(new_password)
-                self.reset_password(username_to_update, hashed_password)
-                print(f"Password for service engineer {username_to_update} has been updated.")
+                self.reset_password(matching_users[0][0], hashed_password)
+                print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
                 logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Updated Service Engineer Password", " ", "No")
+                logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
             elif choice == "3":
                 new_first_name = input("Enter the new first name: ").strip()
                 if Verification.verify_name(new_first_name):
-                    self.set_new_first_name(username_to_update, new_first_name)
-                    print(f"First name for service engineer {username_to_update} has been updated to {new_first_name}.")
+                    self.set_new_first_name(matching_users[0][0], new_first_name)
+                    print(f"First name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer First Name", f"New First Name: {new_first_name}", "No")
             elif choice == "4":
                 new_last_name = input("Enter the new last name: ").strip()
                 if Verification.verify_name(new_last_name):
-                    self.set_new_last_name(username_to_update, new_last_name)
-                    print(f"Last name for service engineer {username_to_update} has been updated to {new_last_name}.")
+                    self.set_new_last_name(matching_users[0][0], new_last_name)
+                    print(f"Last name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer Last Name", f"New Last Name: {new_last_name}", "No")
             elif choice == "5":
@@ -177,11 +177,12 @@ class systemAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username_to_delete, "serviceengineer"))
+            enc_username = matching_users[0][0]
+            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, "serviceengineer"))
             connection.commit()
-            print(f"service engineer '{username_to_delete}' has been deleted.")
+            print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
             logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {username_to_delete} is deleted", "No")
+            logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {decrypt(matching_users[0][0])} is deleted", "No")
         else:
             print("Failed to connect to the database.")
     
