@@ -198,3 +198,31 @@ class SuperAdmin:
             connection.commit()
         else:
             print("Failed to connect to the database.")
+    
+    def activate_inactive_account(self):
+        connection = self.db_context.connect()
+        if not connection:
+            print("No database connection.")
+            return
+        cursor = connection.cursor()
+        cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 0")
+        users = cursor.fetchall()
+        if not users:
+            print("No inactive accounts found.")
+            return
+        print("\nInactive Accounts:")
+        for idx, user in enumerate(users, 1):
+            print(f"[{idx}] Username: {decrypt(user[0])}, Role: {user[1]}")
+        try:
+            choice = int(input("Enter the number of the account to activate: ").strip())
+            if 1 <= choice <= len(users):
+                username = users[choice-1][0]
+                cursor.execute("UPDATE User SET IsActive = 1 WHERE Username = ?", (username,))
+                connection.commit()
+                print(f"Account '{decrypt(username)}' has been activated.")
+                logger = EncryptedLogger()
+                logger.log_entry("super_admin", "Activated Account", f"Username: {decrypt(username)} activated", "No")
+            else:
+                print("Invalid selection.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
