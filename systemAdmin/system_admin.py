@@ -1,5 +1,6 @@
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
+from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 
 
@@ -33,7 +34,8 @@ class systemAdmin:
             
         else:
             print("Failed to connect to the database.")
-    def create_service_engineer(self):
+
+    def create_service_engineer(self, creator):
         verified_username = False
         while not verified_username:
             user_name = input("Enter username: ")
@@ -42,14 +44,26 @@ class systemAdmin:
         while not verified_password:
             password = input("Enter password: ")
             verified_password = Verification.verify_Password(password)
+        while not verified_first_name:
+            firstname = input("Enter first name: ")
+            verified_first_name = Verification.verify_name(firstname)
+        verified_last_name = False
+        while not verified_last_name:
+            lastname = input("Enter last name: ")
+            verified_last_name = Verification.verify_name(lastname)
+    
         hashed = hash_password(password)
         system_data = {
             "Username": encrypt(user_name),
             "Password": hashed,
+            "FirstName": encrypt(firstname),
+            "LastName": encrypt(lastname),
             "Role": "serviceengineer",
             "IsActive": 1
         }
         self.db_context.insert_User(system_data)
+        logger = EncryptedLogger()
+        logger.log_entry(f"{creator}", "Created Service Engineer Account", f"username: {user_name}", "No")
         return user_name
     
     def view_all_users(self):
@@ -88,7 +102,7 @@ class systemAdmin:
             print("No database connection.")
             return "Error"
         
-    def update_service_engineer(self):
+    def update_service_engineer(self, updater):
         servEng = self.view_all_service_engineers()
         if not servEng:
             print("No service engineers available to update.")
@@ -102,13 +116,18 @@ class systemAdmin:
             return
         print ("What do you want to update?")
         print(f"1. Username: ({username_to_update})")
-        print(f"2. Password")
+        print("2. Password")
+        print("3. First Name")
+        print("4. Last Name")
+        print("5. Go Back")
         choice = input("Enter your choice (1 or 2): ").strip()
         if choice == "1":
             new_username = input("Enter the new username: ").strip()
             if Verification.verify_username(new_username):
                 self.set_new_username(username_to_update, new_username)
                 print(f"Service Engineer {username_to_update} updated to {new_username}.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {username_to_update}, New: {new_username}", "No")
             else:
                 print("Invalid username format. Please try again.")
         elif choice == "2":
@@ -116,13 +135,32 @@ class systemAdmin:
             if Verification.verify_Password(new_password):
                 hashed_password = Verification.hash_password(new_password)
                 self.reset_password(username_to_update, hashed_password)
-                print(f"Password for service engineer {username_to_update} has been updated to {new_password}.")
+                print(f"Password for service engineer {username_to_update} has been updated.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Updated Service Engineer Password", " ", "No")
+            elif choice == "3":
+                new_first_name = input("Enter the new first name: ").strip()
+                if Verification.verify_name(new_first_name):
+                    self.set_new_first_name(username_to_update, new_first_name)
+                    print(f"First name for service engineer {username_to_update} has been updated to {new_first_name}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Updated Service Engineer First Name", f"New First Name: {new_first_name}", "No")
+            elif choice == "4":
+                new_last_name = input("Enter the new last name: ").strip()
+                if Verification.verify_name(new_last_name):
+                    self.set_new_last_name(username_to_update, new_last_name)
+                    print(f"Last name for service engineer {username_to_update} has been updated to {new_last_name}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Updated Service Engineer Last Name", f"New Last Name: {new_last_name}", "No")
+            elif choice == "5":
+                print("Going back to the previous menu.")
+                return
             else:
                 print("Invalid password format. Please try again.")
         else:
             print("Invalid choice. Please try again.")
     
-    def delete_service_engineer(self): #Delete by setting IsActive to 0
+    def delete_service_engineer(self, deletor): #Delete by setting IsActive to 0
         servEng = self.view_all_service_engineers()
         if not servEng:
             print("No service engineers available to delete.")
@@ -142,6 +180,8 @@ class systemAdmin:
             cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username_to_delete, "serviceengineer"))
             connection.commit()
             print(f"service engineer '{username_to_delete}' has been deleted.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {username_to_delete} is deleted", "No")
         else:
             print("Failed to connect to the database.")
     
@@ -211,6 +251,28 @@ class systemAdmin:
         else:
             print("Failed to connect to the database.")
             return False
+    
+    def set_new_first_name(self, username, new_first_name):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            enc_username = encrypt(username)
+            enc_first_name = encrypt(new_first_name)
+            cursor.execute("UPDATE User SET FirstName = ? WHERE Username = ? AND Role = ?", (enc_first_name, enc_username, "serviceengineer"))
+            connection.commit()
+        else:
+            print("Failed to connect to the database.")
+    
+    def set_new_last_name(self, username, new_last_name):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            enc_username = encrypt(username)
+            enc_last_name = encrypt(new_last_name)
+            cursor.execute("UPDATE User SET LastName = ? WHERE Username = ? AND Role = ?", (enc_last_name, enc_username, "serviceengineer"))
+            connection.commit()
+        else:
+            print("Failed to connect to the database.")
 
     def reset_password_function(self, username, new_password, role):
         connection = self.db_context.connect()
@@ -243,7 +305,7 @@ class systemAdmin:
             print("Failed to connect to the database.")
             return False
 
-    def reset_password_service_engineer(self):
+    def reset_password_service_engineer(self, resetter):
         service_engineers = self.view_all_service_engineers()
         if not service_engineers:
             print("No service engineers available to reset password.")
@@ -261,5 +323,7 @@ class systemAdmin:
             hashed_password = Verification.hash_password(new_password)
             self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
             print(f"Password for service engineer {username_to_reset} has been reset.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{resetter}", "Resetted the password of a Service Engineer Account", f"username: {username_to_reset} had his password reset", "No")
         else:
             print("Invalid password format. Please try again.")

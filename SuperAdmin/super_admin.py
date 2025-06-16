@@ -221,26 +221,7 @@ class SuperAdmin:
             hashed_password = Verification.hash_password(new_password)
             self.reset_password_function(username_to_reset, hashed_password, "systemadmin")
             print(f"Password for system admin {username_to_reset} has been reset.")
-        else:
-            print("Invalid password format. Please try again.")
-    
-    def reset_password_service_engineer(self):
-        service_engineers = self.view_all_service_engineers()
-        if not service_engineers:
-            print("No service engineers available to reset password.")
-            return
-        username_to_reset = input("Enter the username of the service engineer whose password you want to reset: ").strip()
-
-        # Check if the username exists in the service_engineers list
-        matching_users = [user for user in service_engineers if user[0].lower() == username_to_reset.lower()]
-        if not matching_users:
-            print(f"No service engineer found with username '{username_to_reset}'.")
-            return
-
-        new_password = input("Enter the new temporary password: ").strip()
-        if Verification.verify_Password(new_password):
-            hashed_password = Verification.hash_password(new_password)
-            self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
-            print(f"Password for service engineer {username_to_reset} has been reset.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"super_admin", "Resetted the password of a Service Engineer Account", f"username: {username_to_reset} had his password reset", "No")
         else:
             print("Invalid password format. Please try again.")

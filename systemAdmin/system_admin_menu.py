@@ -36,7 +36,7 @@ def system_admin_menu(username):
         if choice == "1":
             sysAd.view_all_users()
         elif choice == "2":
-            system_admin_service_engineer_menu()
+            system_admin_service_engineer_menu(username)
         elif choice == "3":
             username = edit_account_menu(username)
         elif choice == "8":
@@ -45,7 +45,7 @@ def system_admin_menu(username):
         else:
             print("Invalid choice. Please try again.")
 
-def system_admin_service_engineer_menu():
+def system_admin_service_engineer_menu(username):
     sysAd= systemAdmin()
     
     while True:
@@ -59,19 +59,19 @@ def system_admin_service_engineer_menu():
         
         if choice == "1":
             print("\n-- Create Service Engineer --")
-            sysAd.create_service_engineer()
+            sysAd.create_service_engineer(username)
         elif choice == "2":
             print("Updating existing Service Engineer Account...")
-            sysAd.update_service_engineer()
+            sysAd.update_service_engineer(username)
         elif choice == "3":
             print("Deleting Service Engineer Account...")
-            sysAd.delete_service_engineer()
+            sysAd.delete_service_engineer(username)
         elif choice == "4":
             print("Resetting password for existing Service Engineer Account...")
             # Implement password reset logic here
             sysAd.reset_password_service_engineer()
         elif choice == "5":
-            break
+            return
         else:
             print("Invalid choice. Please try again.")
     
