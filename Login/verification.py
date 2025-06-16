@@ -1,29 +1,31 @@
 import hashlib
 from DbContext.DbContext import DbContext
 import re
+from DbContext.crypto_utils import decrypt, encrypt
+
 
 class Verification:
     def hash_password(password):
         return hashlib.sha256(password.encode()).hexdigest()
     
-    def check_username_exists(username):
+    def check_username_exists_simple(username):
         db = DbContext()
         connection = db.connect()
-        """Retrieve a User record by username."""
         if connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT Username FROM User WHERE Lower(Username) = ?", (username,))
-            user = cursor.fetchone()
-            if user is not None:
-                return user
-            else:
-                return None
+            cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
+            all_users = cursor.fetchall()
         else:
-            print("No database connection.")
-            return "Error"
+            print("Failed to connect to the database.")
+            return "error"
+
+        matching_users = [user for user in all_users if decrypt(user[0]).lower() == username]
+        if not matching_users:
+            return None
+        else:
+            return matching_users[0]
         
     def verify_username(username):
-        db = DbContext()
         username = username.lower()
 
         # Check length constraints
@@ -42,7 +44,7 @@ class Verification:
             return False
 
         # Check uniqueness in the database (assumes case-insensitive uniqueness)
-        if Verification.check_username_exists(username) is not None:
+        if Verification.check_username_exists_simple(username) is not None:
             print("Username already exists in the database.")
             return False
         return True
@@ -73,3 +75,14 @@ class Verification:
             print("Password must contain at least one special character.")
             return False
         return True
+
+    def verify_name(name):
+        if not name:
+            print("Name cannot be empty.")
+            return False
+        # Allow only letters, hyphens, apostrophes, and spaces
+        if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ'\- ]{1,50}", name):
+            print("Invalid characters in name. Please use letters, hyphens (-), or apostrophes (').")
+            return False
+        return True
+

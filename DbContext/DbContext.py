@@ -32,6 +32,9 @@ class DbContext:
         user_schema = """
             Username TEXT PRIMARY KEY,
             Password TEXT NOT NULL,
+            FirstName TEXT NOT NULL,
+            LastName TEXT NOT NULL,
+            RegistrationDate TEXT NOT NULL DEFAULT (datetime('now')),
             ResettedPasswordCheck INTEGER NOT NULL DEFAULT 0,
             Role TEXT NOT NULL DEFAULT 'user',
             IsActive INTEGER NOT NULL DEFAULT 1
@@ -55,15 +58,6 @@ class DbContext:
         """
         self.create_table("Traveller", traveller_schema)
 
-        # Create the AuditLog table
-        audit_schema = """
-            Id INTEGER PRIMARY KEY AUTOINCREMENT,
-            Username TEXT NOT NULL,
-            Action TEXT NOT NULL,
-            Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        """
-        self.create_table("AuditLog", audit_schema)
-
         # Create the Scooter table
         scooter_schema = """
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,8 +76,6 @@ class DbContext:
             LastMaintenanceDate TEXT NOT NULL
         """
         self.create_table("Scooter", scooter_schema)
-
-        
         self.close()
     
     def log_action(self, username, action):
@@ -105,7 +97,6 @@ class DbContext:
         """Insert a new User record into the database (encrypt Username)."""
         if self.connection:
             cursor = self.connection.cursor()
-            # Encrypt Username
             user_data = user_data.copy()
             if 'Username' in user_data:
                 user_data['Username'] = encrypt(user_data['Username'])
@@ -114,7 +105,7 @@ class DbContext:
             sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
             cursor.execute(sql, list(user_data.values()))
             self.connection.commit()
-            print(f"Inserted new User record with ID: {user_data['Username']}")
+            print(f"Inserted new User record")
         else:
             print("No database connection. Call connect() first.")
         self.connection.close()        
