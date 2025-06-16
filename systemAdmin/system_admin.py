@@ -7,9 +7,8 @@ from Login.verification import Verification
 class systemAdmin:
     def __init__(self):
         self.db_context = DbContext()
-
-    # check if the user has a reset password variable called ResettedPasswordCheck using only the username
-    def check_reset_password(self, username):
+    
+    def get_username(self, username):
         users = self.view_all_users_no_print()
         if not users:
             print("No users found in the system.")
@@ -18,10 +17,15 @@ class systemAdmin:
         if not matching_users:
             print(f"No user found with username '{username}'.")
             return
+        return matching_users[0][0]
+
+    # check if the user has a reset password variable called ResettedPasswordCheck using only the username
+    def check_reset_password(self, username):
+        user = self.get_username(username)
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (matching_users[0][0], "systemadmin"))
+            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (user, "systemadmin"))
             result = cursor.fetchone()
             connection.close()
             if result:
