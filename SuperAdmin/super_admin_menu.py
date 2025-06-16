@@ -25,7 +25,7 @@ def super_admin_menu(username):
         elif choice == "2":
             system_admin_service_engineer_menu(username)
         elif choice == "3":
-            traveller_menu()
+            traveller_menu(username)
         elif choice == "4":
             main()
         elif choice == "5":
