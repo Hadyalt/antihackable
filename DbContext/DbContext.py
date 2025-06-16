@@ -62,20 +62,20 @@ class DbContext:
 
         # Create the Scooter table
         scooter_schema = """
-            Id INTEGER PRIMARY KEY AUTOINCREMENT,
-            Brand TEXT NOT NULL,
-            Model TEXT NOT NULL,
-            SerialNumber TEXT NOT NULL UNIQUE,
-            TopSpeed REAL NOT NULL,
-            BatteryCapacity REAL NOT NULL,
-            StateOfCharge REAL NOT NULL,
-            TargetRangeSocMin REAL NOT NULL,
-            TargetRangeSocMax REAL NOT NULL,
-            LocationLat REAL NOT NULL,
-            LocationLong REAL NOT NULL,
-            OutOfService INTEGER NOT NULL DEFAULT 0,
-            Mileage REAL NOT NULL,
-            LastMaintenanceDate TEXT NOT NULL
+            SerialNumber TEXT PRIMARY KEY,
+            Brand TEXT,
+            Model TEXT,
+            TopSpeed REAL,
+            BatteryCapacity REAL,
+            StateOfCharge REAL,
+            TargetRangeSocMin REAL,
+            TargetRangeSocMax REAL,
+            LocationLat REAL,
+            LocationLong REAL,
+            OutOfService INTEGER,
+            Mileage REAL,
+            LastMaintenanceDate TEXT,
+            InServiceDate TEXT NOT NULL DEFAULT (datetime('now'))
         """
         self.create_table("Scooter", scooter_schema)
         self.close()
