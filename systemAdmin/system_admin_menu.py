@@ -12,18 +12,7 @@ def system_admin_menu(username):
     sysAd= systemAdmin()
     
     while True:
-        # check the database if the systemadmin has a reset password
-        if sysAd.check_reset_password(username):
-            print("You have a reset password, please reset it before proceeding.")
-            verified_password = False
-            while not verified_password:
-                password = input("Enter password: ")
-                verified_password = Verification.verify_Password(password)
-            hashed_password = Verification.hash_password(password)
-            sysAd.reset_password_function(username, hashed_password, "systemadmin")
-            sysAd.reset_resetted_password_check(username)
-            print("Password reset completed. You can now proceed with the menu options.")
-        
+        # check the database if the systemadmin has a reset password        
         print("\nSYSTEM ADMIN MENU")
         print("1. View all user accounts")
         print("2. Manage Service Engineers")
@@ -61,8 +50,7 @@ def system_admin_service_engineer_menu(username):
         print("1. Create Service Engineer Account")
         print("2. Update existing Service Engineer Account")
         print("3. Delete Service Engineer Account")
-        print("4. Reset the password for an existing Service Engineer Account")
-        print("5. Go Back")
+        print("4. Go Back")
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
@@ -73,12 +61,8 @@ def system_admin_service_engineer_menu(username):
             sysAd.update_service_engineer(username)
         elif choice == "3":
             print("Deleting Service Engineer Account...")
-            sysAd.delete_service_engineer(username)
+            sysAd.delete_service_engineer(username)            
         elif choice == "4":
-            print("Resetting password for existing Service Engineer Account...")
-            # Implement password reset logic here
-            sysAd.reset_password_service_engineer(username)
-        elif choice == "5":
             return
         else:
             print("Invalid choice. Please try again.")
