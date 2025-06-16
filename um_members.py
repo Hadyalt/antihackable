@@ -1,4 +1,5 @@
 import sqlite3
+import time
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
@@ -14,60 +15,71 @@ DB_PATH = "data.db"
 def login():
     logger = EncryptedLogger()
     max_attempts = 5
-    for attempt in range(1, max_attempts + 1):
-        print("\n" + "=" * 50)
-        print("🔐 URBAN MOBILITY - LOGIN")
-        print("=" * 50)
-        username = input("Username: ").strip()
-        password = input("Password: ").strip()
+    # Use a persistent attribute to store timeout duration between login calls
+    if not hasattr(login, "timeout_duration"):
+        login.timeout_duration = 15  # start at 15 seconds
+    while True:
+        for attempt in range(1, max_attempts + 1):
+            print("\n" + "=" * 50)
+            print("🔐 URBAN MOBILITY - LOGIN")
+            print("=" * 50)
+            username = input("Username: ").strip()
+            password = input("Password: ").strip()
 
-        # Hardcoded super admin
-        if username.lower() == "super_admin" and password == "Admin_123?":
-            print("✅ Super Admin login successful.")
-            logger.log_entry("super_admin", "Logged in", " ", "No")
-            return "superadmin" , "super_Admin"
+            # Hardcoded super admin
+            if username.lower() == "super_admin" and password == "Admin_123?":
+                print("✅ Super Admin login successful.")
+                logger.log_entry("super_admin", "Logged in", " ", "No")
+                # Reset timeout on successful login
+                login.timeout_duration = 15
+                return "superadmin" , "super_Admin"
 
-        # Fetch all users and decrypt usernames
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("SELECT Username FROM User")
-        users = cursor.fetchall()
-        found_enc_username = None
-        for (enc_username,) in users:
-            try:
-                dec_username = decrypt(enc_username)
-                if dec_username == username:
-                    found_enc_username = enc_username
-                    break
-            except Exception:
-                continue
-        if not found_enc_username:
-            print("❌ Username not found.")
-            logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
-            conn.close()
-        else:
-            # Now fetch password and role for the found encrypted username
-            cursor.execute("SELECT password, role FROM User WHERE Username = ?", (found_enc_username,))
-            result = cursor.fetchone()
-            conn.close()
-            if result:
-                stored_hash, role = result
-                if verify_password(password, stored_hash):
-                    print(f"✅ Login successful. Welcome, {role}!")
-                    logger.log_entry(username, "Login attempt", "Success", "No")
-                    return role, username
-                else:
-                    print("❌ Incorrect password.")
-                    logger.log_entry(username, "Login attempt", "Incorrect password", "Yes" if attempt >= 4 else "No")
-            else:
+            # Fetch all users and decrypt usernames
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("SELECT Username FROM User")
+            users = cursor.fetchall()
+            found_enc_username = None
+            for (enc_username,) in users:
+                try:
+                    dec_username = decrypt(enc_username)
+                    if dec_username == username:
+                        found_enc_username = enc_username
+                        break
+                except Exception:
+                    continue
+            if not found_enc_username:
                 print("❌ Username not found.")
                 logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
-        if attempt < max_attempts:
-            print(f"Attempt {attempt} of {max_attempts}. Try again.")
-        else:
-            print("❌ Too many failed login attempts. Exiting.")
-            logger.log_entry(username, "Login attempt", "Max attempts reached - exiting", "Yes")
-            exit()
+                conn.close()
+            else:
+                # Now fetch password and role for the found encrypted username
+                cursor.execute("SELECT password, role FROM User WHERE Username = ?", (found_enc_username,))
+                result = cursor.fetchone()
+                conn.close()
+                if result:
+                    stored_hash, role = result
+                    if verify_password(password, stored_hash):
+                        print(f"✅ Login successful. Welcome, {role}!")
+                        logger.log_entry(username, "Login attempt", "Success", "No")
+                        # Reset timeout on successful login
+                        login.timeout_duration = 15
+                        return role, username
+                    else:
+                        print("❌ Incorrect password.")
+                        logger.log_entry(username, "Login attempt", "Incorrect password", "Yes" if attempt >= 4 else "No")
+                else:
+                    print("❌ Username not found.")
+                    logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
+            if attempt < max_attempts:
+                print(f"Attempt {attempt} of {max_attempts}. Try again.")
+            else:
+                print(f"❌ Too many failed login attempts. Please wait {login.timeout_duration} seconds before trying again.")
+                logger.log_entry(username, "Login attempt", f"Max attempts reached - timeout {login.timeout_duration}s", "Yes")
+                logger.log_entry(username, "Login timeout", f"User timed out for {login.timeout_duration} seconds after 5 failed attempts", "Yes")
+                time.sleep(login.timeout_duration)
+                login.timeout_duration *= 2  # double the timeout for next time
+                break  # restart login attempts after timeout
     return None, None
 
 # === ROLE-BASED MENU ===
