@@ -64,7 +64,7 @@ def main(role, username):
         elif role == "serviceengineer":
             show_menu(role)
             choice = input("Choose an option: ")
-            Scooter_Menu_SerEng(choice)
+            Scooter_Menu_SerEng(choice, username)
             break
 
         # INVALID ROLE
