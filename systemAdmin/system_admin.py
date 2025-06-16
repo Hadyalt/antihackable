@@ -20,26 +20,29 @@ class systemAdmin:
         return matching_users[0][0]
 
     # check if the user has a reset password variable called ResettedPasswordCheck using only the username
-    def check_reset_password(self, username):
-        user = self.get_username(username)
+    def check_reset_password(self, username, role):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (user, "systemadmin"))
+            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (username, role))
             result = cursor.fetchone()
             connection.close()
-            if result:
-                return result[0]
+            if result is None:
+                print(f"No user found with username '{username}'.")
+                return None
+            if result[0] == 1:
+                return True
+            elif result[0] == 0:
+                return False
             else:
                 print(f"No user found with username '{username}'.")
                 return None
 
-    def reset_resetted_password_check(self, username):
+    def reset_resetted_password_check(self, username, role):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            enc_username = encrypt(username)
-            cursor.execute("UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
+            cursor.execute("UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?", (username, role))
             connection.commit()
             connection.close()
             
@@ -141,10 +144,10 @@ class systemAdmin:
             print(f"No service engineer found with username '{username_to_update}'.")
             return
         print ("What do you want to update?")
-        print(f"1. Username: ({decrypt(matching_users[0][0])})")
-        print("2. Password")
-        print("3. First Name")
-        print("4. Last Name")
+        print(f"1. Update Username: ({decrypt(matching_users[0][0])})")
+        print("2. Reset Password")
+        print("3. Update First Name")
+        print("4. Update Last Name")
         print("5. Go Back")
         choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
         if choice == "1":
@@ -159,8 +162,8 @@ class systemAdmin:
         elif choice == "2":
             new_password = input("Enter the new password: ").strip()
             if Verification.verify_Password(new_password):
-                hashed_password = Verification.hash_password(new_password)
-                self.reset_password_function(matching_users[0][0], hashed_password, "serviceengineer")
+                hashed = hash_password(new_password)
+                self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
                 print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
@@ -302,7 +305,10 @@ class systemAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, role))
+            cursor.execute(
+                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
+                (new_password, username, role)
+            )
             connection.commit()
         else:
             print("Failed to connect to the database.")

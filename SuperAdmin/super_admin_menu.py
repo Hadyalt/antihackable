@@ -75,8 +75,7 @@ def super_admin_service_engineer_menu(username):
         print("1. Create Service Engineer Account")
         print("2. Update existing Service Engineer Account")
         print("3. Delete Service Engineer Account")
-        print("4. Reset the password for an existing Service Engineer Account")
-        print("5. Go Back")
+        print("4. Go Back")
         choice = input("\nEnter your choice: ")
         
         if choice == "1":

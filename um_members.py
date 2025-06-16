@@ -3,6 +3,7 @@ import time
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
+from Login.verification import Verification
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
@@ -121,7 +122,6 @@ def show_main_menu(role, username):
     print("\n" + "=" * 50)
     print(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}")
     print("=" * 50)
-    print("Choose an option:\n")
 
     if role == "superadmin":
         print("1. Super Admin Menu")
@@ -138,6 +138,21 @@ def show_main_menu(role, username):
         else:
             print("Invalid choice.")
     elif role == "systemadmin":
+        sysAd= systemAdmin()
+        user = sysAd.get_username(username)
+        if (sysAd.check_reset_password(user, "systemadmin")):
+            print("You have a reset password, please reset it before proceeding.")
+            verified_password = False
+            while not verified_password:
+                password = input("Enter password: ")
+                verified_password = Verification.verify_Password(password)
+            hashed_password = hash_password(password)
+            sysAd.reset_password_function(user, hashed_password, "systemadmin")
+            sysAd.reset_resetted_password_check(user, "systemadmin")
+            print("Password reset completed. You can now proceed with the menu options.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{username}", "Reset his own password", f"Username: {username} picked a new password after it was changed by a higher account", "No")
+
         print("1. System Admin Menu")
         print("2. Backup & Restore")
         print("3. Exit")
