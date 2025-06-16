@@ -191,7 +191,11 @@ def add_traveller(creator):
 def view_travellers():
     db = Traveller()
     db.connect()
-    travellers = db.get_all_travellers()
+    search_term = input("Enter search term (leave blank for all): ").strip()
+    if search_term:
+        travellers = db.search_travellers(search_term)
+    else:
+        travellers = db.get_all_travellers()
     if travellers:
         print("\nTraveller List:")
         print("-" * 100)
@@ -205,7 +209,7 @@ def view_travellers():
             )
         print("-" * 100)
     else:
-        print("No travellers found.")
+        print("No matching travellers found.")
 
 def update_traveller(updater):
     db = Traveller()
