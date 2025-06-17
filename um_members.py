@@ -1,8 +1,9 @@
 import sqlite3
 import time
+import os
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
-from DbContext.encrypted_logger import EncryptedLogger
+from DbContext.encrypted_logger import EncryptedLogger, fernet
 from Login.verification import Verification
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
@@ -119,6 +120,20 @@ def login():
 
 # === ROLE-BASED MENU ===
 def show_main_menu(role, username):
+    # Alert for new suspicious logs if superadmin or systemadmin
+    if role in ["superadmin", "systemadmin"]:
+        logger = EncryptedLogger()
+        suspicious_new_log_count = 0
+        if hasattr(logger, 'logfile_path') and logger.logfile_path and os.path.exists(logger.logfile_path):
+            with open(logger.logfile_path, "r") as f:
+                for line in f:
+                    decrypted = fernet.decrypt(line.strip().encode()).decode()
+                    parts = decrypted.split("|")
+                    if len(parts) == 8 and parts[-1] == "new" and parts[-2].lower() == "yes":
+                        suspicious_new_log_count += 1
+        if suspicious_new_log_count > 0:
+            print(f"\n⚠️  ALERT: There are {suspicious_new_log_count} new suspicious logs that need to be reviewed!\n")
+
     print("\n" + "=" * 50)
     print(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}")
     print("=" * 50)
