@@ -8,7 +8,7 @@ from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
-from DbContext.backup_utils import create_backup, list_backups, restore_backup
+from DbContext.backup_utils import create_backup, list_backups, restore_backup, delete_backup
 from systemAdmin.system_admin import systemAdmin
 
 DB_PATH = "data.db"
@@ -177,7 +177,8 @@ def backup_menu(role, username=None):
         print("1. Create Backup")
         print("2. List Backups")
         print("3. Restore Backup")
-        print("4. Exit Backup Menu")
+        print("4. Delete Backup")
+        print("5. Exit Backup Menu")
         choice = input("Enter your choice: ").strip()
         if choice == "1":
             backup_path = create_backup(username)
@@ -214,6 +215,24 @@ def backup_menu(role, username=None):
             except Exception as e:
                 print(f"Restore failed: {e}")
         elif choice == "4":
+            backups = list_backups()
+            if not backups:
+                print("No backups to delete.")
+                continue
+            print("Available backups:")
+            for idx, b in enumerate(backups, 1):
+                print(f"{idx}. {b}")
+            sel = input("Select backup number to delete: ").strip()
+            try:
+                sel_idx = int(sel) - 1
+                if sel_idx < 0 or sel_idx >= len(backups):
+                    print("Invalid selection.")
+                    continue
+                delete_backup(backups[sel_idx], username)
+                print(f"Backup deleted: {backups[sel_idx]}")
+            except Exception as e:
+                print(f"Delete failed: {e}")
+        elif choice == "5":
             return
         else:
             print("Invalid choice.")
