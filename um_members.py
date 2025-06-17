@@ -171,16 +171,16 @@ def show_main_menu(role, username):
         print("Invalid role.")
         return
 
-def backup_menu(role):
-    print("\n=== BACKUP & RESTORE MENU ===")
-    print("1. Create Backup")
-    print("2. List Backups")
-    print("3. Restore Backup")
-    print("4. Exit Backup Menu")
+def backup_menu(role, username=None):
     while True:
+        print("\n=== BACKUP & RESTORE MENU ===")
+        print("1. Create Backup")
+        print("2. List Backups")
+        print("3. Restore Backup")
+        print("4. Exit Backup Menu")
         choice = input("Enter your choice: ").strip()
         if choice == "1":
-            backup_path = create_backup()
+            backup_path = create_backup(username)
             print(f"Backup created: {backup_path}")
         elif choice == "2":
             backups = list_backups()
@@ -208,7 +208,7 @@ def backup_menu(role):
                 if role == "systemadmin" and sel_idx != len(backups) - 1:
                     print("System Admin can only restore the latest backup.")
                     continue
-                restore_backup(backups[sel_idx])
+                restore_backup(backups[sel_idx], username)
                 print("Restore complete. Please restart the application.")
                 exit()
             except Exception as e:
