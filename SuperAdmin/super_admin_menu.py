@@ -1,9 +1,10 @@
-from DbContext.encrypted_logger import EncryptedLogger
+from DbContext.encrypted_logger import EncryptedLogger, fernet
 from SuperAdmin.super_admin import SuperAdmin
 from systemAdmin.system_admin import systemAdmin
 from systemAdmin.system_admin_menu import system_admin_service_engineer_menu
 from traveller.Traveller_menu import traveller_menu
 from scooter.Scooter import main
+import os
 
 
 def super_admin_menu(username):
@@ -31,7 +32,47 @@ def super_admin_menu(username):
             main("superadmin", username)
         elif choice == "5":
             logger = EncryptedLogger()
-            logger.read_logs(table_format=True)
+            # Read and separate logs by status
+            if not hasattr(logger, 'logfile_path') or not logger.logfile_path:
+                print("No log file found.")
+            elif not os.path.exists(logger.logfile_path):
+                print("No log file found.")
+            else:
+                new_logs = []
+                old_logs = []
+                all_rows = []
+                with open(logger.logfile_path, "r") as f:
+                    for line in f:
+                        decrypted = fernet.decrypt(line.strip().encode()).decode()
+                        parts = decrypted.split("|")
+                        if len(parts) == 8:
+                            if parts[-1] == "new":
+                                new_logs.append(parts)
+                            else:
+                                old_logs.append(parts)
+                        all_rows.append(parts)
+                # Print old logs table
+                if old_logs:
+                    print("\n--- OLD LOGS ---")
+                    logger._print_table(old_logs)
+                else:
+                    print("\nNo old logs.")
+                # Print new logs table
+                if new_logs:
+                    print("\n--- NEW LOGS ---")
+                    logger._print_table(new_logs)
+                else:
+                    print("\nNo new logs.")
+                # Mark all new logs as old
+                if new_logs:
+                    updated_lines = []
+                    for row in all_rows:
+                        if len(row) == 8 and row[-1] == "new":
+                            row[-1] = "old"
+                        updated_lines.append(fernet.encrypt("|".join(row).encode()).decode())
+                    with open(logger.logfile_path, "w") as f:
+                        for line in updated_lines:
+                            f.write(line + "\n")
         elif choice == "6":
             sysAd= systemAdmin()
             print("\n-- View All User Accounts --")
