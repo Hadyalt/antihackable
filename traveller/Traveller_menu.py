@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from DbContext.crypto_utils import decrypt
+from DbContext.crypto_utils import decrypt, encrypt  # Added encrypt import
 from DbContext.encrypted_logger import EncryptedLogger
 from traveller.Traveller import Traveller
 
@@ -172,30 +172,49 @@ def add_traveller(creator):
             print("Invalid Driving License format. Please try again.")
             logger.log_entry(f"{creator}", "Input failed", "Invalid Driving License entry", "No")
 
+    # Encrypt all fields before inserting traveller
+    enc_first_name = encrypt(first_name)
+    enc_last_name = encrypt(last_name)
+    enc_birthday = encrypt(birthday)
+    enc_gender = encrypt(gender)
+    enc_street_name = encrypt(street_name)
+    enc_house_number = encrypt(house_number)
+    enc_zip_code = encrypt(zip_code)
+    enc_city = encrypt(city)
+    enc_email = encrypt(email)
+    enc_phone = encrypt(phone)
+    enc_driving_license = encrypt(driving_license)
+
     # Attempt to add traveller
-    db.insert_traveller(
-        first_name,
-        last_name,
-        birthday,
-        gender,
-        street_name,
-        house_number,
-        zip_code,
-        city,
-        email,
-        phone,
-        driving_license,
+    success = db.insert_traveller(
+        enc_first_name,
+        enc_last_name,
+        enc_birthday,
+        enc_gender,
+        enc_street_name,
+        enc_house_number,
+        enc_zip_code,
+        enc_city,
+        enc_email,
+        enc_phone,
+        enc_driving_license,
     )
-    logger.log_entry(f"{creator}", "Created a new Traveller", f"Traveller: {first_name} is created" , "No")
+    if success:
+        logger.log_entry(f"{creator}", "Created a new Traveller", f"Traveller: {first_name} is created" , "No")
+    else:
+        print("Failed to add traveller. Please check your input and try again.")
 
 def view_travellers():
     db = Traveller()
     db.connect()
+    logger = EncryptedLogger()
     search_term = input("Enter search term (leave blank for all): ").strip()
     if search_term:
         travellers = db.search_travellers(search_term)
+        logger.log_entry("system", "Searched Travellers", f"Search term: {search_term}", "No")
     else:
         travellers = db.get_all_travellers()
+        logger.log_entry("system", "Viewed All Travellers", "", "No")
     if travellers:
         print("\nTraveller List:")
         print("-" * 100)
@@ -204,8 +223,15 @@ def view_travellers():
         )
         print("-" * 100)
         for t in travellers:
+            # Decrypt all relevant fields before displaying
+            tid = t[0]
+            first_name = decrypt(t[1])
+            last_name = decrypt(t[2])
+            email = decrypt(t[9])
+            phone = decrypt(t[10])
+            city = decrypt(t[8])
             print(
-                f"{t[0]:<4}| {t[1]:<12}| {t[2]:<12}| {t[9]:<20}| {t[10]:<14}| {t[8]}"
+                f"{tid:<4}| {first_name:<12}| {last_name:<12}| {email:<20}| {phone:<14}| {city}"
             )
         print("-" * 100)
     else:

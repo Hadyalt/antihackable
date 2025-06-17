@@ -72,18 +72,7 @@ class Traveller:
         driving_license,
     ):
         try:
-            # Validate inputs
-            if not self.validate_zip_code(zip_code):
-                raise ValueError("Invalid Zip Code format. Must be DDDDXX")
-
-            if not self.validate_driving_license(driving_license):
-                raise ValueError("Invalid Driving License format")
-
-            formatted_phone = self.format_phone(phone)
-
-            if city not in self.cities:
-                raise ValueError("Invalid city selection")
-
+            # Only format phone (not validate other fields, as they are already validated and encrypted)
             cursor = self.connection.cursor()
             print("[DEBUG] Attempting to insert traveller...")  # Debug print
             cursor.execute(
@@ -104,7 +93,7 @@ class Traveller:
                     zip_code,
                     city,
                     email,
-                    formatted_phone,
+                    phone,
                     driving_license,
                 ),
             )
@@ -135,22 +124,26 @@ class Traveller:
             print("No connection.")
             return []
 
-        term = f"%{search_term}%"
+        # Fetch all travellers
         cursor = self.connection.cursor()
-        cursor.execute(
-            """
-            SELECT * FROM Traveller
-            WHERE 
-                FirstName LIKE ? OR
-                LastName LIKE ? OR
-                Email LIKE ? OR
-                City LIKE ? OR
-                Phone LIKE ? OR
-                DrivingLicenseNumber LIKE ?
-            """,
-            (term, term, term, term, term, term),
-        )
-        return cursor.fetchall()
+        cursor.execute("SELECT * FROM Traveller")
+        all_travellers = cursor.fetchall()
+        results = []
+        search_term_lower = search_term.lower()
+        for t in all_travellers:
+            # Decrypt all relevant fields
+            decrypted_fields = [
+                decrypt(t[1]),  # FirstName
+                decrypt(t[2]),  # LastName
+                decrypt(t[9]),  # Email
+                decrypt(t[8]),  # City
+                decrypt(t[10]), # Phone
+                decrypt(t[11])  # DrivingLicenseNumber
+            ]
+            # If search term is in any field, add to results
+            if any(search_term_lower in (str(field).lower()) for field in decrypted_fields):
+                results.append(t)
+        return results
 
     def get_traveller_by_id(self, traveller_id):
         cursor = self.connection.cursor()
