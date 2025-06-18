@@ -3,22 +3,23 @@ from models.Scooter import Scooter
 from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
 from scooter.Scooter_data import Scooter_data
 from datetime import datetime
+from input_output_utils import validate_input, sanitize_output
 
 def show_menu(role):
     if role in ["superadmin", "systemadmin"]:
-        print("""
+        print(sanitize_output("""
 [1] Add Scooter
 [2] View Scooters
 [3] Update Scooter
 [4] Delete Scooter
 [5] Exit
-""")
+"""))
     elif role == "serviceengineer":
-        print("""
+        print(sanitize_output("""
 [1] View Scooters
 [2] Update Scooter
 [3] Exit
-""")
+"""))
 
 
 def main(role, username):
@@ -29,7 +30,11 @@ def main(role, username):
         # ADMIN MENU
         if role in ["superadmin", "systemadmin"]:
             show_menu(role)
-            choice = input("Choose an option: ")
+            try:
+                choice = validate_input(input("Choose an option: ").strip(), pattern=r"^[1-5]$", context="Scooter Admin Menu Choice")
+            except ValueError as e:
+                print(sanitize_output(f"Invalid input: {e}"))
+                continue
             if choice == "1":
                 add_scooter(username)
             elif choice == "2":
@@ -40,36 +45,38 @@ def main(role, username):
                     scooters = db.get_all_scooters()
                 if scooters:
                     for s in scooters:
-                        print(s)
+                        print(sanitize_output(str(s)))
                 else:
-                    print("No matching scooters found")
+                    print(sanitize_output("No matching scooters found"))
             elif choice == "3":
                 update_scooter(username)
             elif choice == "4":
-                print("\nList of Scooters:")
+                print(sanitize_output("\nList of Scooters:"))
                 scooters = db.get_all_serial_numbers()
                 for s in scooters:
-                    print(f"- {s[0]}")
-                sn = input("\nSerial Number to delete: ")
+                    print(sanitize_output(f"- {s[0]}"))
+                sn = validate_input(input("\nSerial Number to delete: ").strip(), min_length=1, context="Serial Number to delete")
                 db.delete_scooter(sn, username)
-
             elif choice == "5":
-                print("Exiting.")
+                print(sanitize_output("Exiting."))
                 break
-
             else:
-                print("Invalid choice.")
+                print(sanitize_output("Invalid choice."))
 
         # SERVICE ENGINEER MENU
         elif role == "serviceengineer":
             show_menu(role)
-            choice = input("Choose an option: ")
+            try:
+                choice = validate_input(input("Choose an option: ").strip(), pattern=r"^[1-3]$", context="Scooter Service Engineer Menu Choice")
+            except ValueError as e:
+                print(sanitize_output(f"Invalid input: {e}"))
+                continue
             Scooter_Menu_SerEng(choice, username)
             break
 
         # INVALID ROLE
         else:
-            print("Invalid role.")
+            print(sanitize_output("Invalid role."))
             break
     db.close()
 
@@ -213,7 +220,7 @@ def update_scooter(updater):
     print("\nList of Scooters:")
     scooters = db.get_all_serial_numbers()
     for s in scooters:
-        print(f"- {s[0]}")
+        print(sanitize_output(f"- {s[0]}"))
     sn = input("\nSerial Number to update: ")
     # Fetch existing scooter data
     scooter = db.get_scooter_by_serial(sn)

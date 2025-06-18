@@ -3,24 +3,28 @@ from datetime import datetime
 from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from traveller.Traveller import Traveller
+from input_output_utils import validate_input, sanitize_output
 
 
 def display_cities(cities):
-    print("\nAvailable Cities:")
+    print(sanitize_output("\nAvailable Cities:"))
     for i, city in enumerate(cities, 1):
-        print(f"[{i}] {city}")
+        print(sanitize_output(f"[{i}] {city}"))
 
 
 def traveller_menu(username):
     while True:
-        print("\nTraveller Menu")
-        print("[1] Add Traveller")
-        print("[2] View Travellers")
-        print("[3] Update Traveller")
-        print("[4] Delete Traveller")
-        print("[5] Go Back")
-
-        choice = input("Choose an option: ")
+        print(sanitize_output("\nTraveller Menu"))
+        print(sanitize_output("[1] Add Traveller"))
+        print(sanitize_output("[2] View Travellers"))
+        print(sanitize_output("[3] Update Traveller"))
+        print(sanitize_output("[4] Delete Traveller"))
+        print(sanitize_output("[5] Go Back"))
+        try:
+            choice = validate_input(input("Choose an option: ").strip(), pattern=r"^[1-5]$", context="Traveller Menu Choice")
+        except ValueError as e:
+            print(sanitize_output(f"Invalid input: {e}"))
+            continue
         if choice == "1":
             add_traveller(username)
         elif choice == "2":
@@ -31,184 +35,143 @@ def traveller_menu(username):
         elif choice == "4":
             db = Traveller()
             db.connect()
-            tid = input("Traveller ID to delete: ").strip()
+            tid = validate_input(input("Traveller ID to delete: ").strip(), pattern=r"^\d+$", context="Traveller ID to delete")
             enc_tid = encrypt(tid)
             db.delete_traveller(enc_tid, username)
-
         elif choice == "5":
             return
         else:
-            print("Invalid choice.")
+            print(sanitize_output("Invalid choice."))
 
 
 def add_traveller(creator):
     db = Traveller()
     db.connect()
     logger = EncryptedLogger()
-
-    print("\nAdd New Traveller")
+    print(sanitize_output("\nAdd New Traveller"))
     # First name validation
     while True:
         first_name = input("First Name: ").strip()
-        if first_name and first_name.isalpha():
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"First Name: {first_name}", "No"
-            )
+        try:
+            first_name = validate_input(first_name, pattern=r"^[A-Za-z]+$", context="First Name")
+            logger.log_entry(f"{creator}", "Input accepted", f"First Name: {first_name}", "No")
             break
-        else:
-            print(
-                "First name must only contain letters and cannot be empty. Please try again."
-            )
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid First Name entry", "No"
-            )
-
+        except ValueError as e:
+            print(sanitize_output("First name must only contain letters and cannot be empty. Please try again."))
+            logger.log_entry(f"{creator}", "Input failed", "Invalid First Name entry", "No")
     # Last name validation
     while True:
         last_name = input("Last Name: ").strip()
-        if last_name and last_name.isalpha():
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"Last Name: {last_name}", "No"
-            )
+        try:
+            last_name = validate_input(last_name, pattern=r"^[A-Za-z]+$", context="Last Name")
+            logger.log_entry(f"{creator}", "Input accepted", f"Last Name: {last_name}", "No")
             break
-        else:
-            print(
-                "Last name must only contain letters and cannot be empty. Please try again."
-            )
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid Last Name entry", "No"
-            )
-
+        except ValueError as e:
+            print(sanitize_output("Last name must only contain letters and cannot be empty. Please try again."))
+            logger.log_entry(f"{creator}", "Input failed", "Invalid Last Name entry", "No")
     # Birthday validation
     while True:
         birthday = input("Birthday (YYYY-MM-DD): ").strip()
         try:
+            birthday = validate_input(birthday, pattern=r"^\d{4}-\d{2}-\d{2}$", context="Birthday")
             datetime.strptime(birthday, "%Y-%m-%d")
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"Birthday: {birthday}", "No"
-            )
+            logger.log_entry(f"{creator}", "Input accepted", f"Birthday: {birthday}", "No")
             break
-        except ValueError:
-            print("Invalid date format. Please use YYYY-MM-DD.")
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid Birthday entry", "No"
-            )
-
-    print("\nGender:")
-    print("[1] Male")
-    print("[2] Female")
+        except Exception as e:
+            print(sanitize_output("Invalid date format. Please use YYYY-MM-DD."))
+            logger.log_entry(f"{creator}", "Input failed", "Invalid Birthday entry", "No")
+    print(sanitize_output("\nGender:"))
+    print(sanitize_output("[1] Male"))
+    print(sanitize_output("[2] Female"))
     while True:
         gender_choice = input("Select gender (1 or 2): ").strip()
-        if gender_choice == "1":
-            gender = "Male"
-            logger.log_entry(f"{creator}", "Input accepted", "Gender: Male", "No")
+        try:
+            gender_choice = validate_input(gender_choice, pattern=r"^[12]$", context="Gender Choice")
+            gender = "Male" if gender_choice == "1" else "Female"
+            logger.log_entry(f"{creator}", "Input accepted", f"Gender: {gender}", "No")
             break
-        elif gender_choice == "2":
-            gender = "Female"
-            logger.log_entry(f"{creator}", "Input accepted", "Gender: Female", "No")
-            break
-        else:
-            print("Invalid input. Please select 1 for Male or 2 for Female.")
+        except ValueError:
+            print(sanitize_output("Invalid input. Please select 1 for Male or 2 for Female."))
             logger.log_entry(f"{creator}", "Input failed", "Invalid Gender entry", "No")
-
     # Street name validation
     while True:
         street_name = input("Street Name: ").strip()
-        if street_name:
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"Street Name: {street_name}", "No"
-            )
+        try:
+            street_name = validate_input(street_name, min_length=1, context="Street Name")
+            logger.log_entry(f"{creator}", "Input accepted", f"Street Name: {street_name}", "No")
             break
-        else:
-            print("Street name cannot be empty. Please try again.")
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid Street Name entry", "No"
-            )
-
+        except ValueError:
+            print(sanitize_output("Street name cannot be empty. Please try again."))
+            logger.log_entry(f"{creator}", "Input failed", "Invalid Street Name entry", "No")
     # House number validation
     while True:
         house_number = input("House Number: ").strip()
-        if house_number.isdigit():
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"House Number: {house_number}", "No"
-            )
+        try:
+            house_number = validate_input(house_number, pattern=r"^\d+$", context="House Number")
+            logger.log_entry(f"{creator}", "Input accepted", f"House Number: {house_number}", "No")
             break
-        else:
-            print("House number must be digits only. Please try again.")
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid House Number entry", "No"
-            )
-
+        except ValueError:
+            print(sanitize_output("House number must be digits only. Please try again."))
+            logger.log_entry(f"{creator}", "Input failed", "Invalid House Number entry", "No")
     # Zip code validation loop
     while True:
         zip_code = input("Zip Code (DDDDXX format): ").strip().upper()
-        if db.validate_zip_code(zip_code):
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"Zip Code: {zip_code}", "No"
-            )
-            break
-        else:
-            print(
-                "Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again."
-            )
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid Zip Code entry", "No"
-            )
-
+        try:
+            zip_code = validate_input(zip_code, pattern=r"^\d{4}[A-Z]{2}$", context="Zip Code")
+            if db.validate_zip_code(zip_code):
+                logger.log_entry(f"{creator}", "Input accepted", f"Zip Code: {zip_code}", "No")
+                break
+            else:
+                raise ValueError()
+        except ValueError:
+            print(sanitize_output("Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again."))
+            logger.log_entry(f"{creator}", "Input failed", "Invalid Zip Code entry", "No")
     display_cities(db.cities)
     city = None
     while city is None:
         try:
-            city_choice = input("Select city (1-10): ").strip()
+            city_choice = validate_input(input("Select city (1-10): ").strip(), pattern=r"^([1-9]|10)$", context="City Choice")
             city_idx = int(city_choice) - 1
             city = db.cities[city_idx]
             logger.log_entry(f"{creator}", "Input accepted", f"City: {city}", "No")
         except (ValueError, IndexError):
-            print("Invalid city selection")
+            print(sanitize_output("Invalid city selection"))
             display_cities(db.cities)
             logger.log_entry(f"{creator}", "Input failed", "Invalid City entry", "No")
-
     # Email validation
-    email_regex = r"^[\w\.-]+@[\w\.-]+\.\w+$"
     while True:
         email = input("Email: ").strip()
-        if re.match(email_regex, email):
+        try:
+            email = validate_input(email, pattern=r"^[\w\.-]+@[\w\.-]+\.\w+$", context="Email")
             logger.log_entry(f"{creator}", "Input accepted", f"Email: {email}", "No")
             break
-        else:
-            print("Invalid email format. Please try again.")
+        except ValueError:
+            print(sanitize_output("Invalid email format. Please try again."))
             logger.log_entry(f"{creator}", "Input failed", "Invalid Email entry", "No")
-
     # Phone validation loop
     while True:
         phone = input("Phone (8 digits only): ").strip()
         try:
+            phone = validate_input(phone, pattern=r"^\d{8}$", context="Phone")
             db.format_phone(phone)
             logger.log_entry(f"{creator}", "Input accepted", f"Phone: {phone}", "No")
             break
         except ValueError as e:
-            print(f"{e} Please try again.")
+            print(sanitize_output(f"{e} Please try again."))
             logger.log_entry(f"{creator}", "Input failed", "Invalid Phone entry", "No")
-
     # Driving license validation loop
     while True:
-        driving_license = (
-            input("Driving License (XXDDDDDDD or XDDDDDDDD format): ").strip().upper()
-        )
-        if db.validate_driving_license(driving_license):
-            logger.log_entry(
-                f"{creator}",
-                "Input accepted",
-                f"Driving License: {driving_license}",
-                "No",
-            )
-            break
-        else:
-            print("Invalid Driving License format. Please try again.")
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid Driving License entry", "No"
-            )
-
+        driving_license = input("Driving License (XXDDDDDDD or XDDDDDDDD format): ").strip().upper()
+        try:
+            driving_license = validate_input(driving_license, pattern=r"^[A-Z]{1,2}\d{7,8}$", context="Driving License")
+            if db.validate_driving_license(driving_license):
+                logger.log_entry(f"{creator}", "Input accepted", f"Driving License: {driving_license}", "No")
+                break
+            else:
+                raise ValueError()
+        except ValueError:
+            print(sanitize_output("Invalid Driving License format. Please try again."))
+            logger.log_entry(f"{creator}", "Input failed", "Invalid Driving License entry", "No")
     # Encrypt all fields before inserting traveller
     enc_first_name = encrypt(first_name)
     enc_last_name = encrypt(last_name)
