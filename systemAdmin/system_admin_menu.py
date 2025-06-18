@@ -1,7 +1,6 @@
 from DbContext.encrypted_logger import EncryptedLogger, fernet
 import os
 from Login.verification import Verification
-from Login.verification import Verification
 from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
 from um_members import pre_login_menu
