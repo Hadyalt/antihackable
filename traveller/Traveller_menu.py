@@ -24,7 +24,7 @@ def traveller_menu(username):
         if choice == "1":
             add_traveller(username)
         elif choice == "2":
-            view_travellers()
+            view_travellers(username)
         elif choice == "3":
             view_travellers()
             update_traveller(username)
@@ -247,7 +247,7 @@ def add_traveller(creator):
         print("Failed to add traveller. Please check your input and try again.")
 
 
-def view_travellers():
+def view_travellers(username):
     db = Traveller()
     db.connect()
     logger = EncryptedLogger()
@@ -255,11 +255,11 @@ def view_travellers():
     if search_term:
         travellers = db.search_travellers(search_term)
         logger.log_entry(
-            "system", "Searched Travellers", f"Search term: {search_term}", "No"
+            f"{username}", "Searched Travellers", f"Search term: {search_term}", "No"
         )
     else:
         travellers = db.get_all_travellers()
-        logger.log_entry("system", "Viewed All Travellers", "", "No")
+        logger.log_entry(f"{username}", "Viewed All Travellers", "", "No")
     if travellers:
         print("\nTraveller List:")
         print("-" * 100)
