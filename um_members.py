@@ -267,12 +267,12 @@ def backup_menu(role, username=None):
         print("3. Restore Backup")
         print("4. Delete Backup")
         if role == "superadmin":
-            print("5. Generate Restore-Code for System Admin")
-            print("6. Revoke Restore-Code")
-            print("7. Exit Backup Menu")
+            print(sanitize_output("5. Generate Restore-Code for System Admin"))
+            print(sanitize_output("6. Revoke Restore-Code"))
+            print(sanitize_output("7. Exit Backup Menu"))
             valid_choices = ["1", "2", "3", "4", "5", "6", "7"]
         else:
-            print("5. Exit Backup Menu")
+            print(sanitize_output("5. Exit Backup Menu"))
             valid_choices = ["1", "2", "3", "4", "5"]
         choice = input("Enter your choice: ").strip()
         if choice not in valid_choices:
@@ -280,7 +280,7 @@ def backup_menu(role, username=None):
             continue
         if choice == "1":
             backup_path = create_backup(username)
-            print(f"Backup created: {backup_path}")
+            print(sanitize_output(f"Backup created: {backup_path}"))
             if role == "superadmin":
                 while True:
                     add_code = input("Do you want to add a recovery code for a System Admin? (yes/no): ").strip().lower()
