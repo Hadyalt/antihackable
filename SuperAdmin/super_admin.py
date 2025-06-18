@@ -69,7 +69,8 @@ class SuperAdmin:
                 else:
                     print("Invalid username format. Please try again.")
             else:
-                print("Incorrect password. Update cancelled.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 return
         elif choice == "2":
             if self.confirm_password():
@@ -83,7 +84,8 @@ class SuperAdmin:
                 else:
                     print("Invalid password format. Please try again.")
             else:
-                print("Incorrect password. Reset cancelled.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 return
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()

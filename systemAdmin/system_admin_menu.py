@@ -134,7 +134,9 @@ def edit_account_menu(username):
                 else:
                     print("Failed to update username.")
             else:
-                print("Incorrect password. Cannot change username.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                
         elif choice == "2":
             if sysAd.confirm_password(username):
                 verified_password = False
@@ -150,7 +152,8 @@ def edit_account_menu(username):
                 else:
                     print("Failed to update password.")
             else:
-                print("Incorrect password. Cannot change password.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
         elif choice == "3":
             if sysAd.confirm_password(username):
                 user = sysAd.get_username(username)
@@ -160,7 +163,8 @@ def edit_account_menu(username):
                 logger.log_entry(f"{username}", "Deleted his own account", f" ", "No")
                 pre_login_menu()
             else:
-                print("Incorrect password. Cannot delete account.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
         elif choice == "4":
             return username  # Go back to the previous menu
         else:

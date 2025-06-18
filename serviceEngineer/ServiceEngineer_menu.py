@@ -34,7 +34,8 @@ def reset_password_flow(current_user):
         logger = EncryptedLogger()
         logger.log_entry(f"{current_user}", "Changed his own password", f" ", "No")
     else:
-        print("Incorrect password. Cannot change password.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{current_user}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
 
 
 def main(username):

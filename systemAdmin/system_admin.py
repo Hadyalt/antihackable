@@ -161,7 +161,8 @@ class systemAdmin:
                 else:
                     print("Invalid username format. Please try again.")
             else:
-                print("Incorrect password. You cannot update the username.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 return
         elif choice == "2":
             if (self.confirm_password(updater)):
@@ -175,7 +176,8 @@ class systemAdmin:
                 else:
                     print("Invalid password format. Please try again.")
             else:
-                print("Incorrect password. You cannot reset the password.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 return
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()
@@ -359,30 +361,40 @@ class systemAdmin:
  
     def confirm_password(self, username):
         if (username.lower() == "super_admin"):
-            password = input("Enter your password: ")
-            if (password == "Admin_123?"):
-                return True
-            else:
-                return False
+            tries = 1
+            while (tries < 3):
+                password = input("Enter your password: ")
+                if (password == "Admin_123?"):
+                    return True
+                else:
+                    tries += 1
+                    print(f"Incorrect password. You have {3 - tries} tries left.")
+            return False
         else:
-            all_users = self.view_all_users_no_print()
-            if not all_users:
-                print("No users found in the system.")
-                return False
-            matching_users = [user for user in all_users if decrypt(user[0]).lower() == username.lower()]
-            if not matching_users:
-                print(f"No user found with username '{username}'.")
-                return False
-            password = input("Enter your current password: ")
-            if not password:
-                print("Password cannot be empty.")
-                return False
-            hashed_password_database = self.get_hashed_password(matching_users[0][0])
-            if not hashed_password_database:
-                print(f"No hashed password found for user '{username}'.")
-                return False
-            if (verify_password(password, hashed_password_database)):
-                return True  
+            tries = 1
+            while (tries < 3):
+                all_users = self.view_all_users_no_print()
+                if not all_users:
+                    print("No users found in the system.")
+                    return False
+                matching_users = [user for user in all_users if decrypt(user[0]).lower() == username.lower()]
+                if not matching_users:
+                    print(f"No user found with username '{username}'.")
+                    return False
+                password = input("Enter your current password: ")
+                if not password:
+                    print("Password cannot be empty.")
+                    return False
+                hashed_password_database = self.get_hashed_password(matching_users[0][0])
+                if not hashed_password_database:
+                    print(f"No hashed password found for user '{username}'.")
+                    return False
+                if (verify_password(password, hashed_password_database)):
+                    return True
+                else:
+                    tries += 1
+                    print(f"Incorrect password. You have {3 - tries} tries left.")
+            return False  
     
     def get_hashed_password(self, username):
         connection = self.db_context.connect()
