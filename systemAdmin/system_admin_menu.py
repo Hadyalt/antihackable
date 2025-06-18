@@ -2,30 +2,29 @@ from DbContext.crypto_utils import hash_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
 import os
 from Login.verification import Verification
+from Login.verification import Verification
 from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
 from um_members import pre_login_menu
 from scooter.Scooter import main
-from input_output_utils import validate_input, sanitize_output
 
 def system_admin_menu(username):
-    current_user = username
-    print(sanitize_output(f"\nWelcome, {current_user}!"))
+    current_user = username  # Replace with actual logged-in username
+    print(f"\nWelcome, {current_user}!")
     sysAd= systemAdmin()
+    
     while True:
-        print(sanitize_output("\nSYSTEM ADMIN MENU"))
-        print(sanitize_output("1. View all user accounts"))
-        print(sanitize_output("2. Manage Service Engineers"))
-        print(sanitize_output("3. Edit your account"))
-        print(sanitize_output("4. Manage Travellers"))
-        print(sanitize_output("5. Manage Scooters"))
-        print(sanitize_output("6. View Logs"))
-        print(sanitize_output("7. Exit"))
-        try:
-            choice = validate_input(input("\nEnter your choice: ").strip(), pattern=r"^[1-7]$", context="System Admin Menu Choice")
-        except ValueError as e:
-            print(sanitize_output(f"Invalid input: {e}"))
-            continue
+        # check the database if the systemadmin has a reset password        
+        print("\nSYSTEM ADMIN MENU")
+        print("1. View all user accounts")
+        print("2. Manage Service Engineers")
+        print("3. Edit your account") 
+        print("4. Manage Travellers")
+        print("5. Manage Scooters")  
+        print("6. View Logs")
+        print("7. Exit")
+        choice = input("\nEnter your choice: ")
+        
         if choice == "1":
             sysAd.view_all_users()
         elif choice == "2":
@@ -38,10 +37,11 @@ def system_admin_menu(username):
             main("systemadmin", username)
         elif choice == "6":
             logger = EncryptedLogger()
+            # Read and separate logs by status (like super admin)
             if not hasattr(logger, 'logfile_path') or not logger.logfile_path:
-                print(sanitize_output("No log file found."))
+                print("No log file found.")
             elif not os.path.exists(logger.logfile_path):
-                print(sanitize_output("No log file found."))
+                print("No log file found.")
             else:
                 new_logs = []
                 old_logs = []
@@ -56,16 +56,19 @@ def system_admin_menu(username):
                             else:
                                 old_logs.append(parts)
                         all_rows.append(parts)
+                # Print old logs table
                 if old_logs:
-                    print(sanitize_output("\n--- OLD LOGS ---"))
+                    print("\n--- OLD LOGS ---")
                     logger._print_table(old_logs)
                 else:
-                    print(sanitize_output("\nNo old logs."))
+                    print("\nNo old logs.")
+                # Print new logs table
                 if new_logs:
-                    print(sanitize_output("\n--- NEW LOGS ---"))
+                    print("\n--- NEW LOGS ---")
                     logger._print_table(new_logs)
                 else:
-                    print(sanitize_output("\nNo new logs."))
+                    print("\nNo new logs.")
+                # Mark all new logs as old
                 if new_logs:
                     updated_lines = []
                     for row in all_rows:
@@ -76,51 +79,46 @@ def system_admin_menu(username):
                         for line in updated_lines:
                             f.write(line + "\n")
         elif choice == "7":
-            print(sanitize_output("Exiting..."))
+            print("Exiting...")
             return
         else:
-            print(sanitize_output("Invalid choice. Please try again."))
+            print("Invalid choice. Please try again.")
 
 def system_admin_service_engineer_menu(username):
     sysAd= systemAdmin()
+    
     while True:
-        print(sanitize_output("\nSERVICE ENGINEER MANAGEMENT"))
-        print(sanitize_output("1. Create Service Engineer Account"))
-        print(sanitize_output("2. Update existing Service Engineer Account"))
-        print(sanitize_output("3. Delete Service Engineer Account"))
-        print(sanitize_output("4. Go Back"))
-        try:
-            choice = validate_input(input("\nEnter your choice: ").strip(), pattern=r"^[1-4]$", context="Service Engineer Management Choice")
-        except ValueError as e:
-            print(sanitize_output(f"Invalid input: {e}"))
-            continue
+        print("\nSERVICE ENGINEER MANAGEMENT")
+        print("1. Create Service Engineer Account")
+        print("2. Update existing Service Engineer Account")
+        print("3. Delete Service Engineer Account")
+        print("4. Go Back")
+        choice = input("\nEnter your choice: ")
+        
         if choice == "1":
-            print(sanitize_output("\n-- Create Service Engineer --"))
+            print("\n-- Create Service Engineer --")
             sysAd.create_service_engineer(username)
         elif choice == "2":
-            print(sanitize_output("Updating existing Service Engineer Account..."))
+            print("Updating existing Service Engineer Account...")
             sysAd.update_service_engineer(username)
         elif choice == "3":
-            print(sanitize_output("Deleting Service Engineer Account..."))
-            sysAd.delete_service_engineer(username)
+            print("Deleting Service Engineer Account...")
+            sysAd.delete_service_engineer(username)            
         elif choice == "4":
             return
         else:
-            print(sanitize_output("Invalid choice. Please try again."))
+            print("Invalid choice. Please try again.")
     
 def edit_account_menu(username):
     sysAd= systemAdmin()
     while True:
-        print(sanitize_output(f"\nEDIT ACCOUNT MENU FOR {username}"))
-        print(sanitize_output("1. Change Username"))
-        print(sanitize_output("2. Change Password"))
-        print(sanitize_output("3. Delete Account"))
-        print(sanitize_output("4. Go Back"))
-        try:
-            choice = validate_input(input("\nEnter your choice: ").strip(), pattern=r"^[1-4]$", context="Edit Account Menu Choice")
-        except ValueError as e:
-            print(sanitize_output(f"Invalid input: {e}"))
-            continue
+        print(f"\nEDIT ACCOUNT MENU FOR {username}")
+        print("1. Change Username")
+        print("2. Change Password")
+        print("3. Delete Account")
+        print("4. Go Back")
+        choice = input("\nEnter your choice: ")
+        
         if choice == "1":
             if sysAd.confirm_password(username):
                 verified_username = False
@@ -164,9 +162,9 @@ def edit_account_menu(username):
             else:
                 print("Incorrect password. Cannot delete account.")
         elif choice == "4":
-            return username
+            return username  # Go back to the previous menu
         else:
-            print(sanitize_output("Invalid choice. Please try again."))
+            print("Invalid choice. Please try again.")
 
 
 
