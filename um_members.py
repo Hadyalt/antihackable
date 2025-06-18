@@ -38,7 +38,7 @@ def login():
                 # Reset timeout and attempts on successful login
                 login.timeout_duration = 15
                 login.user_attempts.clear()
-                return "superadmin" , "super_Admin"
+                return "superadmin" , "super_admin"
 
             # Fetch all users and decrypt usernames
             conn = sqlite3.connect(DB_PATH)
@@ -280,4 +280,8 @@ if __name__ == "__main__":
     db_context = DbContext()
     db_context.initialize_database()
     while True:
-        pre_login_menu()
+        try:
+            pre_login_menu()
+        except KeyboardInterrupt:
+            print("\n👋 Exiting system.")
+            exit()
