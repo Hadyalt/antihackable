@@ -27,14 +27,38 @@ def list_backups():
     """List all backup zip files."""
     return [f for f in os.listdir(BACKUP_DIR) if f.endswith('.zip')]
 
-def restore_backup(backup_filename, username=None):
-    """Restore the database from a given backup zip file, preserving backup_recovery_list."""
+def restore_backup(backup_filename, username=None, restore_code=None, system_admin=None):
+    """Restore the database from a given backup zip file, preserving backup_recovery_list.
+    If restore_code and system_admin are provided, mark the code as used before restoring."""
     import sqlite3
     logger = EncryptedLogger()
     backup_path = os.path.join(BACKUP_DIR, backup_filename)
     if not os.path.exists(backup_path):
         logger.log_entry(username or "system", "Restore Backup Failed", f"Backup file not found: {backup_filename}", "Yes")
         raise FileNotFoundError("Backup file not found.")
+    # Step 0: If restore_code and system_admin are provided, mark the code as used before restoring
+    if restore_code and system_admin:
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, backup_name, system_admin, recovery_code, used FROM backup_recovery_list")
+            rows = cursor.fetchall()
+            from DbContext.crypto_utils import decrypt
+            for row in rows:
+                row_id, enc_backup_name, enc_system_admin, enc_code, used = row
+                if (used == 0 and decrypt(enc_backup_name) == backup_filename and
+                    decrypt(enc_system_admin) == system_admin and decrypt(enc_code) == restore_code):
+                    cursor.execute("""
+                        UPDATE backup_recovery_list
+                        SET used = 1, used_at = datetime('now')
+                        WHERE id = ?
+                    """, (row_id,))
+                    conn.commit()
+                    break
+            conn.close()
+        except Exception as e:
+            logger.log_entry(username or "system", "Mark restore code as used Failed", str(e), "Yes")
+            raise
     # Step 1: Export backup_recovery_list
     recovery_rows = []
     try:
