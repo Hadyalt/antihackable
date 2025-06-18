@@ -151,22 +151,32 @@ class systemAdmin:
         print("5. Go Back")
         choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
         if choice == "1":
-            new_username = input("Enter the new username: ").strip()
-            if Verification.verify_username(new_username):
-                self.set_new_username(matching_users[0][0], new_username)
-                print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
+            if (self.confirm_password(updater)):
+                new_username = input("Enter the new username: ").strip()
+                if Verification.verify_username(new_username):
+                    self.set_new_username(matching_users[0][0], new_username)
+                    print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
+                else:
+                    print("Invalid username format. Please try again.")
             else:
-                print("Invalid username format. Please try again.")
+                print("Incorrect password. You cannot update the username.")
+                return
         elif choice == "2":
-            new_password = input("Enter the new password: ").strip()
-            if Verification.verify_Password(new_password):
-                hashed = hash_password(new_password)
-                self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
-                print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
+            if (self.confirm_password(updater)):
+                new_password = input("Enter the new password: ").strip()
+                if Verification.verify_Password(new_password):
+                    hashed = hash_password(new_password)
+                    self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
+                    print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
+                else:
+                    print("Invalid password format. Please try again.")
+            else:
+                print("Incorrect password. You cannot reset the password.")
+                return
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()
             if Verification.verify_name(new_first_name):
@@ -346,3 +356,50 @@ class systemAdmin:
             logger.log_entry(f"{resetter}", "Resetted the password of a Service Engineer Account", f"username: {username_to_reset} had his password reset", "No")
         else:
             print("Invalid password format. Please try again.")
+ 
+    def confirm_password(self, username):
+        if (username.lower() == "super_admin"):
+            password = input("Enter your password: ")
+            if (password == "Admin_123?"):
+                return True
+            else:
+                return False
+        else:
+            all_users = self.view_all_users_no_print()
+            if not all_users:
+                print("No users found in the system.")
+                return False
+            matching_users = [user for user in all_users if decrypt(user[0]).lower() == username.lower()]
+            if not matching_users:
+                print(f"No user found with username '{username}'.")
+                return False
+            password = input("Enter your current password: ")
+            if not password:
+                print("Password cannot be empty.")
+                return False
+            password = hash_password(password)
+            hashed_password_database = self.get_hashed_password(matching_users[0][0])
+            if not hashed_password_database:
+                print(f"No hashed password found for user '{username}'.")
+                return False
+            if (password == hashed_password_database):
+                return True  
+    
+    def get_hashed_password(self, username):
+        connection = self.db_context.connect()
+        if connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT Password FROM User WHERE Username = ?", (username, ))
+            result = cursor.fetchone()
+            connection.close()
+            if result:
+                return result[0]
+            else:
+                print(f"No user found with username '{username}'.")
+                return None
+        else:
+            print("Failed to connect to the database.")
+            return None
+            
+
+

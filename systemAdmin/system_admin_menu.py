@@ -78,38 +78,47 @@ def edit_account_menu(username):
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
-            verified_username = False
-            while not verified_username:
-                new_username = input("Enter username: ")
-                verified_username = Verification.verify_username(new_username)
-            user = sysAd.get_username(username)
-            if sysAd.set_new_username_system(user, new_username):
-                print("Username updated successfully.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{username}", "Updated his own username", f"Old: {username}, New: {new_username}", "No")
-                username = new_username
+            if sysAd.confirm_password(username):
+                verified_username = False
+                while not verified_username:
+                    new_username = input("Enter username: ")
+                    verified_username = Verification.verify_username(new_username)
+                user = sysAd.get_username(username)
+                if sysAd.set_new_username_system(user, new_username):
+                    print("Username updated successfully.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{username}", "Updated his own username", f"Old: {username}, New: {new_username}", "No")
+                    username = new_username
+                else:
+                    print("Failed to update username.")
             else:
-                print("Failed to update username.")
+                print("Incorrect password. Cannot change username.")
         elif choice == "2":
-            verified_password = False
-            while not verified_password:
-                new_password = input("Enter new password: ")
-                verified_password = Verification.verify_Password(new_password)
-            hashed_password = Verification.hash_password(new_password)
-            user = sysAd.get_username(username)
-            if sysAd.reset_password_system(user, hashed_password):
-                print("Password updated successfully.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{username}", "Updated his own password", f" ", "No")
+            if sysAd.confirm_password(username):
+                verified_password = False
+                while not verified_password:
+                    new_password = input("Enter new password: ")
+                    verified_password = Verification.verify_Password(new_password)
+                hashed_password = Verification.hash_password(new_password)
+                user = sysAd.get_username(username)
+                if sysAd.reset_password_system(user, hashed_password):
+                    print("Password updated successfully.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{username}", "Updated his own password", f" ", "No")
+                else:
+                    print("Failed to update password.")
             else:
-                print("Failed to update password.")
+                print("Incorrect password. Cannot change password.")
         elif choice == "3":
-            user = sysAd.get_username(username)
-            sysAd.delete_account(user)
-            print("Account deleted successfully. returning to main menu.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{username}", "Deleted his own account", f" ", "No")
-            pre_login_menu()
+            if sysAd.confirm_password(username):
+                user = sysAd.get_username(username)
+                sysAd.delete_account(user)
+                print("Account deleted successfully. returning to main menu.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Deleted his own account", f" ", "No")
+                pre_login_menu()
+            else:
+                print("Incorrect password. Cannot delete account.")
         elif choice == "4":
             return username  # Go back to the previous menu
         else:
