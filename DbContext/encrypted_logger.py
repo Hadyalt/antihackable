@@ -24,10 +24,10 @@ class EncryptedLogger:
         with open(self.logfile_path, "r") as f:
             return sum(1 for _ in f) + 1
 
-    def log_entry(self, username, activity, additional_info="", suspicious="No"):
+    def log_entry(self, username, activity, additional_info="", suspicious="No", status="new"):
         now = datetime.now()
         no = self._get_next_no()
-        entry = f"{no}|{now.strftime('%d-%m-%Y')}|{now.strftime('%H:%M:%S')}|{username}|{activity}|{additional_info}|{suspicious}"
+        entry = f"{no}|{now.strftime('%d-%m-%Y')}|{now.strftime('%H:%M:%S')}|{username}|{activity}|{additional_info}|{suspicious}|{status}"
         encrypted = fernet.encrypt(entry.encode()).decode()
         with open(self.logfile_path, "a") as f:
             f.write(encrypted + "\n")
@@ -49,7 +49,7 @@ class EncryptedLogger:
                 print("|".join(row))
 
     def _print_table(self, rows):
-        headers = ["No.", "Date", "Time", "Username", "Description of activity", "Additional Information", "Suspicious"]
+        headers = ["No.", "Date", "Time", "Username", "Description of activity", "Additional Information", "Suspicious", "Status"]
         col_widths = [max(len(str(row[i])) for row in ([headers] + rows)) for i in range(len(headers))]
         def fmt_row(row):
             return " | ".join(str(row[i]).ljust(col_widths[i]) for i in range(len(headers)))

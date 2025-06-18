@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from DbContext.crypto_utils import decrypt
+from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from traveller.Traveller import Traveller
 
@@ -24,7 +24,7 @@ def traveller_menu(username):
         if choice == "1":
             add_traveller(username)
         elif choice == "2":
-            view_travellers()
+            view_travellers(username)
         elif choice == "3":
             view_travellers()
             update_traveller(username)
@@ -32,12 +32,14 @@ def traveller_menu(username):
             db = Traveller()
             db.connect()
             tid = input("Traveller ID to delete: ").strip()
-            db.delete_traveller(tid, username)
+            enc_tid = encrypt(tid)
+            db.delete_traveller(enc_tid, username)
 
         elif choice == "5":
             return
         else:
             print("Invalid choice.")
+
 
 def add_traveller(creator):
     db = Traveller()
@@ -49,32 +51,48 @@ def add_traveller(creator):
     while True:
         first_name = input("First Name: ").strip()
         if first_name and first_name.isalpha():
-            logger.log_entry(f"{creator}", "Input accepted", f"First Name: {first_name}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"First Name: {first_name}", "No"
+            )
             break
         else:
-            print("First name must only contain letters and cannot be empty. Please try again.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid First Name entry", "No")
+            print(
+                "First name must only contain letters and cannot be empty. Please try again."
+            )
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid First Name entry", "No"
+            )
 
     # Last name validation
     while True:
         last_name = input("Last Name: ").strip()
         if last_name and last_name.isalpha():
-            logger.log_entry(f"{creator}", "Input accepted", f"Last Name: {last_name}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"Last Name: {last_name}", "No"
+            )
             break
         else:
-            print("Last name must only contain letters and cannot be empty. Please try again.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid Last Name entry", "No")
+            print(
+                "Last name must only contain letters and cannot be empty. Please try again."
+            )
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid Last Name entry", "No"
+            )
 
     # Birthday validation
     while True:
         birthday = input("Birthday (YYYY-MM-DD): ").strip()
         try:
             datetime.strptime(birthday, "%Y-%m-%d")
-            logger.log_entry(f"{creator}", "Input accepted", f"Birthday: {birthday}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"Birthday: {birthday}", "No"
+            )
             break
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid Birthday entry", "No")
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid Birthday entry", "No"
+            )
 
     print("\nGender:")
     print("[1] Male")
@@ -97,31 +115,45 @@ def add_traveller(creator):
     while True:
         street_name = input("Street Name: ").strip()
         if street_name:
-            logger.log_entry(f"{creator}", "Input accepted", f"Street Name: {street_name}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"Street Name: {street_name}", "No"
+            )
             break
         else:
             print("Street name cannot be empty. Please try again.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid Street Name entry", "No")
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid Street Name entry", "No"
+            )
 
     # House number validation
     while True:
         house_number = input("House Number: ").strip()
         if house_number.isdigit():
-            logger.log_entry(f"{creator}", "Input accepted", f"House Number: {house_number}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"House Number: {house_number}", "No"
+            )
             break
         else:
             print("House number must be digits only. Please try again.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid House Number entry", "No")
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid House Number entry", "No"
+            )
 
     # Zip code validation loop
     while True:
         zip_code = input("Zip Code (DDDDXX format): ").strip().upper()
         if db.validate_zip_code(zip_code):
-            logger.log_entry(f"{creator}", "Input accepted", f"Zip Code: {zip_code}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"Zip Code: {zip_code}", "No"
+            )
             break
         else:
-            print("Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid Zip Code entry", "No")
+            print(
+                "Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again."
+            )
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid Zip Code entry", "No"
+            )
 
     display_cities(db.cities)
     city = None
@@ -161,41 +193,73 @@ def add_traveller(creator):
     # Driving license validation loop
     while True:
         driving_license = (
-            input("Driving License (XXDDDDDDD or XDDDDDDDD format): ")
-            .strip()
-            .upper()
+            input("Driving License (XXDDDDDDD or XDDDDDDDD format): ").strip().upper()
         )
         if db.validate_driving_license(driving_license):
-            logger.log_entry(f"{creator}", "Input accepted", f"Driving License: {driving_license}", "No")
+            logger.log_entry(
+                f"{creator}",
+                "Input accepted",
+                f"Driving License: {driving_license}",
+                "No",
+            )
             break
         else:
             print("Invalid Driving License format. Please try again.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid Driving License entry", "No")
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid Driving License entry", "No"
+            )
+
+    # Encrypt all fields before inserting traveller
+    enc_first_name = encrypt(first_name)
+    enc_last_name = encrypt(last_name)
+    enc_birthday = encrypt(birthday)
+    enc_gender = encrypt(gender)
+    enc_street_name = encrypt(street_name)
+    enc_house_number = encrypt(house_number)
+    enc_zip_code = encrypt(zip_code)
+    enc_city = encrypt(city)
+    enc_email = encrypt(email)
+    enc_phone = encrypt(phone)
+    enc_driving_license = encrypt(driving_license)
 
     # Attempt to add traveller
-    db.insert_traveller(
-        first_name,
-        last_name,
-        birthday,
-        gender,
-        street_name,
-        house_number,
-        zip_code,
-        city,
-        email,
-        phone,
-        driving_license,
+    success = db.insert_traveller(
+        enc_first_name,
+        enc_last_name,
+        enc_birthday,
+        enc_gender,
+        enc_street_name,
+        enc_house_number,
+        enc_zip_code,
+        enc_city,
+        enc_email,
+        enc_phone,
+        enc_driving_license,
     )
-    logger.log_entry(f"{creator}", "Created a new Traveller", f"Traveller: {first_name} is created" , "No")
+    if success:
+        logger.log_entry(
+            f"{creator}",
+            "Created a new Traveller",
+            f"Traveller: {first_name} is created",
+            "No",
+        )
+    else:
+        print("Failed to add traveller. Please check your input and try again.")
 
-def view_travellers():
+
+def view_travellers(username):
     db = Traveller()
     db.connect()
+    logger = EncryptedLogger()
     search_term = input("Enter search term (leave blank for all): ").strip()
     if search_term:
         travellers = db.search_travellers(search_term)
+        logger.log_entry(
+            f"{username}", "Searched Travellers", f"Search term: {search_term}", "No"
+        )
     else:
         travellers = db.get_all_travellers()
+        logger.log_entry(f"{username}", "Viewed All Travellers", "", "No")
     if travellers:
         print("\nTraveller List:")
         print("-" * 100)
@@ -204,12 +268,20 @@ def view_travellers():
         )
         print("-" * 100)
         for t in travellers:
+            # Decrypt all relevant fields before displaying
+            tid = t[0]
+            first_name = decrypt(t[1])
+            last_name = decrypt(t[2])
+            email = decrypt(t[9])
+            phone = decrypt(t[10])
+            city = decrypt(t[8])
             print(
-                f"{t[0]:<4}| {t[1]:<12}| {t[2]:<12}| {t[9]:<20}| {t[10]:<14}| {t[8]}"
+                f"{tid:<4}| {first_name:<12}| {last_name:<12}| {email:<20}| {phone:<14}| {city}"
             )
         print("-" * 100)
     else:
         print("No matching travellers found.")
+
 
 def update_traveller(updater):
     db = Traveller()
@@ -258,7 +330,6 @@ def update_traveller(updater):
                 new_val = db.cities[city_idx]
             except (ValueError, IndexError):
                 print("Invalid city selection")
-                
 
     elif field == "10":  # Phone
         new_val = input("New Phone (8 digits only): ").strip()
@@ -288,6 +359,12 @@ def update_traveller(updater):
         "11": "DrivingLicenseNumber",
     }
 
-    # Perform update
-    db.update_traveller(tid, **{field_map[field]: new_val})
-    logger.log_entry(f"{updater}", "Updated a Traveller", f"Traveller {tid}: {field_map[field]} is updated to {new_val}" , "No")
+    enc_val = encrypt(new_val)
+
+    db.update_traveller(tid, **{field_map[field]: enc_val})
+    logger.log_entry(
+        f"{updater}",
+        "Updated a Traveller",
+        f"Traveller {tid}: {field_map[field]} is updated to {new_val}",
+        "No",
+    )

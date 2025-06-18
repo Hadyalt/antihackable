@@ -1,14 +1,15 @@
 import sqlite3
 import time
+import os
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
-from DbContext.encrypted_logger import EncryptedLogger
+from DbContext.encrypted_logger import EncryptedLogger, fernet
 from Login.verification import Verification
 from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
-from DbContext.backup_utils import create_backup, list_backups, restore_backup
+from DbContext.backup_utils import create_backup, list_backups, restore_backup, delete_backup
 from systemAdmin.system_admin import systemAdmin
 
 DB_PATH = "data.db"
@@ -119,6 +120,20 @@ def login():
 
 # === ROLE-BASED MENU ===
 def show_main_menu(role, username):
+    # Alert for new suspicious logs if superadmin or systemadmin
+    if role in ["superadmin", "systemadmin"]:
+        logger = EncryptedLogger()
+        suspicious_new_log_count = 0
+        if hasattr(logger, 'logfile_path') and logger.logfile_path and os.path.exists(logger.logfile_path):
+            with open(logger.logfile_path, "r") as f:
+                for line in f:
+                    decrypted = fernet.decrypt(line.strip().encode()).decode()
+                    parts = decrypted.split("|")
+                    if len(parts) == 8 and parts[-1] == "new" and parts[-2].lower() == "yes":
+                        suspicious_new_log_count += 1
+        if suspicious_new_log_count > 0:
+            print(f"\n⚠️  ALERT: There are {suspicious_new_log_count} new suspicious logs that need to be reviewed!\n")
+
     print("\n" + "=" * 50)
     print(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}")
     print("=" * 50)
@@ -171,16 +186,17 @@ def show_main_menu(role, username):
         print("Invalid role.")
         return
 
-def backup_menu(role):
-    print("\n=== BACKUP & RESTORE MENU ===")
-    print("1. Create Backup")
-    print("2. List Backups")
-    print("3. Restore Backup")
-    print("4. Exit Backup Menu")
+def backup_menu(role, username=None):
     while True:
+        print("\n=== BACKUP & RESTORE MENU ===")
+        print("1. Create Backup")
+        print("2. List Backups")
+        print("3. Restore Backup")
+        print("4. Delete Backup")
+        print("5. Exit Backup Menu")
         choice = input("Enter your choice: ").strip()
         if choice == "1":
-            backup_path = create_backup()
+            backup_path = create_backup(username)
             print(f"Backup created: {backup_path}")
         elif choice == "2":
             backups = list_backups()
@@ -208,12 +224,30 @@ def backup_menu(role):
                 if role == "systemadmin" and sel_idx != len(backups) - 1:
                     print("System Admin can only restore the latest backup.")
                     continue
-                restore_backup(backups[sel_idx])
+                restore_backup(backups[sel_idx], username)
                 print("Restore complete. Please restart the application.")
                 exit()
             except Exception as e:
                 print(f"Restore failed: {e}")
         elif choice == "4":
+            backups = list_backups()
+            if not backups:
+                print("No backups to delete.")
+                continue
+            print("Available backups:")
+            for idx, b in enumerate(backups, 1):
+                print(f"{idx}. {b}")
+            sel = input("Select backup number to delete: ").strip()
+            try:
+                sel_idx = int(sel) - 1
+                if sel_idx < 0 or sel_idx >= len(backups):
+                    print("Invalid selection.")
+                    continue
+                delete_backup(backups[sel_idx], username)
+                print(f"Backup deleted: {backups[sel_idx]}")
+            except Exception as e:
+                print(f"Delete failed: {e}")
+        elif choice == "5":
             return
         else:
             print("Invalid choice.")
