@@ -18,7 +18,7 @@ class DbContext:
 
     def create_table(self, table_name, schema):
         # Whitelist allowed table names to prevent SQL injection
-        allowed_tables = {"User", "Traveller", "Scooter"}
+        allowed_tables = {"User", "Traveller", "Scooter", "backup_recovery_list"}
         if table_name not in allowed_tables:
             raise ValueError(f"Table name '{table_name}' is not allowed.")
         if self.connection:
