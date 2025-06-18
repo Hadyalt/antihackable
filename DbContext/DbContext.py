@@ -17,6 +17,10 @@ class DbContext:
         return self.connection
 
     def create_table(self, table_name, schema):
+        # Whitelist allowed table names to prevent SQL injection
+        allowed_tables = {"User", "Traveller", "Scooter"}
+        if table_name not in allowed_tables:
+            raise ValueError(f"Table name '{table_name}' is not allowed.")
         if self.connection:
             cursor = self.connection.cursor()
             cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})")

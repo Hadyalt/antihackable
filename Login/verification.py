@@ -4,10 +4,7 @@ import re
 from DbContext.crypto_utils import decrypt, encrypt
 
 
-class Verification:
-    def hash_password(password):
-        return hashlib.sha256(password.encode()).hexdigest()
-    
+class Verification:   
     def check_username_exists_simple(username):
         db = DbContext()
         connection = db.connect()

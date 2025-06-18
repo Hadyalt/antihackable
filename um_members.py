@@ -7,12 +7,12 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
 from Login.verification import Verification
-from scooter import Scooter
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
 from DbContext.backup_utils import create_backup, list_backups, restore_backup, delete_backup
 from systemAdmin.system_admin import systemAdmin
+from input_output_utils import validate_input, sanitize_output
 
 DB_PATH = "data.db"
 
@@ -27,20 +27,20 @@ def login():
         login.user_attempts = {}  # {username: failed_attempts}
     while True:
         for attempt in range(1, max_attempts + 1):
-            print("\n" + "=" * 50)
-            print("🔐 URBAN MOBILITY - LOGIN")
-            print("=" * 50)
-            username = input("Username: ").strip()
-            password = input("Password: ").strip()
+            print(sanitize_output("\n" + "=" * 50))
+            print(sanitize_output("🔐 URBAN MOBILITY - LOGIN"))
+            print(sanitize_output("=" * 50))
+            username = validate_input(input("Username: ").strip(), min_length=1, context="Login Username")
+            password = validate_input(input("Password: ").strip(), min_length=1, context="Login Password")
 
             # Hardcoded super admin
             if username.lower() == "super_admin" and password == "Admin_123?":
-                print("✅ Super Admin login successful.")
+                print(sanitize_output("✅ Super Admin login successful."))
                 logger.log_entry("super_admin", "Logged in", " ", "No")
                 # Reset timeout and attempts on successful login
                 login.timeout_duration = 15
                 login.user_attempts.clear()
-                return "superadmin" , "super_Admin"
+                return "superadmin" , "super_admin"
 
             # Fetch all users and decrypt usernames
             conn = sqlite3.connect(DB_PATH)
@@ -57,7 +57,7 @@ def login():
                 except Exception:
                     continue
             if not found_enc_username:
-                print("❌ Username not found.")
+                print(sanitize_output("❌ Username not found."))
                 logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
                 conn.close()
             else:
@@ -67,24 +67,24 @@ def login():
                 if result:
                     stored_hash, role, is_active = result
                     if not is_active:
-                        print("❌ This account is inactive. Please contact an administrator.")
+                        print(sanitize_output("❌ This account is inactive. Please contact an administrator."))
                         # Track and log every attempt to log in to an inactive account
                         login.user_attempts[username] = login.user_attempts.get(username, 0) + 1
                         logger.log_entry(username, "Login attempt", f"Attempted login to inactive account (attempt {login.user_attempts[username]})", "Yes")
                         conn.close()
                         # Increment the global attempt counter for timeout
                         if attempt < max_attempts:
-                            print(f"Attempt {attempt} of {max_attempts}. Try again.")
+                            print(sanitize_output(f"Attempt {attempt} of {max_attempts}. Try again."))
                             continue
                         else:
-                            print(f"❌ Too many failed login attempts. Please wait {login.timeout_duration} seconds before trying again.")
+                            print(sanitize_output(f"❌ Too many failed login attempts. Please wait {login.timeout_duration} seconds before trying again."))
                             logger.log_entry(username, "Login attempt", f"Max attempts reached - timeout {login.timeout_duration}s", "Yes")
                             logger.log_entry(username, "Login timeout", f"User timed out for {login.timeout_duration} seconds after 5 failed attempts", "Yes")
                             time.sleep(login.timeout_duration)
                             login.timeout_duration *= 2  # double the timeout for next time
                             break
                     if verify_password(password, stored_hash):
-                        print(f"✅ Login successful. Welcome, {role}!")
+                        print(sanitize_output(f"✅ Login successful. Welcome, {role}!"))
                         logger.log_entry(username, "Login attempt", "Success", "No")
                         # Reset timeout and attempts on successful login
                         login.timeout_duration = 15
@@ -92,13 +92,13 @@ def login():
                         conn.close()
                         return role, username
                     else:
-                        print("❌ Incorrect password.")
+                        print(sanitize_output("❌ Incorrect password."))
                         logger.log_entry(username, "Login attempt", "Incorrect password", "Yes" if attempt >= 4 else "No")
                         # Track failed attempts for this username
                         login.user_attempts[username] = login.user_attempts.get(username, 0) + 1
                         # If 5 wrong attempts for a valid username, deactivate and log
                         if login.user_attempts[username] >= 5:
-                            print("❌ Too many failed attempts for this user. Account is now inactive.")
+                            print(sanitize_output("❌ Too many failed attempts for this user. Account is now inactive."))
                             logger.log_entry(username, "Account locked", "User made 5 failed login attempts. Account set to inactive.", "Yes")
                             cursor.execute("UPDATE User SET IsActive = 0 WHERE Username = ?", (found_enc_username,))
                             conn.commit()
@@ -106,13 +106,13 @@ def login():
                             # Do not allow further attempts for this username in this session
                             break
                 else:
-                    print("❌ Username not found.")
+                    print(sanitize_output("❌ Username not found."))
                     logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
                 conn.close()
             if attempt < max_attempts:
-                print(f"Attempt {attempt} of {max_attempts}. Try again.")
+                print(sanitize_output(f"Attempt {attempt} of {max_attempts}. Try again."))
             else:
-                print(f"❌ Too many failed login attempts. Please wait {login.timeout_duration} seconds before trying again.")
+                print(sanitize_output(f"❌ Too many failed login attempts. Please wait {login.timeout_duration} seconds before trying again."))
                 logger.log_entry(username, "Login attempt", f"Max attempts reached - timeout {login.timeout_duration}s", "Yes")
                 logger.log_entry(username, "Login timeout", f"User timed out for {login.timeout_duration} seconds after 5 failed attempts", "Yes")
                 time.sleep(login.timeout_duration)
@@ -134,26 +134,28 @@ def show_main_menu(role, username):
                     if len(parts) == 8 and parts[-1] == "new" and parts[-2].lower() == "yes":
                         suspicious_new_log_count += 1
         if suspicious_new_log_count > 0:
-            print(f"\n⚠️  ALERT: There are {suspicious_new_log_count} new suspicious logs that need to be reviewed!\n")
-
-    print("\n" + "=" * 50)
-    print(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}")
-    print("=" * 50)
-
+            print(sanitize_output(f"\n⚠️  ALERT: There are {suspicious_new_log_count} new suspicious logs that need to be reviewed!\n"))
+    print(sanitize_output("\n" + "=" * 50))
+    print(sanitize_output(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}"))
+    print(sanitize_output("=" * 50))
     if role == "superadmin":
-        print("1. Super Admin Menu")
-        print("2. Backup & Restore")
-        print("3. Exit")
-        choice = input("Enter your choice: ")
+        print(sanitize_output("1. Super Admin Menu"))
+        print(sanitize_output("2. Backup & Restore"))
+        print(sanitize_output("3. Exit"))
+        try:
+            choice = validate_input(input("Enter your choice: ").strip(), pattern=r"^[1-3]$", context="SuperAdmin Main Menu Choice")
+        except ValueError as e:
+            print(sanitize_output(f"Invalid input: {e}"))
+            return
         if choice == "1":
             SuperMenu.super_admin_menu(username)
         elif choice == "2":
             backup_menu(role)
         elif choice == "3":
-            print("👋 Logging out.")
+            print(sanitize_output("👋 Logging out."))
             return
         else:
-            print("Invalid choice.")
+            print(sanitize_output("Invalid choice."))
     elif role == "systemadmin":
         sysAd= systemAdmin()
         user = sysAd.get_username(username)
@@ -170,10 +172,14 @@ def show_main_menu(role, username):
             logger = EncryptedLogger()
             logger.log_entry(f"{username}", "Reset his own password", f"Username: {username} picked a new password after it was changed by a higher account", "No")
 
-        print("1. System Admin Menu")
-        print("2. Backup & Restore")
-        print("3. Exit")
-        choice = input("Enter your choice: ")
+        print(sanitize_output("1. System Admin Menu"))
+        print(sanitize_output("2. Backup & Restore"))
+        print(sanitize_output("3. Exit"))
+        try:
+            choice = validate_input(input("Enter your choice: ").strip(), pattern=r"^[1-3]$", context="SystemAdmin Main Menu Choice")
+        except ValueError as e:
+            print(sanitize_output(f"Invalid input: {e}"))
+            return
         if choice == "1":
             SystemMenu.system_admin_menu(username)
         elif choice == "2":
@@ -181,11 +187,11 @@ def show_main_menu(role, username):
         elif choice == "3":
             exit()
         else:
-            print("Invalid choice.")
+            print(sanitize_output("Invalid choice."))
     elif role == "serviceengineer":
         ServiceEngineer_menu.main(username)
     else:
-        print("Invalid role.")
+        print(sanitize_output("Invalid role."))
         return
 
 def generate_restore_code(length=12):
@@ -261,18 +267,18 @@ def get_decrypted_backups():
 
 def backup_menu(role, username=None):
     while True:
-        print("\n=== BACKUP & RESTORE MENU ===")
-        print("1. Create Backup")
-        print("2. List Backups")
-        print("3. Restore Backup")
-        print("4. Delete Backup")
+        print(sanitize_output("\n=== BACKUP & RESTORE MENU ==="))
+        print(sanitize_output("1. Create Backup"))
+        print(sanitize_output("2. List Backups"))
+        print(sanitize_output("3. Restore Backup"))
+        print(sanitize_output("4. Delete Backup"))
         if role == "superadmin":
-            print("5. Generate Restore-Code for System Admin")
-            print("6. Revoke Restore-Code")
-            print("7. Exit Backup Menu")
+            print(sanitize_output("5. Generate Restore-Code for System Admin"))
+            print(sanitize_output("6. Revoke Restore-Code"))
+            print(sanitize_output("7. Exit Backup Menu"))
             valid_choices = ["1", "2", "3", "4", "5", "6", "7"]
         else:
-            print("5. Exit Backup Menu")
+            print(sanitize_output("5. Exit Backup Menu"))
             valid_choices = ["1", "2", "3", "4", "5"]
         choice = input("Enter your choice: ").strip()
         if choice not in valid_choices:
@@ -280,7 +286,7 @@ def backup_menu(role, username=None):
             continue
         if choice == "1":
             backup_path = create_backup(username)
-            print(f"Backup created: {backup_path}")
+            print(sanitize_output(f"Backup created: {backup_path}"))
             if role == "superadmin":
                 while True:
                     add_code = input("Do you want to add a recovery code for a System Admin? (yes/no): ").strip().lower()
@@ -312,24 +318,21 @@ def backup_menu(role, username=None):
         elif choice == "2":
             backups = list_backups()
             if backups:
-                print("Available backups:")
+                print(sanitize_output("Available backups:"))
                 for b in backups:
-                    print(f"- {b}")
+                    print(sanitize_output(f"- {b}"))
             else:
-                print("No backups found.")
+                print(sanitize_output("No backups found."))
         elif choice == "3":
             backups = list_backups()
             if not backups:
-                print("No backups to restore.")
+                print(sanitize_output("No backups to restore."))
                 continue
             while True:
-                print("Available backups:")
+                print(sanitize_output("Available backups:"))
                 for idx, b in enumerate(backups, 1):
-                    print(f"{idx}. {b}")
-                sel = input("Select backup number to restore: ").strip()
-                if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
-                    print("Invalid selection. Please enter a valid number.")
-                    continue
+                    print(sanitize_output(f"{idx}. {b}"))
+                sel = validate_input(input("Select backup number to restore: ").strip(), pattern=r"^\d+$", context="Backup Restore Selection")
                 sel_idx = int(sel) - 1
                 if role == "systemadmin":
                     code = input("Enter your restore code: ").strip()
@@ -346,13 +349,13 @@ def backup_menu(role, username=None):
         elif choice == "4":
             backups = list_backups()
             if not backups:
-                print("No backups to delete.")
+                print(sanitize_output("No backups to delete."))
                 continue
             while True:
-                print("Available backups:")
+                print(sanitize_output("Available backups:"))
                 for idx, b in enumerate(backups, 1):
-                    print(f"{idx}. {b}")
-                sel = input("Select backup number to delete: ").strip()
+                    print(sanitize_output(f"{idx}. {b}"))
+                sel = validate_input(input("Select backup number to delete: ").strip(), pattern=r"^\d+$", context="Backup Delete Selection")
                 if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
                     print("Invalid selection. Please enter a valid number.")
                     continue
@@ -436,19 +439,21 @@ def backup_menu(role, username=None):
         elif (role == "superadmin" and choice == "7") or (role != "superadmin" and choice == "5"):
             return
         else:
-            print("Invalid choice.")
+            print(sanitize_output("Invalid choice."))
 
 # === MAIN MENU BEFORE LOGIN ===
 def pre_login_menu():
     while True:
-        print("=" * 50)
-        print("⚙️  URBAN MOBILITY CONSOLE")
-        print("=" * 50)
-        print("1. Login to System")
-        print("2. Exit")
-
-        choice = input("Enter your choice: ")
-
+        print(sanitize_output("=" * 50))
+        print(sanitize_output("⚙️  URBAN MOBILITY CONSOLE"))
+        print(sanitize_output("=" * 50))
+        print(sanitize_output("1. Login to System"))
+        print(sanitize_output("2. Exit"))
+        try:
+            choice = validate_input(input("Enter your choice: ").strip(), pattern=r"^[1-2]$", context="Pre-login Menu Choice")
+        except ValueError as e:
+            print(sanitize_output(f"Invalid input: {e}"))
+            continue
         if choice == "1":
             role, username = login()
             if role:
@@ -456,14 +461,18 @@ def pre_login_menu():
                     show_main_menu(role, username)
                     break
         elif choice == "2":
-            print("👋 Exiting system.")
+            print(sanitize_output("👋 Exiting system."))
             exit()
         else:
-            print("❌ Invalid choice.")
+            print(sanitize_output("❌ Invalid choice."))
 
 # === START APP ===
 if __name__ == "__main__":
     db_context = DbContext()
     db_context.initialize_database()
     while True:
-        pre_login_menu()
+        try:
+            pre_login_menu()
+        except KeyboardInterrupt:
+            print("\n👋 Exiting system.")
+            exit()
