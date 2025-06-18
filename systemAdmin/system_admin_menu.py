@@ -1,3 +1,4 @@
+from DbContext.crypto_utils import hash_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
 import os
 from Login.verification import Verification
@@ -140,7 +141,7 @@ def edit_account_menu(username):
                 while not verified_password:
                     new_password = input("Enter new password: ")
                     verified_password = Verification.verify_Password(new_password)
-                hashed_password = Verification.hash_password(new_password)
+                hashed_password = hash_password(new_password)
                 user = sysAd.get_username(username)
                 if sysAd.reset_password_system(user, hashed_password):
                     print("Password updated successfully.")

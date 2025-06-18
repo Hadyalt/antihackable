@@ -349,7 +349,7 @@ class systemAdmin:
 
         new_password = input("Enter the new temporary password: ").strip()
         if Verification.verify_Password(new_password):
-            hashed_password = Verification.hash_password(new_password)
+            hashed_password = hash_password(new_password)
             self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
             print(f"Password for service engineer {username_to_reset} has been reset.")
             logger = EncryptedLogger()
@@ -377,12 +377,11 @@ class systemAdmin:
             if not password:
                 print("Password cannot be empty.")
                 return False
-            password = hash_password(password)
             hashed_password_database = self.get_hashed_password(matching_users[0][0])
             if not hashed_password_database:
                 print(f"No hashed password found for user '{username}'.")
                 return False
-            if (password == hashed_password_database):
+            if (verify_password(password, hashed_password_database)):
                 return True  
     
     def get_hashed_password(self, username):
