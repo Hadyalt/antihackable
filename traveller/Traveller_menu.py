@@ -252,6 +252,9 @@ def view_travellers(username):
     db.connect()
     logger = EncryptedLogger()
     search_term = input("Enter search term (leave blank for all): ").strip()
+    if search_term and not re.match(r'^[\w\s@.-]*$', search_term):
+        print("Invalid search term. Only letters, numbers, spaces, @, ., and - are allowed.")
+        return
     if search_term:
         travellers = db.search_travellers(search_term)
         logger.log_entry(
@@ -288,6 +291,10 @@ def update_traveller(updater):
     logger = EncryptedLogger()
     db.connect()
     tid = input("Traveller ID to update: ").strip()
+    # Input validation: ensure tid is numeric
+    if not tid.isdigit():
+        print("Invalid Traveller ID. Must be numeric.")
+        return
     traveller = db.get_traveller_by_id(tid)
     if not traveller:
         print("Traveller not found.")
