@@ -4,6 +4,7 @@ from serviceEngineer.ServiceEngineer import ServiceEngineer
 from scooter import Scooter
 from systemAdmin.system_admin import systemAdmin
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
+from um_members import pre_login_menu
 
 
 
@@ -36,6 +37,7 @@ def reset_password_flow(current_user):
     else:
         logger = EncryptedLogger()
         logger.log_entry(f"{current_user}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+        pre_login_menu()
 
 
 def main(username):

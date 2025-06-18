@@ -2,6 +2,7 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
+from um_members import pre_login_menu
 
 
 class systemAdmin:
@@ -163,7 +164,7 @@ class systemAdmin:
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
-                return
+                pre_login_menu()
         elif choice == "2":
             if (self.confirm_password(updater)):
                 new_password = input("Enter the new password: ").strip()
@@ -178,7 +179,7 @@ class systemAdmin:
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
-                return
+                pre_login_menu()
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()
             if Verification.verify_name(new_first_name):
@@ -211,18 +212,22 @@ class systemAdmin:
         if not matching_users:
             print(f"No service engineer found with username '{username_to_delete}'.")
             return
-
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            enc_username = matching_users[0][0]
-            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, "serviceengineer"))
-            connection.commit()
-            print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {decrypt(matching_users[0][0])} is deleted", "No")
+        if self.confirm_password(deletor):
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                enc_username = matching_users[0][0]
+                cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, "serviceengineer"))
+                connection.commit()
+                print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {decrypt(matching_users[0][0])} is deleted", "No")
+            else:
+                print("Failed to connect to the database.")
         else:
-            print("Failed to connect to the database.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{deletor}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+            pre_login_menu()
     
     # def delete_service_engineer(self): #Delete by removing the record
     #     servEng = self.view_all_service_engineers()
