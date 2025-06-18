@@ -23,6 +23,24 @@ def display_menu():
 
 def reset_password_flow(current_user):
     engineer = ServiceEngineer()
+    sysAd = systemAdmin()
+    if (sysAd.confirm_password(current_user)):
+        print("\n** Password Reset **")
+        verified_password = False
+        while not verified_password:
+            password = input("Enter new password: ")
+            verified_password = Verification.verify_Password(password)
+            confirm_password = input("Confirm new password: ")
+            if confirm_password != password:
+                print("Error: Passwords do not match!")
+                print("Process cancelled.")
+                break
+        engineer.reset_password(current_user, password)
+        print("Password reset completed. Check system messages for status.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{current_user}", "Changed his own password", f" ", "No")
+    else:
+        print("Incorrect password. Cannot change password.")
     print(sanitize_output("\n** Password Reset **"))
     verified_password = False
     while not verified_password:

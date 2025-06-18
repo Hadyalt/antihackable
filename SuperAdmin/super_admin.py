@@ -58,25 +58,33 @@ class SuperAdmin:
         print("4. Update Last Name")
         print("5. Go Back")
         choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
-        if choice == "1":
-            new_username = input("Enter the new username: ").strip()
-            if Verification.verify_username(new_username):
-                self.set_new_username(matching_users[0][0], new_username)
-                print(f"System admin {decrypt(matching_users[0][0])} updated to {new_username}.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Updated System Admin Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
+        if choice == "1":  
+            if self.confirm_password():  
+                new_username = input("Enter the new username: ").strip()
+                if Verification.verify_username(new_username):
+                    self.set_new_username(matching_users[0][0], new_username)
+                    print(f"System admin {decrypt(matching_users[0][0])} updated to {new_username}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Updated System Admin Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
+                else:
+                    print("Invalid username format. Please try again.")
             else:
-                print("Invalid username format. Please try again.")
+                print("Incorrect password. Update cancelled.")
+                return
         elif choice == "2":
-            new_password = input("Enter the new password: ").strip()
-            if Verification.verify_Password(new_password):
-                hashed = hash_password(new_password)
-                self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
-                print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
+            if self.confirm_password():
+                new_password = input("Enter the new password: ").strip()
+                if Verification.verify_Password(new_password):
+                    hashed = hash_password(new_password)
+                    self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
+                    print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
+                else:
+                    print("Invalid password format. Please try again.")
             else:
-                print("Invalid password format. Please try again.")
+                print("Incorrect password. Reset cancelled.")
+                return
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()
             if Verification.verify_name(new_first_name):
@@ -226,3 +234,10 @@ class SuperAdmin:
                 print("Invalid selection.")
         except ValueError:
             print("Invalid input. Please enter a number.")
+
+    def confirm_password(self):
+        password = input("Enter your current password: ")
+        if (password == "Admin_123?"):
+            return True
+        else:
+            return False
