@@ -17,6 +17,10 @@ class DbContext:
         return self.connection
 
     def create_table(self, table_name, schema):
+        # Whitelist allowed table names to prevent SQL injection
+        allowed_tables = {"User", "Traveller", "Scooter", "backup_recovery_list"}
+        if table_name not in allowed_tables:
+            raise ValueError(f"Table name '{table_name}' is not allowed.")
         if self.connection:
             cursor = self.connection.cursor()
             cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})")
@@ -78,6 +82,17 @@ class DbContext:
             InServiceDate TEXT NOT NULL DEFAULT (datetime('now'))
         """
         self.create_table("Scooter", scooter_schema)
+        # Create the backup_recovery_list table
+        backup_recovery_list_schema = """
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            backup_name TEXT NOT NULL,
+            system_admin TEXT NOT NULL,
+            recovery_code TEXT NOT NULL,
+            used INTEGER NOT NULL DEFAULT 0,
+            used_at TEXT DEFAULT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        """
+        self.create_table("backup_recovery_list", backup_recovery_list_schema)
         self.close()
         
     
