@@ -3,7 +3,7 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
-from um_members import pre_login_menu
+
 
 
 class SuperAdmin:
@@ -72,6 +72,7 @@ class SuperAdmin:
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                from um_members import pre_login_menu
                 pre_login_menu()
         elif choice == "2":
             if self.confirm_password():
@@ -87,6 +88,7 @@ class SuperAdmin:
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                from um_members import pre_login_menu
                 pre_login_menu()
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()
@@ -133,6 +135,7 @@ class SuperAdmin:
         else:
             logger = EncryptedLogger()
             logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+            from um_members import pre_login_menu
             pre_login_menu()
         
     def view_all_system_admins(self):
