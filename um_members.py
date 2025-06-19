@@ -3,6 +3,7 @@ import time
 import os
 import random
 import string
+import getpass
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
@@ -30,7 +31,7 @@ def login():
             print("🔐 URBAN MOBILITY - LOGIN")
             print("=" * 50)
             username = input("Username: ").strip()
-            password = input("Password: ").strip()
+            password = getpass.getpass("Password: ").strip()
 
             # Hardcoded super admin
             if username.lower() == "super_admin" and password == "Admin_123?":
@@ -145,7 +146,8 @@ def show_main_menu(role, username):
     if role == "superadmin":
         print("1. Super Admin Menu")
         print("2. Backup & Restore")
-        print("3. Exit")
+        print("3. Logout")
+        print("4. Exit")
         choice = input("Enter your choice: ")
         if choice == "1":
             SuperMenu.super_admin_menu(username)
@@ -153,7 +155,10 @@ def show_main_menu(role, username):
             backup_menu(role)
         elif choice == "3":
             print("👋 Logging out.")
-            return
+            return  # Return to pre-login menu
+        elif choice == "4":
+            print("👋 Exiting system.")
+            exit()
         else:
             print("Invalid choice.")
     elif role == "systemadmin":
@@ -163,7 +168,7 @@ def show_main_menu(role, username):
             print("You have a reset password, please reset it before proceeding.")
             verified_password = False
             while not verified_password:
-                password = input("Enter password: ")
+                password = getpass.getpass("Enter password: ")
                 verified_password = Verification.verify_Password(password)
             hashed_password = hash_password(password)
             sysAd.reset_password_function(user, hashed_password, "systemadmin")
@@ -174,18 +179,36 @@ def show_main_menu(role, username):
 
         print("1. System Admin Menu")
         print("2. Backup & Restore")
-        print("3. Exit")
+        print("3. Logout")
+        print("4. Exit")
         choice = input("Enter your choice: ")
         if choice == "1":
             SystemMenu.system_admin_menu(username)
         elif choice == "2":
             backup_menu(role, username)
         elif choice == "3":
+            print("👋 Logging out.")
+            return  # Return to pre-login menu
+        elif choice == "4":
+            print("👋 Exiting system.")
             exit()
         else:
             print("Invalid choice.")
     elif role == "serviceengineer":
-        ServiceEngineer_menu.main(username)
+        print("1. Service Engineer Menu")
+        print("2. Logout")
+        print("3. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            ServiceEngineer_menu.main(username)
+        elif choice == "2":
+            print("👋 Logging out.")
+            return
+        elif choice == "3":
+            print("👋 Exiting system.")
+            exit()
+        else:
+            print("Invalid choice.")
     else:
         print("Invalid role.")
         return
