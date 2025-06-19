@@ -4,6 +4,7 @@ from serviceEngineer.ServiceEngineer import ServiceEngineer
 from scooter import Scooter
 from systemAdmin.system_admin import systemAdmin
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
+import getpass
 
 
 
@@ -22,9 +23,9 @@ def reset_password_flow(current_user):
         print("\n** Password Reset **")
         verified_password = False
         while not verified_password:
-            password = input("Enter new password: ")
+            password = getpass.getpass("Enter new password: ")
             verified_password = Verification.verify_Password(password)
-            confirm_password = input("Confirm new password: ")
+            confirm_password = getpass.getpass("Confirm new password: ")
             if confirm_password != password:
                 print("Error: Passwords do not match!")
                 print("Process cancelled.")
@@ -46,7 +47,7 @@ def main(username):
         print("You have a reset password, please reset it before proceeding.")
         verified_password = False
         while not verified_password:
-            password = input("Enter password: ")
+            password = getpass.getpass("Enter password: ")
             verified_password = Verification.verify_Password(password)
         hashed_password = hash_password(password)
         print(hashed_password)

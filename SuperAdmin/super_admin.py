@@ -3,7 +3,7 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
-from valid_in_out_put import validate_input_pass,validate_input_user
+import getpass
 
 
 class SuperAdmin:
@@ -17,7 +17,7 @@ class SuperAdmin:
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
-            password = validate_input_pass(input("Enter password: "))
+            password = getpass.getpass("Enter password: ")
             verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
@@ -74,15 +74,15 @@ class SuperAdmin:
                 return
         elif choice == "2":
             if self.confirm_password():
-                new_password = input("Enter the new password: ").strip()
-                if Verification.verify_Password(new_password):
-                    hashed = hash_password(new_password)
-                    self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
-                    print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
-                    logger = EncryptedLogger()
-                    logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
-                else:
-                    print("Invalid password format. Please try again.")
+                verified_password = False
+                while not verified_password:
+                    password = getpass.getpass("Enter new password: ")
+                    verified_password = Verification.verify_Password(password)
+                hashed = hash_password(password)
+                self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
+                print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
+                logger = EncryptedLogger()
+                logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
             else:
                 print("Incorrect password. Reset cancelled.")
                 return
@@ -237,7 +237,7 @@ class SuperAdmin:
             print("Invalid input. Please enter a number.")
 
     def confirm_password(self):
-        password = input("Enter your current password: ")
+        password = getpass.getpass("Enter your current password: ")
         if (password == "Admin_123?"):
             return True
         else:

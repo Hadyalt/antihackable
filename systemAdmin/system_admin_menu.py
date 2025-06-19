@@ -7,6 +7,7 @@ from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
 from um_members import pre_login_menu
 from scooter.Scooter import main
+import getpass
 
 def system_admin_menu(username):
     current_user = username  # Replace with actual logged-in username
@@ -139,7 +140,7 @@ def edit_account_menu(username):
             if sysAd.confirm_password(username):
                 verified_password = False
                 while not verified_password:
-                    new_password = input("Enter new password: ")
+                    new_password = getpass.getpass("Enter new password: ")
                     verified_password = Verification.verify_Password(new_password)
                 hashed_password = hash_password(new_password)
                 user = sysAd.get_username(username)

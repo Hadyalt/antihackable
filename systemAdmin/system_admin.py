@@ -2,7 +2,7 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
-from valid_in_out_put import validate_input_pass,validate_input_user
+import getpass
 
 
 class systemAdmin:
@@ -57,7 +57,7 @@ class systemAdmin:
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
-            password = validate_input_pass(input("Enter password: "))
+            password = getpass.getpass("Enter password: ")
             verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
@@ -166,7 +166,7 @@ class systemAdmin:
                 return
         elif choice == "2":
             if (self.confirm_password(updater)):
-                new_password = input("Enter the new password: ").strip()
+                new_password = getpass.getpass("Enter the new password: ").strip()
                 if Verification.verify_Password(new_password):
                     hashed = hash_password(new_password)
                     self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
@@ -348,7 +348,7 @@ class systemAdmin:
             print(f"No service engineer found with username '{username_to_reset}'.")
             return
 
-        new_password = input("Enter the new temporary password: ").strip()
+        new_password = getpass.getpass("Enter the new temporary password: ").strip()
         if Verification.verify_Password(new_password):
             hashed_password = hash_password(new_password)
             self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
@@ -360,7 +360,7 @@ class systemAdmin:
  
     def confirm_password(self, username):
         if (username.lower() == "super_admin"):
-            password = input("Enter your password: ")
+            password = getpass.getpass("Enter your password: ")
             if (password == "Admin_123?"):
                 return True
             else:
@@ -374,7 +374,7 @@ class systemAdmin:
             if not matching_users:
                 print(f"No user found with username '{username}'.")
                 return False
-            password = input("Enter your current password: ")
+            password = getpass.getpass("Enter your current password: ")
             if not password:
                 print("Password cannot be empty.")
                 return False
@@ -400,6 +400,6 @@ class systemAdmin:
         else:
             print("Failed to connect to the database.")
             return None
-            
+
 
 

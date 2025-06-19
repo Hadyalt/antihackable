@@ -3,6 +3,7 @@ import time
 import os
 import random
 import string
+import getpass
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
@@ -10,12 +11,7 @@ from Login.verification import Verification
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
-from DbContext.backup_utils import (
-    create_backup,
-    list_backups,
-    restore_backup,
-    delete_backup,
-)
+from backup.backup_menu import backup_menu
 from systemAdmin.system_admin import systemAdmin
 from valid_in_out_put import sanitize_output,validate_input_user,validate_input_pass
 
@@ -33,11 +29,11 @@ def login():
         login.user_attempts = {}  # {username: failed_attempts}
     while True:
         for attempt in range(1, max_attempts + 1):
-            print("\n" + sanitize_output("=" * 50))
-            print(sanitize_output("🔐 URBAN MOBILITY - LOGIN"))
-            print(sanitize_output("=" * 50))
-            username = validate_input_user(input(sanitize_output("Username: ")).strip())
-            password = validate_input_pass(input(sanitize_output("Password: ")).strip())
+            print("\n" + "=" * 50)
+            print("🔐 URBAN MOBILITY - LOGIN")
+            print("=" * 50)
+            username = input("Username: ").strip()
+            password = getpass.getpass("Password: ").strip()
 
             # Hardcoded super admin
             if username == "super_admin" and password == "Admin_123?":
@@ -63,7 +59,8 @@ def login():
                 except Exception:
                     continue
             if not found_enc_username:
-                print(sanitize_output("❌ Username not found."))
+                # Generic error message
+                print(sanitize_output("❌ Wrong username or password."))
                 logger.log_entry(
                     username,
                     "Login attempt",
@@ -137,7 +134,8 @@ def login():
                         conn.close()
                         return role, username
                     else:
-                        print(sanitize_output("❌ Incorrect password."))
+                        # Generic error message
+                        print(sanitize_output("❌ Wrong username or password."))
                         logger.log_entry(
                             username,
                             "Login attempt",
@@ -170,7 +168,8 @@ def login():
                             # Do not allow further attempts for this username in this session
                             break
                 else:
-                    print(sanitize_output("❌ Username not found."))
+                    # Generic error message
+                    print(sanitize_output("❌ Wrong username or password."))
                     logger.log_entry(
                         username,
                         "Login attempt",
@@ -239,17 +238,21 @@ def show_main_menu(role, username):
     print(sanitize_output("=" * 50))
 
     if role == "superadmin":
-        print(sanitize_output("1. Super Admin Menu"))
-        print(sanitize_output("2. Backup & Restore"))
-        print(sanitize_output("3. Exit"))
-        choice = input(sanitize_output("Enter your choice: "))
+        print("1. Super Admin Menu")
+        print("2. Backup & Restore")
+        print("3. Logout")
+        print("4. Exit")
+        choice = input("Enter your choice: ")
         if choice == "1":
             SuperMenu.super_admin_menu(username)
         elif choice == "2":
             backup_menu(role)
         elif choice == "3":
             print(sanitize_output("👋 Logging out."))
-            return
+            return  # Return to pre-login menu
+        elif choice == "4":
+            print("👋 Exiting system.")
+            exit()
         else:
             print(sanitize_output("Invalid choice."))
     elif role == "systemadmin":
@@ -263,7 +266,7 @@ def show_main_menu(role, username):
             )
             verified_password = False
             while not verified_password:
-                password = input(sanitize_output("Enter password: "))
+                password = getpass.getpass(sanitize_output("Enter password: "))
                 verified_password = Verification.verify_Password(password)
             hashed_password = hash_password(password)
             sysAd.reset_password_function(user, hashed_password, "systemadmin")
@@ -281,544 +284,41 @@ def show_main_menu(role, username):
                 "No",
             )
 
-        print(sanitize_output("1. System Admin Menu"))
-        print(sanitize_output("2. Backup & Restore"))
-        print(sanitize_output("3. Exit"))
-        choice = input(sanitize_output("Enter your choice: "))
+        print("1. System Admin Menu")
+        print("2. Backup & Restore")
+        print("3. Logout")
+        print("4. Exit")
+        choice = input("Enter your choice: ")
         if choice == "1":
             SystemMenu.system_admin_menu(username)
         elif choice == "2":
             backup_menu(role, username)
         elif choice == "3":
+            print("👋 Logging out.")
+            return  # Return to pre-login menu
+        elif choice == "4":
+            print("👋 Exiting system.")
             exit()
         else:
             print(sanitize_output("Invalid choice."))
     elif role == "serviceengineer":
-        ServiceEngineer_menu.main(username)
-    else:
-        print(sanitize_output("Invalid role."))
-        return
-
-
-def generate_restore_code(length=12):
-    """Generate a random alphanumeric restore code."""
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
-
-def add_restore_code(backup_name, system_admin, db_path=DB_PATH):
-    # Fetch all entries and decrypt to check for existing unused code
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT backup_name, system_admin, used FROM backup_recovery_list")
-    rows = cursor.fetchall()
-    for enc_backup_name, enc_system_admin, used in rows:
-        try:
-            dec_backup_name = decrypt(enc_backup_name)
-            dec_system_admin = decrypt(enc_system_admin)
-        except Exception:
-            continue
-        if (
-            dec_backup_name == backup_name
-            and dec_system_admin == system_admin
-            and used == 0
-        ):
-            conn.close()
-            print(
-                f"System Admin '{system_admin}' already has an active recovery code for backup '{backup_name}'."
-            )
-            return None
-    # Generate a new restore code
-    code = generate_restore_code()
-    enc_backup_name = encrypt(backup_name)
-    enc_system_admin = encrypt(system_admin)
-    enc_code = encrypt(code)
-    cursor.execute(
-        """
-        INSERT INTO backup_recovery_list (backup_name, system_admin, recovery_code, used)
-        VALUES (?, ?, ?, 0)
-    """,
-        (enc_backup_name, enc_system_admin, enc_code),
-    )
-    conn.commit()
-    conn.close()
-    return code
-
-
-def revoke_restore_code(backup_name, system_admin, db_path=DB_PATH):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, backup_name, system_admin, used FROM backup_recovery_list"
-    )
-    rows = cursor.fetchall()
-    for row in rows:
-        row_id, enc_backup_name, enc_system_admin, used = row
-        if (
-            used == 0
-            and decrypt(enc_backup_name) == backup_name
-            and decrypt(enc_system_admin) == system_admin
-        ):
-            cursor.execute(
-                """
-                UPDATE backup_recovery_list
-                SET used = 1, used_at = datetime('now')
-                WHERE id = ?
-            """,
-                (row_id,),
-            )
-            conn.commit()
-            conn.close()
-            return True
-    conn.close()
-    return False
-
-
-def validate_restore_code(backup_name, system_admin, code, db_path=DB_PATH):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, backup_name, system_admin, recovery_code, used FROM backup_recovery_list"
-    )
-    rows = cursor.fetchall()
-    for row in rows:
-        row_id, enc_backup_name, enc_system_admin, enc_code, used = row
-        if (
-            used == 0
-            and decrypt(enc_backup_name) == backup_name
-            and decrypt(enc_system_admin) == system_admin
-            and decrypt(enc_code) == code
-        ):
-            cursor.execute(
-                """
-                UPDATE backup_recovery_list
-                SET used = 1, used_at = datetime('now')
-                WHERE id = ?
-            """,
-                (row_id,),
-            )
-            conn.commit()
-            conn.close()
-            return True
-    conn.close()
-    return False
-
-
-def get_system_admins(db_path=DB_PATH):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT Username FROM User WHERE Role = 'systemadmin' AND IsActive = 1"
-    )
-    admins = [decrypt(row[0]) for row in cursor.fetchall()]
-    conn.close()
-    return admins
-
-
-def get_decrypted_backups():
-    backups = list_backups()
-    # backups on disk are not encrypted, but in DB they are
-    return backups
-
-
-def backup_menu(role, username=None):
-    logger = EncryptedLogger()
-    while True:
-        print(sanitize_output("\n=== BACKUP & RESTORE MENU ==="))
-        print(sanitize_output("1. Create Backup"))
-        print(sanitize_output("2. List Backups"))
-        print(sanitize_output("3. Restore Backup"))
-        print(sanitize_output("4. Delete Backup"))
-        if role == "superadmin":
-            print("5. Generate Restore-Code for System Admin")
-            print("6. Revoke Restore-Code")
-            print("7. Exit Backup Menu")
-            valid_choices = ["1", "2", "3", "4", "5", "6", "7"]
-        else:
-            print(sanitize_output("5. Exit Backup Menu"))
-            valid_choices = ["1", "2", "3", "4", "5"]
-        choice = input(sanitize_output("Enter your choice: ")).strip()
-        if choice not in valid_choices:
-            print("Invalid choice. Please enter a valid option.")
-            logger.log_entry(
-                username or "system",
-                "Backup Menu",
-                f"Invalid menu choice: {choice}",
-                "No",
-            )
-            continue
+        print("1. Service Engineer Menu")
+        print("2. Logout")
+        print("3. Exit")
+        choice = input("Enter your choice: ")
         if choice == "1":
-            backup_path = create_backup(username)
-            print(sanitize_output(f"Backup created: {backup_path}"))
-            logger.log_entry(
-                username or "system",
-                "Backup Menu",
-                f"Created backup: {backup_path}",
-                "No",
-            )
-            if role == "systemadmin":
-                print(
-                    "please contact a Super Admin to add a recovery code for this backup."
-                )
-            if role == "superadmin":
-                while True:
-                    add_code = (
-                        input(
-                            "Do you want to add a recovery code for a System Admin? (yes/no): "
-                        )
-                        .strip()
-                        .lower()
-                    )
-                    if add_code not in ["yes", "no"]:
-                        print("Invalid input. Please enter 'yes' or 'no'.")
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            f"Invalid input for add recovery code: {add_code}",
-                            "No",
-                        )
-                        continue
-                    if add_code == "no":
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            "Chose not to add recovery code after backup.",
-                            "No",
-                        )
-                        break
-                    admins = get_system_admins()
-                    if not admins:
-                        print("No active System Admins found.")
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            "No active System Admins found for recovery code.",
-                            "No",
-                        )
-                        break
-                    while True:
-                        print("System Admins:")
-                        for idx, admin in enumerate(admins, 1):
-                            print(f"{idx}. {admin}")
-                        sel = input("Select System Admin number: ").strip()
-                        if not sel.isdigit() or int(sel) < 1 or int(sel) > len(admins):
-                            print("Invalid selection. Please enter a valid number.")
-                            logger.log_entry(
-                                username or "system",
-                                "Backup Menu",
-                                f"Invalid System Admin selection: {sel}",
-                                "No",
-                            )
-                            continue
-                        sel_idx = int(sel) - 1
-                        try:
-                            code = add_restore_code(
-                                os.path.basename(backup_path), admins[sel_idx]
-                            )
-                            if code:
-                                print(
-                                    f"Restore code for {admins[sel_idx]} and backup {os.path.basename(backup_path)}: {code}"
-                                )
-                                logger.log_entry(
-                                    username or "system",
-                                    "Backup Menu",
-                                    f"Generated restore code for {admins[sel_idx]} and backup {os.path.basename(backup_path)}",
-                                    "No",
-                                )
-                            break
-                        except Exception as e:
-                            print(f"Failed to generate restore code: {e}")
-                            logger.log_entry(
-                                username or "system",
-                                "Backup Menu",
-                                f"Failed to generate restore code: {e}",
-                                "Yes",
-                            )
-                    break
+            ServiceEngineer_menu.main(username)
         elif choice == "2":
-            backups = list_backups()
-            logger.log_entry(
-                username or "system", "Backup Menu", "Listed backups", "No"
-            )
-            if backups:
-                print(sanitize_output("Available backups:"))
-                for b in backups:
-                    print(sanitize_output(f"- {b}"))
-            else:
-                print(sanitize_output("No backups found."))
-        elif choice == "3":
-            backups = list_backups()
-            if not backups:
-                print(sanitize_output("No backups to restore."))
-                logger.log_entry(
-                    username or "system", "Backup Menu", "No backups to restore.", "No"
-                )
-                continue
-            while True:
-                print(sanitize_output("Available backups:"))
-                for idx, b in enumerate(backups, 1):
-                    print(sanitize_output(f"{idx}. {b}"))
-                sel = input(
-                    sanitize_output("Select backup number to restore: ")
-                ).strip()
-                if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
-                    print("Invalid selection. Please enter a valid number.")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Invalid restore selection: {sel}",
-                        "No",
-                    )
-                    continue
-                sel_idx = int(sel) - 1
-                if role == "systemadmin":
-                    code = input("Enter your restore code: ").strip()
-                    if not validate_restore_code(backups[sel_idx], username, code):
-                        print("Invalid or already used restore code.")
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            f"Invalid or used restore code for {backups[sel_idx]}",
-                            "Yes",
-                        )
-                        continue
-                try:
-                    restore_backup(backups[sel_idx], username)
-                    print("Restore complete. Please restart the application.")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Restored backup: {backups[sel_idx]}",
-                        "No",
-                    )
-                    exit()
-                except Exception as e:
-                    print(f"Restore failed: {e}")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Restore failed: {e}",
-                        "Yes",
-                    )
-                break
-        elif choice == "4":
-            backups = list_backups()
-            if not backups:
-                print(sanitize_output("No backups to delete."))
-                logger.log_entry(
-                    username or "system", "Backup Menu", "No backups to delete.", "No"
-                )
-                continue
-            while True:
-                print(sanitize_output("Available backups:"))
-                for idx, b in enumerate(backups, 1):
-                    print(sanitize_output(f"{idx}. {b}"))
-                sel = input(sanitize_output("Select backup number to delete: ")).strip()
-                if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
-                    print("Invalid selection. Please enter a valid number.")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Invalid delete selection: {sel}",
-                        "No",
-                    )
-                    continue
-                sel_idx = int(sel) - 1
-                try:
-                    delete_backup(backups[sel_idx], username)
-                    print(f"Backup deleted: {backups[sel_idx]}")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Deleted backup: {backups[sel_idx]}",
-                        "No",
-                    )
-                except Exception as e:
-                    print(f"Delete failed: {e}")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Delete failed: {e}",
-                        "Yes",
-                    )
-                break
-        elif role == "superadmin" and choice == "5":
-            backups = list_backups()
-            if not backups:
-                print("No backups available.")
-                logger.log_entry(
-                    username or "system",
-                    "Backup Menu",
-                    "No backups available for restore code generation.",
-                    "No",
-                )
-                continue
-            while True:
-                print("Available backups:")
-                for idx, b in enumerate(backups, 1):
-                    print(f"{idx}. {b}")
-                sel = input("Select backup number: ").strip()
-                if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
-                    print("Invalid selection. Please enter a valid number.")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Invalid backup selection for code: {sel}",
-                        "No",
-                    )
-                    continue
-                sel_idx = int(sel) - 1
-                admins = get_system_admins()
-                if not admins:
-                    print("No active System Admins found.")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        "No active System Admins found for code generation.",
-                        "No",
-                    )
-                    break
-                while True:
-                    print("System Admins:")
-                    for idx, admin in enumerate(admins, 1):
-                        print(f"{idx}. {admin}")
-                    admin_sel = input("Select System Admin number: ").strip()
-                    if (
-                        not admin_sel.isdigit()
-                        or int(admin_sel) < 1
-                        or int(admin_sel) > len(admins)
-                    ):
-                        print("Invalid selection. Please enter a valid number.")
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            f"Invalid System Admin selection for code: {admin_sel}",
-                            "No",
-                        )
-                        continue
-                    admin_idx = int(admin_sel) - 1
-                    try:
-                        code = add_restore_code(backups[sel_idx], admins[admin_idx])
-                        if code:
-                            print(
-                                f"Restore code for {admins[admin_idx]} and backup {backups[sel_idx]}: {code}"
-                            )
-                            logger.log_entry(
-                                username or "system",
-                                "Backup Menu",
-                                f"Generated restore code for {admins[admin_idx]} and backup {backups[sel_idx]}",
-                                "No",
-                            )
-                        break
-                    except Exception as e:
-                        print(f"Failed to generate restore code: {e}")
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            f"Failed to generate restore code: {e}",
-                            "Yes",
-                        )
-                break
-        elif role == "superadmin" and choice == "6":
-            backups = list_backups()
-            if not backups:
-                print("No backups available.")
-                logger.log_entry(
-                    username or "system",
-                    "Backup Menu",
-                    "No backups available for revoke.",
-                    "No",
-                )
-                continue
-            while True:
-                print("Available backups:")
-                for idx, b in enumerate(backups, 1):
-                    print(f"{idx}. {b}")
-                sel = input("Select backup number: ").strip()
-                if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
-                    print("Invalid selection. Please enter a valid number.")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        f"Invalid backup selection for revoke: {sel}",
-                        "No",
-                    )
-                    continue
-                sel_idx = int(sel) - 1
-                admins = get_system_admins()
-                if not admins:
-                    print("No active System Admins found.")
-                    logger.log_entry(
-                        username or "system",
-                        "Backup Menu",
-                        "No active System Admins found for revoke.",
-                        "No",
-                    )
-                    break
-                while True:
-                    print("System Admins:")
-                    for idx, admin in enumerate(admins, 1):
-                        print(f"{idx}. {admin}")
-                    admin_sel = input("Select System Admin number: ").strip()
-                    if (
-                        not admin_sel.isdigit()
-                        or int(admin_sel) < 1
-                        or int(admin_sel) > len(admins)
-                    ):
-                        print("Invalid selection. Please enter a valid number.")
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            f"Invalid System Admin selection for revoke: {admin_sel}",
-                            "No",
-                        )
-                        continue
-                    admin_idx = int(admin_sel) - 1
-                    try:
-                        if revoke_restore_code(backups[sel_idx], admins[admin_idx]):
-                            print(
-                                f"Restore code for {admins[admin_idx]} and backup {backups[sel_idx]} revoked."
-                            )
-                            logger.log_entry(
-                                username or "system",
-                                "Backup Menu",
-                                f"Revoked restore code for {admins[admin_idx]} and backup {backups[sel_idx]}",
-                                "No",
-                            )
-                        else:
-                            print("No active restore code found to revoke.")
-                            logger.log_entry(
-                                username or "system",
-                                "Backup Menu",
-                                f"No active restore code found to revoke for {admins[admin_idx]} and backup {backups[sel_idx]}",
-                                "No",
-                            )
-                        break
-                    except Exception as e:
-                        print(f"Failed to revoke restore code: {e}")
-                        logger.log_entry(
-                            username or "system",
-                            "Backup Menu",
-                            f"Failed to revoke restore code: {e}",
-                            "Yes",
-                        )
-                break
-        elif (role == "superadmin" and choice == "7") or (
-            role != "superadmin" and choice == "5"
-        ):
-            logger.log_entry(
-                username or "system", "Backup Menu", "Exited backup menu.", "No"
-            )
+            print("👋 Logging out.")
             return
+        elif choice == "3":
+            print("👋 Exiting system.")
+            exit()
         else:
-            print(sanitize_output("Invalid choice."))
-
-            logger.log_entry(
-                username or "system",
-                "Backup Menu",
-                f"Invalid menu choice (else): {choice}",
-                "No",
-            )
-
+            print("Invalid choice.")
+    else:
+        print("Invalid role.")
+        return
 
 # === MAIN MENU BEFORE LOGIN ===
 def pre_login_menu():
