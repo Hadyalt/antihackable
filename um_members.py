@@ -147,22 +147,19 @@ def show_main_menu(role, username):
         if role == "superadmin":
             print("[1] Super Admin Menu")
             print("[2] Backup & Restore")
-            print("[3] Go Back")
-            print("[4] Logout")
-            print("[5] Exit")
+            print("[3] Logout")
+            print("[4] Exit")
             choice = input("Enter your choice: ")
             if choice == "1":
                 SuperMenu.super_admin_menu(username)
             elif choice == "2":
                 backup_menu(role)
             elif choice == "3":
-                return  # Go back to previous menu
-            elif choice == "4":
                 print("👋 Logging out.")
                 from um_members import pre_login_menu
                 pre_login_menu()
                 return
-            elif choice == "5":
+            elif choice == "4":
                 print("👋 Exiting system.")
                 exit()
             else:
@@ -185,23 +182,20 @@ def show_main_menu(role, username):
 
             print("[1] System Admin Menu")
             print("[2] Backup & Restore")
-            print("[3] Go Back")
-            print("[4] Logout")
-            print("[5] Exit")
+            print("[3] Logout")
+            print("[4] Exit")
             choice = input("Enter your choice: ")
             if choice == "1":
                 SystemMenu.system_admin_menu(username)
             elif choice == "2":
                 backup_menu(role, username)
             elif choice == "3":
-                return  # Go back to previous menu
-            elif choice == "4":
                 print("👋 Logging out.")
                 from um_members import pre_login_menu
                 logger.log_entry(f"{username}", "Logged out", f"Success", "No")
                 pre_login_menu()
                 return
-            elif choice == "5":
+            elif choice == "4":
                 logger.log_entry(f"{username}", "Exited system", f"Success", "No")
                 print("👋 Exiting system.")
                 exit()
@@ -209,20 +203,17 @@ def show_main_menu(role, username):
                 print("Invalid choice.")
         elif role == "serviceengineer":
             print("[1] Service Engineer Menu")
-            print("[2] Go Back")
-            print("[3] Logout")
-            print("[4] Exit")
+            print("[2] Logout")
+            print("[3] Exit")
             choice = input("Enter your choice: ")
             if choice == "1":
                 ServiceEngineer_menu.main(username)
             elif choice == "2":
-                return  # Go back to previous menu
-            elif choice == "3":
                 print("👋 Logging out.")
                 from um_members import pre_login_menu
                 pre_login_menu()
                 return
-            elif choice == "4":
+            elif choice == "3":
                 print("👋 Exiting system.")
                 exit()
             else:
