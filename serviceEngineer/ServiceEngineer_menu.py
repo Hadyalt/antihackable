@@ -6,8 +6,6 @@ from systemAdmin.system_admin import systemAdmin
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 
 
-
-
 def display_menu():
     print("\n==== Service Engineer Menu ====")
     print("1. Scooter Menu")
@@ -53,7 +51,6 @@ def main(username):
             password = input("Enter password: ")
             verified_password = Verification.verify_Password(password)
         hashed_password = hash_password(password)
-        print(hashed_password)
         sysAd.reset_password_function(user, hashed_password, "serviceengineer")
         sysAd.reset_resetted_password_check(user, "serviceengineer")
         print("Password reset completed. You can now proceed with the menu options.")

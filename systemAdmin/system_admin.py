@@ -368,40 +368,46 @@ class systemAdmin:
             print("Invalid password format. Please try again.")
  
     def confirm_password(self, username):
-        if (username.lower() == "super_admin"):
-            tries = 1
-            while (tries < 3):
+        tries = 0
+        max_tries = 3
+        if username.lower() == "super_admin":
+            while tries < max_tries:
                 password = input("Enter your password: ")
-                if (password == "Admin_123?"):
+                if password == "Admin_123?":
                     return True
                 else:
                     tries += 1
-                    print(f"Incorrect password. You have {3 - tries} tries left.")
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
             return False
         else:
-            tries = 1
-            while (tries < 3):
+            while tries < max_tries:
                 all_users = self.view_all_users_no_print()
                 if not all_users:
                     print("No users found in the system.")
-                    return False
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
                 matching_users = [user for user in all_users if decrypt(user[0]).lower() == username.lower()]
                 if not matching_users:
                     print(f"No user found with username '{username}'.")
-                    return False
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
                 password = input("Enter your current password: ")
                 if not password:
-                    print("Password cannot be empty.")
-                    return False
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
                 hashed_password_database = self.get_hashed_password(matching_users[0][0])
                 if not hashed_password_database:
-                    print(f"No hashed password found for user '{username}'.")
-                    return False
-                if (verify_password(password, hashed_password_database)):
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
+                if verify_password(password, hashed_password_database):
                     return True
                 else:
                     tries += 1
-                    print(f"Incorrect password. You have {3 - tries} tries left.")
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
             return False  
     
     def get_hashed_password(self, username):
@@ -419,6 +425,6 @@ class systemAdmin:
         else:
             print("Failed to connect to the database.")
             return None
-            
+
 
 
