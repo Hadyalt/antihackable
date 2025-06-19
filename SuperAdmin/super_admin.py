@@ -71,8 +71,10 @@ class SuperAdmin:
                 else:
                     print("Invalid username format. Please try again.")
             else:
-                print("Incorrect password. Update cancelled.")
-                return
+                logger = EncryptedLogger()
+                logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                from um_members import pre_login_menu
+                pre_login_menu()
         elif choice == "2":
             if self.confirm_password():
                 verified_password = False
@@ -85,8 +87,10 @@ class SuperAdmin:
                 logger = EncryptedLogger()
                 logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
             else:
-                print("Incorrect password. Reset cancelled.")
-                return
+                logger = EncryptedLogger()
+                logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                from um_members import pre_login_menu
+                pre_login_menu()
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()
             if Verification.verify_name(new_first_name):
@@ -117,17 +121,23 @@ class SuperAdmin:
         if not matching_users:
             print(f"No system admin found with username '{username_to_delete}'.")
             return
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            enc_username = matching_users[0][0]
-            cursor.execute("UPDATE User SET IsActive = 0 WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
-            connection.commit()
-            print(f"System admin '{decrypt(matching_users[0][0])}' has been deleted.")
-            logger = EncryptedLogger()
-            logger.log_entry("super_admin", "Deleted System Admin Account", f"Username: {decrypt(matching_users[0][0])} is deleted" , "No")
+        if self.confirm_password():
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                enc_username = matching_users[0][0]
+                cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
+                connection.commit()
+                print(f"System admin '{decrypt(matching_users[0][0])}' has been deleted.")
+                logger = EncryptedLogger()
+                logger.log_entry("super_admin", "Deleted System Admin Account", f"Username: {decrypt(matching_users[0][0])} is deleted" , "No")
+            else:
+                print("Failed to connect to the database.")
         else:
-            print("Failed to connect to the database.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+            from um_members import pre_login_menu
+            pre_login_menu()
         
     def view_all_system_admins(self):
         connection = self.db_context.connect()
@@ -238,8 +248,12 @@ class SuperAdmin:
             print("Invalid input. Please enter a number.")
 
     def confirm_password(self):
-        password = getpass.getpass("Enter your current password: ")
-        if (password == "Admin_123?"):
-            return True
-        else:
-            return False
+        tries = 0
+        while (tries < 3):
+            password = getpass.getpass("Enter your password: ")
+            if (password == "Admin_123?"):
+                return True
+            else:
+                tries += 1
+                print(f"Incorrect password. You have {3 - tries} tries left.")
+        return False

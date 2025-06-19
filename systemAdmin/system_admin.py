@@ -83,7 +83,7 @@ class systemAdmin:
         logger.log_entry(f"{creator}", "Created Service Engineer Account", f"username: {user_name}", "No")
         return user_name
     
-    def view_all_users(self):
+    def view_all_users(self, viewer):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
@@ -98,6 +98,8 @@ class systemAdmin:
             connection.close()
         else:
             print("Failed to connect to the database.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{viewer}", "Viewed all users", f" ", "No")
         return users
 
     def view_all_users_no_print(self):
@@ -163,8 +165,10 @@ class systemAdmin:
                 else:
                     print("Invalid username format. Please try again.")
             else:
-                print("Incorrect password. You cannot update the username.")
-                return
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                from um_members import pre_login_menu
+                pre_login_menu()
         elif choice == "2":
             if (self.confirm_password(updater)):
                 new_password = getpass.getpass("Enter the new password: ").strip()
@@ -177,8 +181,10 @@ class systemAdmin:
                 else:
                     print("Invalid password format. Please try again.")
             else:
-                print("Incorrect password. You cannot reset the password.")
-                return
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                from um_members import pre_login_menu
+                pre_login_menu()
         elif choice == "3":
             new_first_name = input("Enter the new first name: ").strip()
             if Verification.verify_name(new_first_name):
@@ -199,7 +205,7 @@ class systemAdmin:
         else:
             print("Invalid choice. Please try again.")
     
-    def delete_service_engineer(self, deletor): #Delete by setting IsActive to 0
+    def delete_service_engineer(self, deletor): 
         servEng = self.view_all_service_engineers()
         if not servEng:
             print("No service engineers available to delete.")
@@ -211,63 +217,34 @@ class systemAdmin:
         if not matching_users:
             print(f"No service engineer found with username '{username_to_delete}'.")
             return
-
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            enc_username = matching_users[0][0]
-            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, "serviceengineer"))
-            connection.commit()
-            print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {decrypt(matching_users[0][0])} is deleted", "No")
+        if self.confirm_password(deletor):
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                enc_username = matching_users[0][0]
+                cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (enc_username, "serviceengineer"))
+                connection.commit()
+                print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {decrypt(matching_users[0][0])} is deleted", "No")
+            else:
+                print("Failed to connect to the database.")
         else:
-            print("Failed to connect to the database.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{deletor}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+            from um_members import pre_login_menu
+            pre_login_menu()
     
-    # def delete_service_engineer(self): #Delete by removing the record
-    #     servEng = self.view_all_service_engineers()
-    #     if not servEng:
-    #         print("No service engineers available to delete.")
-    #         return
-    #     username_to_delete = input("Enter the username of the service engineer you want to delete: ").strip()
-
-    #     # Check if the username exists in the servEng list
-    #     matching_users = [user for user in servEng if user[0].lower() == username_to_delete.lower()]  # assumes username is in column 0
-
-    #     if not matching_users:
-    #         print(f"No service engineer found with username '{username_to_delete}'.")
-    #         return
-
-    #     connection = self.db_context.connect()
-    #     if connection:
-    #         cursor = connection.cursor()
-    #         cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username_to_delete, "serviceengineer"))
-    #         connection.commit()
-    #         print(f"service engineer '{username_to_delete}' has been deleted.")
-    #     else:
-    #         print("Failed to connect to the database.")
-    
-    def delete_account(self, username): #Delete by setting IsActive to 0
+    def delete_account(self, username):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            cursor.execute("UPDATE User SET IsActive = 0 WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
+            cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (username, "systemadmin"))
             connection.commit()
             return True
         else:
             print("Failed to connect to the database.")
             return False
-    
-    # def delete_account(self, username): #Delete by removing the record
-    #     connection = self.db_context.connect()
-    #     if connection:
-    #         cursor = connection.cursor()
-    #         cursor.execute("DELETE User WHERE LOWER(Username) = LOWER(?) AND Role = ?", (username, "systemadmin"))
-    #         connection.commit()
-    #         return True
-    #     else:
-    #         print("Failed to connect to the database.")
-    #         return False
 
     def set_new_username(self, old_username, new_username):
         connection = self.db_context.connect()
@@ -360,31 +337,47 @@ class systemAdmin:
             print("Invalid password format. Please try again.")
  
     def confirm_password(self, username):
-        if (username.lower() == "super_admin"):
-            password = getpass.getpass("Enter your password: ")
-            if (password == "Admin_123?"):
-                return True
-            else:
-                return False
+        tries = 0
+        max_tries = 3
+        if username.lower() == "super_admin":
+            while tries < max_tries:
+                password = getpass.getpass("Enter your password: ")
+                if password == "Admin_123?":
+                    return True
+                else:
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+            return False
         else:
-            all_users = self.view_all_users_no_print()
-            if not all_users:
-                print("No users found in the system.")
-                return False
-            matching_users = [user for user in all_users if decrypt(user[0]).lower() == username.lower()]
-            if not matching_users:
-                print(f"No user found with username '{username}'.")
-                return False
-            password = getpass.getpass("Enter your current password: ")
-            if not password:
-                print("Password cannot be empty.")
-                return False
-            hashed_password_database = self.get_hashed_password(matching_users[0][0])
-            if not hashed_password_database:
-                print(f"No hashed password found for user '{username}'.")
-                return False
-            if (verify_password(password, hashed_password_database)):
-                return True  
+            while tries < max_tries:
+                all_users = self.view_all_users_no_print()
+                if not all_users:
+                    print("No users found in the system.")
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
+                matching_users = [user for user in all_users if decrypt(user[0]).lower() == username.lower()]
+                if not matching_users:
+                    print(f"No user found with username '{username}'.")
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
+                password = getpass.getpass("Enter your current password: ")
+                if not password:
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
+                hashed_password_database = self.get_hashed_password(matching_users[0][0])
+                if not hashed_password_database:
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+                    continue
+                if verify_password(password, hashed_password_database):
+                    return True
+                else:
+                    tries += 1
+                    print(f"Incorrect password. You have {max_tries - tries} tries left.")
+            return False  
     
     def get_hashed_password(self, username):
         connection = self.db_context.connect()

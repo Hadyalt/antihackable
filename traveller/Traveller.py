@@ -9,7 +9,6 @@ class Traveller:
     def __init__(self, db_name="data.db"):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.db_name = os.path.join(base_dir, db_name)
-        print(f"[DEBUG] Database path: {self.db_name}")  # Debug print for DB path
         self.connection = None
         self.cities = [
             "Amsterdam",
@@ -25,8 +24,7 @@ class Traveller:
         ]
 
     def connect(self):
-        print(f"[DEBUG] Connecting to database: {self.db_name}")  # Debug print
-        self.connection = sqlite3.connect(self.db_name)
+        self.connection = sqlite3.connect(self.db_name)    
 
     def validate_zip_code(self, zip_code):
         # Format: 4 digits + 2 uppercase letters
@@ -74,7 +72,6 @@ class Traveller:
         try:
             # Only format phone (not validate other fields, as they are already validated and encrypted)
             cursor = self.connection.cursor()
-            print("[DEBUG] Attempting to insert traveller...")  # Debug print
             cursor.execute(
                 """
                 INSERT INTO Traveller (
@@ -111,11 +108,9 @@ class Traveller:
             return False
 
     def get_all_travellers(self):
-        "[DEBUG] Fetching all travellers..."
         cursor = self.connection.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
-        (f"[DEBUG] Tables in DB: {tables}")
         cursor.execute("SELECT * FROM Traveller")
         return cursor.fetchall()
 
