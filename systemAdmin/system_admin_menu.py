@@ -27,7 +27,7 @@ def system_admin_menu(username):
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
-            sysAd.view_all_users()
+            sysAd.view_all_users(username)
         elif choice == "2":
             system_admin_service_engineer_menu(username)
         elif choice == "3":
@@ -135,7 +135,9 @@ def edit_account_menu(username):
                 else:
                     print("Failed to update username.")
             else:
-                print("Incorrect password. Cannot change username.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                pre_login_menu()
         elif choice == "2":
             if sysAd.confirm_password(username):
                 verified_password = False
@@ -151,7 +153,9 @@ def edit_account_menu(username):
                 else:
                     print("Failed to update password.")
             else:
-                print("Incorrect password. Cannot change password.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                pre_login_menu()
         elif choice == "3":
             if sysAd.confirm_password(username):
                 user = sysAd.get_username(username)
@@ -161,7 +165,9 @@ def edit_account_menu(username):
                 logger.log_entry(f"{username}", "Deleted his own account", f" ", "No")
                 pre_login_menu()
             else:
-                print("Incorrect password. Cannot delete account.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                pre_login_menu()
         elif choice == "4":
             return username  # Go back to the previous menu
         else:

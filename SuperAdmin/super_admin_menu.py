@@ -76,7 +76,7 @@ def super_admin_menu(username):
         elif choice == "6":
             sysAd= systemAdmin()
             print("\n-- View All User Accounts --")
-            sysAd.view_all_users()
+            sysAd.view_all_users(username)
         elif choice == "7":
             sa = SuperAdmin()
             sa.activate_inactive_account()
