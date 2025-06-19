@@ -30,8 +30,8 @@ def login():
             print("\n" + "=" * 50)
             print("🔐 URBAN MOBILITY - LOGIN")
             print("=" * 50)
-            username = input("Username: ").strip()
-            password = getpass.getpass("Password: ").strip()
+            username = validate_input_user(input("Username: ").strip())
+            password = validate_input_pass(getpass.getpass("Password: ").strip())
 
             # Hardcoded super admin
             if username == "super_admin" and password == "Admin_123?":
@@ -264,7 +264,7 @@ def show_main_menu(role, username):
             )
             verified_password = False
             while not verified_password:
-                password = getpass.getpass(sanitize_output("Enter password: "))
+                password = validate_input_pass(getpass.getpass(sanitize_output("Enter password: ")))
                 verified_password = Verification.verify_Password(password)
             hashed_password = hash_password(password)
             sysAd.reset_password_function(user, hashed_password, "systemadmin")
