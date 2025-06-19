@@ -17,7 +17,7 @@ from DbContext.backup_utils import (
     delete_backup,
 )
 from systemAdmin.system_admin import systemAdmin
-from valid_in_out_put import sanitize_output
+from valid_in_out_put import sanitize_output,validate_input_user,validate_input_pass
 
 DB_PATH = "data.db"
 
@@ -36,8 +36,8 @@ def login():
             print("\n" + sanitize_output("=" * 50))
             print(sanitize_output("🔐 URBAN MOBILITY - LOGIN"))
             print(sanitize_output("=" * 50))
-            username = input(sanitize_output("Username: ")).strip()
-            password = input(sanitize_output("Password: ")).strip()
+            username = validate_input_user(input(sanitize_output("Username: ")).strip())
+            password = validate_input_pass(input(sanitize_output("Password: ")).strip())
 
             # Hardcoded super admin
             if username == "super_admin" and password == "Admin_123?":

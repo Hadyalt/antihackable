@@ -26,7 +26,7 @@ class Traveller:
 
     def connect(self):
         print(f"[DEBUG] Connecting to database: {self.db_name}")  # Debug print
-        self.connection = sqlite3.connect(self.db_name)    
+        self.connection = sqlite3.connect(self.db_name)
 
     def validate_zip_code(self, zip_code):
         # Format: 4 digits + 2 uppercase letters
@@ -111,14 +111,14 @@ class Traveller:
             return False
 
     def get_all_travellers(self):
-        print("[DEBUG] Fetching all travellers...")
+        "[DEBUG] Fetching all travellers..."
         cursor = self.connection.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
-        print(f"[DEBUG] Tables in DB: {tables}")
+        (f"[DEBUG] Tables in DB: {tables}")
         cursor.execute("SELECT * FROM Traveller")
         return cursor.fetchall()
-    
+
     def search_travellers(self, search_term):
         if not self.connection:
             print("No connection.")
@@ -137,11 +137,13 @@ class Traveller:
                 decrypt(t[2]),  # LastName
                 decrypt(t[9]),  # Email
                 decrypt(t[8]),  # City
-                decrypt(t[10]), # Phone
-                decrypt(t[11])  # DrivingLicenseNumber
+                decrypt(t[10]),  # Phone
+                decrypt(t[11]),  # DrivingLicenseNumber
             ]
             # If search term is in any field, add to results
-            if any(search_term_lower in (str(field).lower()) for field in decrypted_fields):
+            if any(
+                search_term_lower in (str(field).lower()) for field in decrypted_fields
+            ):
                 results.append(t)
         return results
 
@@ -203,7 +205,12 @@ class Traveller:
         self.connection.commit()
         print("Traveller deleted.")
         logger = EncryptedLogger()
-        logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " " , "No")
+        logger.log_entry(
+            f"{deletor}",
+            f"Deleted Traveller with Traveller ID: {traveller_id}",
+            " ",
+            "No",
+        )
 
     def close(self):
         if self.connection:
