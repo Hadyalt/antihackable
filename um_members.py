@@ -11,7 +11,7 @@ from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
 from backup.backup_menu import backup_menu
 from systemAdmin.system_admin import systemAdmin
-from valid_in_out_put import sanitize_output,validate_input_user,validate_input_pass
+from valid_in_out_put import sanitize_output, validate_input_user, validate_input_pass
 
 DB_PATH = "data.db"
 
@@ -233,7 +233,9 @@ def show_main_menu(role, username):
 
     while True:
         print("\n" + sanitize_output("=" * 50))
-        print(sanitize_output(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}"))
+        print(
+            sanitize_output(f"🛴 URBAN MOBILITY SYSTEM - Logged in as: {role.upper()}")
+        )
         print(sanitize_output("=" * 50))
 
         if role == "superadmin":
@@ -249,6 +251,7 @@ def show_main_menu(role, username):
             elif choice == "3":
                 print(sanitize_output("👋 Logging out."))
                 from um_members import pre_login_menu
+
                 pre_login_menu()
                 return
             elif choice == "4":
@@ -261,29 +264,31 @@ def show_main_menu(role, username):
             user = sysAd.get_username(username)
             if sysAd.check_reset_password(user, "systemadmin"):
                 print(
-                sanitize_output(
-                    "You have a reset password, please reset it before proceeding."
+                    sanitize_output(
+                        "You have a reset password, please reset it before proceeding."
+                    )
                 )
-            )
                 verified_password = False
                 while not verified_password:
-                    password = validate_input_pass(getpass.getpass(sanitize_output("Enter password: ")))
+                    password = validate_input_pass(
+                        getpass.getpass(sanitize_output("Enter password: "))
+                    )
                     verified_password = Verification.verify_Password(password)
                 hashed_password = hash_password(password)
                 sysAd.reset_password_function(user, hashed_password, "systemadmin")
                 sysAd.reset_resetted_password_check(user, "systemadmin")
                 print(
-                sanitize_output(
-                    "Password reset completed. You can now proceed with the menu options."
+                    sanitize_output(
+                        "Password reset completed. You can now proceed with the menu options."
+                    )
                 )
-            )
                 logger = EncryptedLogger()
                 logger.log_entry(
-                f"{username}",
-                "Reset his own password",
-                f"Username: {username} picked a new password after it was changed by a higher account",
-                "No",
-            )
+                    f"{username}",
+                    "Reset his own password",
+                    f"Username: {username} picked a new password after it was changed by a higher account",
+                    "No",
+                )
 
             print("[1] System Admin Menu")
             print("[2] Backup & Restore")
@@ -297,6 +302,7 @@ def show_main_menu(role, username):
             elif choice == "3":
                 print("👋 Logging out.")
                 from um_members import pre_login_menu
+
                 logger.log_entry(f"{username}", "Logged out", f"Success", "No")
                 pre_login_menu()
                 return
@@ -307,15 +313,16 @@ def show_main_menu(role, username):
             else:
                 print(sanitize_output("Invalid choice."))
         elif role == "serviceengineer":
-            print("[1] Service Engineer Menu")
-            print("[2] Logout")
-            print("[3] Exit")
+            print(sanitize_output("[1] Service Engineer Menu"))
+            print(sanitize_output("[2] Logout"))
+            print(sanitize_output("[3] Exit"))
             choice = input("Enter your choice: ")
             if choice == "1":
                 ServiceEngineer_menu.main(username)
             elif choice == "2":
                 print("👋 Logging out.")
                 from um_members import pre_login_menu
+
                 pre_login_menu()
                 return
             elif choice == "3":
@@ -326,6 +333,7 @@ def show_main_menu(role, username):
         else:
             print("Invalid role.")
             return
+
 
 # === MAIN MENU BEFORE LOGIN ===
 def pre_login_menu():
