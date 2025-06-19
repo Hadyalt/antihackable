@@ -125,7 +125,7 @@ class SuperAdmin:
             if connection:
                 cursor = connection.cursor()
                 enc_username = matching_users[0][0]
-                cursor.execute("UPDATE User SET IsActive = 0 WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
+                cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
                 connection.commit()
                 print(f"System admin '{decrypt(matching_users[0][0])}' has been deleted.")
                 logger = EncryptedLogger()
