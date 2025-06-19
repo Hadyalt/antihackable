@@ -40,7 +40,7 @@ def login():
             password = input(sanitize_output("Password: ")).strip()
 
             # Hardcoded super admin
-            if username.lower() == "super_admin" and password == "Admin_123?":
+            if username == "super_admin" and password == "Admin_123?":
                 print(sanitize_output("✅ Super Admin login successful."))
                 logger.log_entry("super_admin", "Logged in", " ", "No")
                 # Reset timeout and attempts on successful login
