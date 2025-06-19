@@ -1,8 +1,6 @@
 import sqlite3
 import time
 import os
-import random
-import string
 import getpass
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
