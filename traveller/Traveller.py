@@ -194,11 +194,17 @@ class Traveller:
 
     def delete_traveller(self, traveller_id, deletor):
         cursor = self.connection.cursor()
+        cursor.execute("SELECT 1 FROM Traveller WHERE TravellerID = ?", (traveller_id,))
+        if cursor.fetchone() is None:
+            print("Traveller not found. Deletion aborted.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{deletor}", f"Attempted to delete non-existent Traveller ID: {traveller_id}","No action taken","No")
+            return 
         cursor.execute("DELETE FROM Traveller WHERE TravellerID = ?", (traveller_id,))
         self.connection.commit()
         print("Traveller deleted.")
         logger = EncryptedLogger()
-        logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " " , "No")
+        logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " ", "No")
 
     def close(self):
         if self.connection:
