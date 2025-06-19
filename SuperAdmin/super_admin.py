@@ -3,6 +3,7 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
+from valid_in_out_put import validate_input_pass,validate_input_user
 
 
 class SuperAdmin:
@@ -12,11 +13,11 @@ class SuperAdmin:
     def create_system_admin(self):
         verified_username = False
         while not verified_username:
-            user_name = input("Enter username: ").strip()
+            user_name = validate_input_user(input("Enter username: ").strip())
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
-            password = input("Enter password: ")
+            password = validate_input_pass(input("Enter password: "))
             verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
