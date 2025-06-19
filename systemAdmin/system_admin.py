@@ -2,7 +2,7 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
-
+import getpass
 
 
 class systemAdmin:
@@ -57,7 +57,7 @@ class systemAdmin:
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
-            password = input("Enter password: ")
+            password = getpass.getpass("Enter password: ")
             verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
@@ -168,7 +168,7 @@ class systemAdmin:
                 pre_login_menu()
         elif choice == "2":
             if (self.confirm_password(updater)):
-                new_password = input("Enter the new password: ").strip()
+                new_password = getpass.getpass("Enter the new password: ").strip()
                 if Verification.verify_Password(new_password):
                     hashed = hash_password(new_password)
                     self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
@@ -357,7 +357,7 @@ class systemAdmin:
             print(f"No service engineer found with username '{username_to_reset}'.")
             return
 
-        new_password = input("Enter the new temporary password: ").strip()
+        new_password = getpass.getpass("Enter the new temporary password: ").strip()
         if Verification.verify_Password(new_password):
             hashed_password = hash_password(new_password)
             self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
@@ -372,7 +372,7 @@ class systemAdmin:
         max_tries = 3
         if username.lower() == "super_admin":
             while tries < max_tries:
-                password = input("Enter your password: ")
+                password = getpass.getpass("Enter your password: ")
                 if password == "Admin_123?":
                     return True
                 else:
@@ -393,7 +393,7 @@ class systemAdmin:
                     tries += 1
                     print(f"Incorrect password. You have {max_tries - tries} tries left.")
                     continue
-                password = input("Enter your current password: ")
+                password = getpass.getpass("Enter your current password: ")
                 if not password:
                     tries += 1
                     print(f"Incorrect password. You have {max_tries - tries} tries left.")
