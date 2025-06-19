@@ -238,8 +238,7 @@ class systemAdmin:
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
-            enc_username = encrypt(username)
-            cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
+            cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (username, "systemadmin"))
             connection.commit()
             return True
         else:
