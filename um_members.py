@@ -56,7 +56,8 @@ def login():
                 except Exception:
                     continue
             if not found_enc_username:
-                print("❌ Username not found.")
+                # Generic error message
+                print("❌ Wrong username or password.")
                 logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
                 conn.close()
             else:
@@ -91,7 +92,8 @@ def login():
                         conn.close()
                         return role, username
                     else:
-                        print("❌ Incorrect password.")
+                        # Generic error message
+                        print("❌ Wrong username or password.")
                         logger.log_entry(username, "Login attempt", "Incorrect password", "Yes" if attempt >= 4 else "No")
                         # Track failed attempts for this username
                         login.user_attempts[username] = login.user_attempts.get(username, 0) + 1
@@ -105,7 +107,8 @@ def login():
                             # Do not allow further attempts for this username in this session
                             break
                 else:
-                    print("❌ Username not found.")
+                    # Generic error message
+                    print("❌ Wrong username or password.")
                     logger.log_entry(username, "Login attempt", "Username not found", "Yes" if attempt >= 4 else "No")
                 conn.close()
             if attempt < max_attempts:
