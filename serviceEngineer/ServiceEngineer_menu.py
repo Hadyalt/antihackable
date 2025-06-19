@@ -7,7 +7,6 @@ from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_passw
 import getpass
 
 
-
 def display_menu():
     print("\n==== Service Engineer Menu ====")
     print("[1] Scooter Menu")
@@ -37,7 +36,10 @@ def reset_password_flow(current_user):
         logger = EncryptedLogger()
         logger.log_entry(f"{current_user}", "Changed his own password", f" ", "No")
     else:
-        print("Incorrect password. Cannot change password.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{current_user}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+        from um_members import pre_login_menu
+        pre_login_menu()
 
 
 def main(username):
@@ -52,7 +54,6 @@ def main(username):
             password = getpass.getpass("Enter password: ")
             verified_password = Verification.verify_Password(password)
         hashed_password = hash_password(password)
-        print(hashed_password)
         sysAd.reset_password_function(user, hashed_password, "serviceengineer")
         sysAd.reset_resetted_password_check(user, "serviceengineer")
         print("Password reset completed. You can now proceed with the menu options.")
