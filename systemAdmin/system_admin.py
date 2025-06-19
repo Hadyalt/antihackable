@@ -82,7 +82,7 @@ class systemAdmin:
         logger.log_entry(f"{creator}", "Created Service Engineer Account", f"username: {user_name}", "No")
         return user_name
     
-    def view_all_users(self):
+    def view_all_users(self, viewer):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
@@ -97,6 +97,8 @@ class systemAdmin:
             connection.close()
         else:
             print("Failed to connect to the database.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{viewer}", "Viewed all users", f" ", "No")
         return users
 
     def view_all_users_no_print(self):

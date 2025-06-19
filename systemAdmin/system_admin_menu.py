@@ -27,7 +27,7 @@ def system_admin_menu(username):
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
-            sysAd.view_all_users()
+            sysAd.view_all_users(username)
         elif choice == "2":
             system_admin_service_engineer_menu(username)
         elif choice == "3":
