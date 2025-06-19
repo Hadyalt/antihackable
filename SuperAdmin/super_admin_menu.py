@@ -12,15 +12,17 @@ def super_admin_menu(username):
     print(f"\nWelcome, {current_user}!")
     while True:
         print("\nSUPER ADMIN MENU")
-        print("1. Manage System Admins")
-        print("2. Manage Service Engineers")
-        print("3. Manage Travellers")
-        print("4. Manage Scooters")
-        print("5. View Logs")
-        print("6. View All user accounts")
-        print("7. Activate Inactive Accounts")
-        print("8. Exit")
-        choice = input("\nEnter your choice: ")
+        print("[1] Manage System Admins")
+        print("[2] Manage Service Engineers")
+        print("[3] Manage Travellers")
+        print("[4] Manage Scooters")
+        print("[5] View Logs")
+        print("[6] View All user accounts")
+        print("[7] Activate Inactive Accounts")
+        print("[8] Go Back")
+        print("[9] Logout")
+        print("[10] Exit")
+        choice = input("Enter your choice: ")
         
         if choice == "1":
             super_admin_system_admin_menu()
@@ -81,8 +83,15 @@ def super_admin_menu(username):
             sa = SuperAdmin()
             sa.activate_inactive_account()
         elif choice == "8":
-            print("Exiting...")
-            break
+            return  # Go back to previous menu
+        elif choice == "9":
+            print("👋 Logging out.")
+            from um_members import pre_login_menu
+            pre_login_menu()
+            return
+        elif choice == "10":
+            print("👋 Exiting system.")
+            exit()
         else:
             print("Invalid choice. Please try again.")
 
@@ -91,10 +100,10 @@ def super_admin_system_admin_menu():
     
     while True:
         print("\nSYSTEM ADMIN MANAGEMENT")
-        print("1. Create System Admin Account")
-        print("2. Update existing System Admin Account")
-        print("3. Delete System Admin Account")
-        print("4. Go Back")
+        print("[1] Create System Admin Account")
+        print("[2] Update existing System Admin Account")
+        print("[3] Delete System Admin Account")
+        print("[4] Go Back")
         
         choice = input("\nEnter your choice: ").strip()
         
@@ -117,10 +126,10 @@ def super_admin_service_engineer_menu(username):
     
     while True:
         print("\nSERVICE ENGINEER MANAGEMENT")
-        print("1. Create Service Engineer Account")
-        print("2. Update existing Service Engineer Account")
-        print("3. Delete Service Engineer Account")
-        print("4. Go Back")
+        print("[1] Create Service Engineer Account")
+        print("[2] Update existing Service Engineer Account")
+        print("[3] Delete Service Engineer Account")
+        print("[4] Go Back")
         choice = input("\nEnter your choice: ")
         
         if choice == "1":
@@ -136,10 +145,6 @@ def super_admin_service_engineer_menu(username):
             sysAd.delete_service_engineer(username)
             
         elif choice == "4":
-            print("Resetting password for existing Service Engineer Account...")
-            # Implement password reset logic here
-            sysAd.reset_password_service_engineer()
-        elif choice == "5":
             return
         else:
             print("Invalid choice. Please try again.")

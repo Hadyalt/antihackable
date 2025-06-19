@@ -11,20 +11,21 @@ import getpass
 
 def system_admin_menu(username):
     current_user = username  # Replace with actual logged-in username
-    print(f"\nWelcome, {current_user}!")
     sysAd= systemAdmin()
     
     while True:
-        # check the database if the systemadmin has a reset password        
+        print(f"\nWelcome, {current_user}!")
         print("\nSYSTEM ADMIN MENU")
-        print("1. View all user accounts")
-        print("2. Manage Service Engineers")
-        print("3. Edit your account") 
-        print("4. Manage Travellers")
-        print("5. Manage Scooters")  
-        print("6. View Logs")
-        print("7. Exit")
-        choice = input("\nEnter your choice: ")
+        print("[1] View all user accounts")
+        print("[2] Manage Service Engineers")
+        print("[3] Edit your account")
+        print("[4] Manage Travellers")
+        print("[5] Manage Scooters")
+        print("[6] View Logs")
+        print("[7] Go Back")
+        print("[8] Logout")
+        print("[9] Exit")
+        choice = input("Enter your choice: ")
         
         if choice == "1":
             sysAd.view_all_users()
@@ -80,22 +81,29 @@ def system_admin_menu(username):
                         for line in updated_lines:
                             f.write(line + "\n")
         elif choice == "7":
-            print("Exiting...")
+            return  # Go back to previous menu
+        elif choice == "8":
+            print("👋 Logging out.")
+            from um_members import pre_login_menu
+            logger.log_entry(f"{username}", "Logged out", f"Success", "No")
+            pre_login_menu()
             return
+        elif choice == "9":
+            logger.log_entry(f"{username}", "Exited the system", f"Success", "No")
+            print("👋 Exiting system.")
+            exit()
         else:
             print("Invalid choice. Please try again.")
 
 def system_admin_service_engineer_menu(username):
     sysAd= systemAdmin()
-    
     while True:
         print("\nSERVICE ENGINEER MANAGEMENT")
-        print("1. Create Service Engineer Account")
-        print("2. Update existing Service Engineer Account")
-        print("3. Delete Service Engineer Account")
-        print("4. Go Back")
+        print("[1] Create Service Engineer Account")
+        print("[2] Update existing Service Engineer Account")
+        print("[3] Delete Service Engineer Account")
+        print("[4] Go Back")
         choice = input("\nEnter your choice: ")
-        
         if choice == "1":
             print("\n-- Create Service Engineer --")
             sysAd.create_service_engineer(username)
@@ -109,17 +117,16 @@ def system_admin_service_engineer_menu(username):
             return
         else:
             print("Invalid choice. Please try again.")
-    
+
 def edit_account_menu(username):
     sysAd= systemAdmin()
     while True:
         print(f"\nEDIT ACCOUNT MENU FOR {username}")
-        print("1. Change Username")
-        print("2. Change Password")
-        print("3. Delete Account")
-        print("4. Go Back")
+        print("[1] Change Username")
+        print("[2] Change Password")
+        print("[3] Delete Account")
+        print("[4] Go Back")
         choice = input("\nEnter your choice: ")
-        
         if choice == "1":
             if sysAd.confirm_password(username):
                 verified_username = False

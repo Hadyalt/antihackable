@@ -10,10 +10,12 @@ import getpass
 
 def display_menu():
     print("\n==== Service Engineer Menu ====")
-    print("1. Scooter Menu")
-    print("2. Change My Password")
-    print("3. Exit")
-    return input("Enter your choice (1-3): ").strip()
+    print("[1] Scooter Menu")
+    print("[2] Change My Password")
+    print("[3] Go Back")
+    print("[4] Logout")
+    print("[5] Exit")
+    return input("Enter your choice (1-5): ").strip()
 
 
 def reset_password_flow(current_user):
@@ -60,14 +62,21 @@ def main(username):
     while True:
         choice = display_menu()
         if choice == "1":
-            Scooter.main("serviceengineer", current_user)
+            Scooter.main("serviceengineer", username)
         elif choice == "2":
-            reset_password_flow(current_user)
+            reset_password_flow(username)
         elif choice == "3":
+            return  # Go back to previous menu
+        elif choice == "4":
+            print("👋 Logging out.")
+            from um_members import pre_login_menu
+            pre_login_menu()
+            return
+        elif choice == "5":
             print("Exiting Service Engineer Portal. Goodbye!")
-            break
+            exit()
         else:
-            print("Invalid selection. Please choose a number between 1 and 3.")
+            print("Invalid selection. Please choose a number between 1 and 5.")
 
 
 if __name__ == "__main__":

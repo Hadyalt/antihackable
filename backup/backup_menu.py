@@ -10,17 +10,17 @@ def backup_menu(role, username=None):
     logger = EncryptedLogger()
     while True:
         print("\n=== BACKUP & RESTORE MENU ===")
-        print("1. Create Backup")
-        print("2. List Backups")
-        print("3. Restore Backup")
-        print("4. Delete Backup")
+        print("[1] Create Backup")
+        print("[2] List Backups")
+        print("[3] Restore Backup")
+        print("[4] Delete Backup")
         if role == "superadmin":
-            print("5. Generate Restore-Code for System Admin")
-            print("6. Revoke Restore-Code")
-            print("7. Exit Backup Menu")
+            print("[5] Generate Restore-Code for System Admin")
+            print("[6] Revoke Restore-Code")
+            print("[7] Exit Backup Menu")
             valid_choices = ["1", "2", "3", "4", "5", "6", "7"]
         else:
-            print("5. Exit Backup Menu")
+            print("[5] Exit Backup Menu")
             valid_choices = ["1", "2", "3", "4", "5"]
         choice = input("Enter your choice: ").strip()
         if choice not in valid_choices:

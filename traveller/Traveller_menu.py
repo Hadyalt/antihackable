@@ -13,14 +13,16 @@ def display_cities(cities):
 
 def traveller_menu(username):
     while True:
+        logger = EncryptedLogger()
         print("\nTraveller Menu")
         print("[1] Add Traveller")
         print("[2] View Travellers")
         print("[3] Update Traveller")
         print("[4] Delete Traveller")
         print("[5] Go Back")
-
-        choice = input("Choose an option: ")
+        print("[6] Logout")
+        print("[7] Exit")
+        choice = input("Enter your choice: ")
         if choice == "1":
             add_traveller(username)
         elif choice == "2":
@@ -37,6 +39,16 @@ def traveller_menu(username):
 
         elif choice == "5":
             return
+        elif choice == "6":
+            # Handle logout
+            print("Logging out...")
+            logger.log_entry(f"{username}", "Logged out", "", "No")
+            return
+        elif choice == "7":
+            # Handle exit
+            print("Exiting the application...")
+            logger.log_entry(f"{username}", "Exited the application", "", "No")
+            exit(0)
         else:
             print("Invalid choice.")
 
