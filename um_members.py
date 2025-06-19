@@ -168,7 +168,7 @@ def show_main_menu(role, username):
             print("You have a reset password, please reset it before proceeding.")
             verified_password = False
             while not verified_password:
-                password = input("Enter password: ")
+                password = getpass.getpass("Enter password: ")
                 verified_password = Verification.verify_Password(password)
             hashed_password = hash_password(password)
             sysAd.reset_password_function(user, hashed_password, "systemadmin")
