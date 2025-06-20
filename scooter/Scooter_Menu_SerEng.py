@@ -79,8 +79,8 @@ def Scooter_Menu_SerEng(choice, updater):
             }
             while True:
                 try:
-                    lat = round(float(input("New Latitude: ")), 5)
-                    lon = round(float(input("New Longitude: ")), 5)
+                    lat = round(float(input("New Latitude (51.85-52.00): ")), 5)
+                    lon = round(float(input("New Longitude (4.30-4.60): ")), 5)
                     if (
                         ROTTERDAM_BOUNDS["min_lat"]
                         <= lat
@@ -123,16 +123,32 @@ def Scooter_Menu_SerEng(choice, updater):
             logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the mileage to {mileage}", "No")
 
         elif field_choice == "6":
-            # Validate Last Maintenance Date (ISO 8601)
+            tries = 0
             while True:
+                if tries >= 3:
+                    print("Too many invalid attempts. Update cancelled.")
+                    logger.log_entry(f"{updater}", f"Update cancelled for scooter {sn}", "Too many invalid attempts", "Yes")
+                    return
                 date = input("Last Maintenance Date (YYYY-MM-DD): ").strip()
                 try:
-                    datetime.strptime(date, "%Y-%m-%d")
-                    break
+                    date_obj = datetime.strptime(date, "%Y-%m-%d")
+                    today = datetime.today()
+
+                    if date_obj > today:
+                        print("Error: Maintenance date cannot be in the future.")
+                        tries += 1
+                        continue
+                    if date_obj.year < 1980:
+                        tries += 1
+                        print("Error: Maintenance date cannot be older than 1980.")
+                        continue
+                    db.update_scooter_fields(sn, LastMaintenanceDate=date)
+                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the last maintenance date to {date}", "No")
+                    return
                 except ValueError:
                     print("Error: Use YYYY-MM-DD format")
-            db.update_scooter_fields(sn, LastMaintenanceDate=date)
-            logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the last maintenance date to {date}", "No")
+                    tries += 1
+                    print("Error: Maintenance date cannot be older than 1980.")
         elif choice == "3":
             return
         else:
