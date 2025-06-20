@@ -313,23 +313,9 @@ def show_main_menu(role, username):
             else:
                 print(sanitize_output("Invalid choice."))
         elif role == "serviceengineer":
-            print(sanitize_output("[1] Service Engineer Menu"))
-            print(sanitize_output("[2] Logout"))
-            print(sanitize_output("[3] Exit"))
-            choice = input("Enter your choice: ")
-            if choice == "1":
-                ServiceEngineer_menu.main(username)
-            elif choice == "2":
-                print("👋 Logging out.")
-                from um_members import pre_login_menu
-
-                pre_login_menu()
-                return
-            elif choice == "3":
-                print("👋 Exiting system.")
-                exit()
-            else:
-                print("Invalid choice.")
+           
+            ServiceEngineer_menu.main(username)
+            
         else:
             print("Invalid role.")
             return
