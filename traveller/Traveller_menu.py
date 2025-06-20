@@ -4,6 +4,7 @@ from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 from traveller.Traveller import Traveller
+from valid_in_out_put import is_valid_email
 
 
 def display_cities(cities):
@@ -102,12 +103,17 @@ def add_traveller(creator):
     while True:
         birthday = input("Birthday (YYYY-MM-DD): ").strip()
         if Verification.is_valid_birthday(birthday):
-            logger.log_entry(f"{creator}", "Input accepted", f"Birthday: {birthday}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"Birthday: {birthday}", "No"
+            )
             break
         else:
-            print("Invalid birthday. Please use format YYYY-MM-DD and a realistic date.")
-            logger.log_entry(f"{creator}", "Input failed", "Invalid Birthday entry", "No")
-
+            print(
+                "Invalid birthday. Please use format YYYY-MM-DD and a realistic date."
+            )
+            logger.log_entry(
+                f"{creator}", "Input failed", "Invalid Birthday entry", "No"
+            )
 
     print("\nGender:")
     print("[1] Male")
@@ -130,11 +136,20 @@ def add_traveller(creator):
     while True:
         street_name = input("Street Name: ").strip()
         if Verification.is_valid_street_name(street_name):
-            logger.log_entry(f"{creator}", "Input accepted", f"Street Name: {street_name}", "No")
+            logger.log_entry(
+                f"{creator}", "Input accepted", f"Street Name: {street_name}", "No"
+            )
             break
         else:
-            print("Invalid street name. Must include letters and only allowed characters.")
-            logger.log_entry(f"{creator}", "Input failed", f"Invalid Street Name entry: {street_name!r}", "No")
+            print(
+                "Invalid street name. Must include letters and only allowed characters."
+            )
+            logger.log_entry(
+                f"{creator}",
+                "Input failed",
+                f"Invalid Street Name entry: {street_name!r}",
+                "No",
+            )
 
     # House number validation
     while True:
@@ -182,8 +197,9 @@ def add_traveller(creator):
     # Email validation
     email_regex = r"^[\w\.-]+@[\w\.-]+\.\w+$"
     while True:
-        email = input("Email: ").strip()
-        if re.match(email_regex, email):
+        email_input = input("Email: ").strip()
+        if re.match(email_regex, email_input) and is_valid_email(email_input):
+            email = email_input
             logger.log_entry(f"{creator}", "Input accepted", f"Email: {email}", "No")
             break
         else:
@@ -286,6 +302,7 @@ def show_travellers():
         print("No travellers found.")
         return None
 
+
 def view_travellers(username):
     db = Traveller()
     db.connect()
@@ -359,7 +376,9 @@ def update_traveller(updater):
     elif field == "3":  # Birthday
         new_val = input("New Birthday (YYYY-MM-DD): ").strip()
         while not new_val or not Verification.is_valid_birthday(new_val):
-            print("Invalid birthday. Please use format YYYY-MM-DD and a realistic date.")
+            print(
+                "Invalid birthday. Please use format YYYY-MM-DD and a realistic date."
+            )
             new_val = input("New Birthday (YYYY-MM-DD): ").strip()
     elif field == "4":  # Gender
         print("[1] Male")
@@ -369,7 +388,9 @@ def update_traveller(updater):
     elif field == "5":  # Street Name
         new_val = input("New Street Name: ").strip()
         while not new_val or not Verification.is_valid_street_name(new_val):
-            print("Invalid street name. Must include letters and only allowed characters.")
+            print(
+                "Invalid street name. Must include letters and only allowed characters."
+            )
             new_val = input("New Street Name: ").strip()
     elif field == "6":  # House Number
         new_val = input("New House Number: ").strip()
