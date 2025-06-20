@@ -210,7 +210,7 @@ def add_traveller(creator):
     while True:
         phone = input("Phone (8 digits only): ").strip()
         try:
-            db.format_phone(phone)
+            phone = db.format_phone(phone)
             logger.log_entry(f"{creator}", "Input accepted", f"Phone: {phone}", "No")
             break
         except ValueError as e:

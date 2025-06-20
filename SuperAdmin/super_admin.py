@@ -18,8 +18,8 @@ class SuperAdmin:
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
-            password = validate_input_pass(getpass.getpass("Enter password: "))
-            verified_password = Verification.verify_Password(password)
+            verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
+            #verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
@@ -61,15 +61,21 @@ class SuperAdmin:
         print("5. Go Back")
         choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
         if choice == "1":  
-            if self.confirm_password():  
-                new_username = input("Enter the new username: ").strip()
-                if Verification.verify_username(new_username):
-                    self.set_new_username(matching_users[0][0], new_username)
-                    print(f"System admin {decrypt(matching_users[0][0])} updated to {new_username}.")
-                    logger = EncryptedLogger()
-                    logger.log_entry("super_admin", "Updated System Admin Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
-                else:
-                    print("Invalid username format. Please try again.")
+            if self.confirm_password():
+                tries = 0
+                while tries < 3:
+                    new_username = input("Enter the new username: ").strip()
+                    if Verification.verify_username(new_username):
+                        self.set_new_username(matching_users[0][0], new_username)
+                        print(f"System admin {decrypt(matching_users[0][0])} updated to {new_username}.")
+                        logger = EncryptedLogger()
+                        logger.log_entry("super_admin", "Updated System Admin Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
+                        break
+                    else:
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                logger = EncryptedLogger()
+                logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
@@ -77,34 +83,55 @@ class SuperAdmin:
                 pre_login_menu()
         elif choice == "2":
             if self.confirm_password():
-                verified_password = False
-                while not verified_password:
+                tries = 0
+                while tries < 3:
                     password = getpass.getpass("Enter new password: ")
-                    verified_password = Verification.verify_Password(password)
-                hashed = hash_password(password)
-                self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
-                print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
+                    if Verification.verify_Password(password):
+                        hashed = hash_password(password)
+                        self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
+                        print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
+                        logger = EncryptedLogger()
+                        logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
+                        break
+                    else:
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                print("Failed to reset password after 3 invalid attempts.")
                 logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
+                logger.log_entry("super_admin", "Failed System Admin Password Reset", f"Username: {decrypt(matching_users[0][0])} - 3 invalid password attempts", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 from um_members import pre_login_menu
                 pre_login_menu()
         elif choice == "3":
-            new_first_name = input("Enter the new first name: ").strip()
-            if Verification.verify_name(new_first_name):
-                self.set_new_first_name(matching_users[0][0], new_first_name)
-                print(f"First name for system admin {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Updated System Admin First Name", f"New First Name: {new_first_name}", "No")
+            tries = 0
+            while tries < 3:
+                new_first_name = input("Enter the new first name: ").strip()
+                if Verification.verify_name(new_first_name):
+                    self.set_new_first_name(matching_users[0][0], new_first_name)
+                    print(f"First name for system admin {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Updated System Admin First Name", f"New First Name: {new_first_name}", "No")
+                    break 
+                tries += 1
+                print(f"You have {3 - tries} tries left.")
+            logger = EncryptedLogger()
+            logger.log_entry("super_admin", "Too many wrong first name attempts", f" ", "Yes")
         elif choice == "4":
-            new_last_name = input("Enter the new last name: ").strip()
-            if Verification.verify_name(new_last_name):
-                self.set_new_last_name(matching_users[0][0], new_last_name)
-                print(f"Last name for system admin {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Updated System Admin Last Name", f"New Last Name: {new_last_name}", "No")
+            tries = 0
+            while tries < 3:
+                new_last_name = input("Enter the new last name: ").strip()
+                if Verification.verify_name(new_last_name):
+                    self.set_new_last_name(matching_users[0][0], new_last_name)
+                    print(f"Last name for system admin {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Updated System Admin Last Name", f"New Last Name: {new_last_name}", "No")
+                    break
+                tries += 1
+                print(f"You have {3 - tries} tries left.")
+            logger = EncryptedLogger()
+            logger.log_entry("super_admin", "Too many wrong last name attempts", f" ", "Yes")
         elif choice == "5":
             print("Going back to the previous menu.")
             return

@@ -30,8 +30,8 @@ def login():
             print("\n" + "=" * 50)
             print("🔐 URBAN MOBILITY - LOGIN")
             print("=" * 50)
-            username = validate_input_user(input("Username: ").strip(),mode= "login")
-            password = validate_input_pass(getpass.getpass("Password: ").strip(), mode="login")
+            bool, username = validate_input_user(input("Username: ").strip(), mode="login")
+            bool2, password = validate_input_pass(getpass.getpass("Password: ").strip(), mode="login")
 
             # Hardcoded super admin
             if username == "super_admin" and password == "Admin_123?":

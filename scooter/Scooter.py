@@ -40,8 +40,7 @@ def main(role, username):
                 else:
                     scooters = db.get_all_scooters()
                 if scooters:
-                    for s in scooters:
-                        print(s)
+                    print_scooter_table(scooters)
                 else:
                     print("No matching scooters found")
             elif choice == "3":
@@ -460,6 +459,39 @@ def update_scooter(updater):
         print("Invalid field selection")
     
 
+def print_scooter_table(scooters):
+    headers = [
+        "Serial #", "Brand", "Model", "Top Speed", "Battery (Wh)", "SoC (%)", "Target SoC", "Location", "OOS", "Mileage", "Last Maint.", "In Service"
+    ]
+    # Prepare rows
+    rows = []
+    for s in scooters:
+        # s: (SerialNumber, Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRangeSocMin, TargetRangeSocMax, LocationLat, LocationLong, OutOfService, Mileage, LastMaintenanceDate, InServiceDate)
+        row = [
+            str(s[0]),  # SerialNumber
+            str(s[1]),  # Brand
+            str(s[2]),  # Model
+            str(s[3]),  # TopSpeed
+            str(s[4]),  # BatteryCapacity
+            str(s[5]),  # StateOfCharge
+            f"{s[6]}-{s[7]}",  # TargetRangeSocMin-Max
+            f"{s[8]},{s[9]}",  # LocationLat, LocationLong
+            "Yes" if s[10] else "No",  # OutOfService
+            str(s[11]),  # Mileage
+            str(s[12]),  # LastMaintenanceDate
+            str(s[13]),  # InServiceDate
+        ]
+        rows.append(row)
+    # Calculate column widths
+    col_widths = [max(len(str(cell)) for cell in [header] + [row[i] for row in rows]) for i, header in enumerate(headers)]
+    sep = "-+-".join("-" * w for w in col_widths)
+    # Print header
+    print(" | ".join(header.ljust(col_widths[i]) for i, header in enumerate(headers)))
+    print(sep)
+    # Print rows
+    for row in rows:
+        print(" | ".join(str(cell).ljust(col_widths[i]) for i, cell in enumerate(row)))
+    print(sep)
 
 if __name__ == "__main__":
     main()

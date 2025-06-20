@@ -58,8 +58,8 @@ class systemAdmin:
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
-            password = validate_input_pass(getpass.getpass("Enter password: "))
-            verified_password = Verification.verify_Password(password)
+            verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
+            #verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
@@ -148,22 +148,28 @@ class systemAdmin:
             print(f"No service engineer found with username '{username_to_update}'.")
             return
         print ("What do you want to update?")
-        print(f"1. Update Username: ({decrypt(matching_users[0][0])})")
-        print("2. Reset Password")
-        print("3. Update First Name")
-        print("4. Update Last Name")
-        print("5. Go Back")
-        choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
+        print(f"[1] Update Username: ({decrypt(matching_users[0][0])})")
+        print("[2] Reset Password")
+        print("[3] Update First Name")
+        print("[4] Update Last Name")
+        print("[5] Go Back")
+        choice = input("Enter your choice [1, 2, 3, 4 or 5]: ").strip()
         if choice == "1":
             if (self.confirm_password(updater)):
-                new_username = input("Enter the new username: ").strip()
-                if Verification.verify_username(new_username):
-                    self.set_new_username(matching_users[0][0], new_username)
-                    print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
-                    logger = EncryptedLogger()
-                    logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
-                else:
-                    print("Invalid username format. Please try again.")
+                tries = 0
+                while tries < 3:
+                    new_username = input("Enter the new username: ").strip()
+                    if Verification.verify_username(new_username):
+                        self.set_new_username(matching_users[0][0], new_username)
+                        print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
+                        logger = EncryptedLogger()
+                        logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
+                        break
+                    else:
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
@@ -171,34 +177,54 @@ class systemAdmin:
                 pre_login_menu()
         elif choice == "2":
             if (self.confirm_password(updater)):
-                new_password = getpass.getpass("Enter the new password: ").strip()
-                if Verification.verify_Password(new_password):
-                    hashed = hash_password(new_password)
-                    self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
-                    print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
-                    logger = EncryptedLogger()
-                    logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
-                else:
-                    print("Invalid password format. Please try again.")
+                tries = 0
+                while tries < 3:
+                    new_password = getpass.getpass("Enter the new password: ").strip()
+                    if Verification.verify_Password(new_password):
+                        hashed = hash_password(new_password)
+                        self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
+                        print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
+                        logger = EncryptedLogger()
+                        logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
+                        break
+                    else:
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 from um_members import pre_login_menu
                 pre_login_menu()
         elif choice == "3":
-            new_first_name = input("Enter the new first name: ").strip()
-            if Verification.verify_name(new_first_name):
-                self.set_new_first_name(matching_users[0][0], new_first_name)
-                print(f"First name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Updated Service Engineer First Name", f"New First Name: {new_first_name}", "No")
+            tries = 0
+            while tries < 3:
+                new_first_name = input("Enter the new first name: ").strip()
+                if Verification.verify_name(new_first_name):
+                    self.set_new_first_name(matching_users[0][0], new_first_name)
+                    print(f"First name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Updated Service Engineer First Name", f"New First Name: {new_first_name}", "No")
+                    break
+                tries += 1
+                print(f"You have {3 - tries} tries left.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{updater}", "Too many wrong first name attempts", f" ", "Yes")
         elif choice == "4":
-            new_last_name = input("Enter the new last name: ").strip()
-            if Verification.verify_name(new_last_name):
-                self.set_new_last_name(matching_users[0][0], new_last_name)
-                print(f"Last name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Updated Service Engineer Last Name", f"New Last Name: {new_last_name}", "No")
+            tries = 0
+            while tries < 3:
+                new_last_name = input("Enter the new last name: ").strip()
+                if Verification.verify_name(new_last_name):
+                    self.set_new_last_name(matching_users[0][0], new_last_name)
+                    print(f"Last name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Updated Service Engineer Last Name", f"New Last Name: {new_last_name}", "No")
+                    break
+                tries += 1
+                print(f"You have {3 - tries} tries left.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{updater}", "Too many wrong last name attempts", f" ", "Yes")
         elif choice == "5":
             print("Going back to the previous menu.")
             return
