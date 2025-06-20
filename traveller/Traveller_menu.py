@@ -417,21 +417,21 @@ def update_traveller(updater):
                 return
 
     elif field == "4":  # Gender
-        print("[1] Male")
-        print("[2] Female")
-        gender_choice = input("Select gender: ").strip()
-        if gender_choice == "1":
-            new_val = "Male"
-        elif gender_choice == "2":
-            new_val = "Female"
-        else:
-            print("Invalid input. Please select 1 for Male or 2 for Female.")
-            fail_count += 1
-            if fail_count >= max_fails:
-                log_suspicious("Gender")
-                print("Too many failed attempts. Suspicious behavior logged.")
-                return
-            return
+        while True:
+            print("[1] Male")
+            print("[2] Female")
+            gender_choice = input("Select gender: ").strip()
+            if gender_choice == "1":
+                new_val = "Male"
+            elif gender_choice == "2":
+                new_val = "Female"
+            else:
+                print("Invalid input. Please select 1 for Male or 2 for Female.")
+                fail_count += 1
+                if fail_count >= max_fails:
+                    log_suspicious("Gender")
+                    print("Too many failed attempts. Suspicious behavior logged.")
+                    return
 
     elif field == "5":  # Street Name
         while True:
