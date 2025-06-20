@@ -350,15 +350,16 @@ def update_traveller(updater):
     new_val = None
     if field == "1":  # first Name
         new_val = input("New first Name: ").strip()
-        while not new_val and not Verification.verify_name(new_val):
+        while not new_val or not Verification.verify_name(new_val):
             new_val = input("New first Name: ").strip()
     elif field == "2":  # Last Name
-        new_val = input("New first Name: ").strip()
-        while not new_val and not Verification.verify_name(new_val):
+        new_val = input("New Last Name: ").strip()
+        while not new_val or not Verification.verify_name(new_val):
             new_val = input("New Last Name: ").strip()
     elif field == "3":  # Birthday
-        new_val = input("New first Name: ").strip()
+        new_val = input("New Birthday (YYYY-MM-DD): ").strip()
         while not new_val or not Verification.is_valid_birthday(new_val):
+            print("Invalid birthday. Please use format YYYY-MM-DD and a realistic date.")
             new_val = input("New Birthday (YYYY-MM-DD): ").strip()
     elif field == "4":  # Gender
         print("[1] Male")
@@ -366,16 +367,21 @@ def update_traveller(updater):
         gender_choice = input("Select gender: ").strip()
         new_val = "Male" if gender_choice == "1" else "Female"
     elif field == "5":  # Street Name
-        new_val = input("New first Name: ").strip()
+        new_val = input("New Street Name: ").strip()
         while not new_val or not Verification.is_valid_street_name(new_val):
+            print("Invalid street name. Must include letters and only allowed characters.")
             new_val = input("New Street Name: ").strip()
     elif field == "6":  # House Number
-        new_val = input("New first Name: ").strip()
+        new_val = input("New House Number: ").strip()
         while not new_val or not new_val.isdigit():
+            print("House number must be digits only. Please try again.")
             new_val = input("New House Number: ").strip()
     elif field == "7":  # Zip Code
         new_val = input("New Zip Code (DDDDXX format): ").strip().upper()
-        if not db.validate_zip_code(new_val):
+        while not db.validate_zip_code(new_val):
+            print(
+                "Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again."
+            )
             new_val = input("New Zip Code (DDDDXX format): ").strip().upper()
     elif field == "8":  # City
         display_cities(db.cities)
@@ -388,12 +394,14 @@ def update_traveller(updater):
             except (ValueError, IndexError):
                 print("Invalid city selection")
     elif field == "9":  # Email
-        new_val = input("New first Name: ").strip()
+        new_val = input("New first Email: ").strip()
         while not new_val or not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", new_val):
+            print("Invalid email format. Please try again.")
             new_val = input("New Email: ").strip()
     elif field == "10":  # Phone
         new_val = input("New Phone (8 digits only): ").strip()
-        if not new_val.isdigit() or len(new_val) != 8:
+        while not new_val.isdigit() or len(new_val) != 8:
+            print("Phone number must contain exactly 8 digits. Please try again.")
             new_val = input("New Phone (8 digits only): ").strip()
     elif field == "11":  # Driving License
         new_val = (
@@ -401,7 +409,10 @@ def update_traveller(updater):
             .strip()
             .upper()
         )
-        if not db.validate_driving_license(new_val):
+        while not db.validate_driving_license(new_val):
+            print(
+                "Invalid Driving License format. Must be XXDDDDDDD or XDDDDDDDD (e.g., AB1234567 or A12345678). Please try again."
+            )
             new_val = (
                 input("New Driving License (XXDDDDDDD or XDDDDDDDD format): ")
                 .strip()
