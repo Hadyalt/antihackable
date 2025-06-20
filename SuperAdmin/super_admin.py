@@ -84,8 +84,7 @@ class SuperAdmin:
         elif choice == "2":
             if self.confirm_password():
                 tries = 0
-                max_tries = 3
-                while tries < max_tries:
+                while tries < 3:
                     password = getpass.getpass("Enter new password: ")
                     if Verification.verify_Password(password):
                         hashed = hash_password(password)
@@ -96,11 +95,10 @@ class SuperAdmin:
                         break
                     else:
                         tries += 1
-                        print(f"Invalid password format. You have {max_tries - tries} tries left.")
-                if tries == max_tries:
-                    print("Failed to reset password after 3 invalid attempts.")
-                    logger = EncryptedLogger()
-                    logger.log_entry("super_admin", "Failed System Admin Password Reset", f"Username: {decrypt(matching_users[0][0])} - 3 invalid password attempts", "Yes")
+                        print(f"You have {3 - tries} tries left.")
+                print("Failed to reset password after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry("super_admin", "Failed System Admin Password Reset", f"Username: {decrypt(matching_users[0][0])} - 3 invalid password attempts", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
