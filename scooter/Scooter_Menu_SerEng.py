@@ -152,7 +152,12 @@ def Scooter_Menu_SerEng(choice, updater):
             while True:
                 if tries >= 3:
                     print("Too many invalid attempts. Update cancelled.")
-                    logger.log_entry(f"{updater}", f"Update cancelled for scooter {sn}", "Too many invalid attempts", "Yes")
+                    logger.log_entry(
+                        f"{updater}",
+                        f"Update cancelled for scooter {sn}",
+                        "Too many invalid attempts",
+                        "Yes",
+                    )
                     return
                 date = input("Last Maintenance Date (YYYY-MM-DD): ").strip()
                 try:
@@ -168,19 +173,24 @@ def Scooter_Menu_SerEng(choice, updater):
                         print("Error: Maintenance date cannot be older than 1980.")
                         continue
                     db.update_scooter_fields(sn, LastMaintenanceDate=date)
-                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the last maintenance date to {date}", "No")
+                    logger.log_entry(
+                        f"{updater}",
+                        f"Updated scooter {sn}",
+                        f"Updated the last maintenance date to {date}",
+                        "No",
+                    )
                     return
                 except ValueError:
                     print("Error: Use YYYY-MM-DD format")
                     tries += 1
                     print("Error: Maintenance date cannot be older than 1980.")
-            db.update_scooter_fields(sn, LastMaintenanceDate=date)
-            logger.log_entry(
-                f"{updater}",
-                f"Updated scooter {sn}",
-                f"Updated the last maintenance date to {date}",
-                "No",
-            )
+                    db.update_scooter_fields(sn, LastMaintenanceDate=date)
+                    logger.log_entry(
+                        f"{updater}",
+                        f"Updated scooter {sn}",
+                        f"Updated the last maintenance date to {date}",
+                        "No",
+                    )
         elif choice == "3":
             return
         else:
