@@ -298,7 +298,7 @@ def is_valid_email(email):
         return False
     if ".." in email:
         return False  # No consecutive dots allowed
-    return email
+    return True
 
 
 def is_valid_license_number(license):
