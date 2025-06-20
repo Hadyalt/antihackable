@@ -166,19 +166,6 @@ class Traveller:
         values = []
         for k, v in fields.items():
             if k in allowed:
-                # Special validation for certain fields
-                if k == "ZipCode" and not self.validate_zip_code(v):
-                    print("Invalid Zip Code format. Must be DDDDXX")
-                    return
-                if k == "DrivingLicenseNumber" and not self.validate_driving_license(v):
-                    print("Invalid Driving License format")
-                    return
-                if k == "City" and v not in self.cities:
-                    print("Invalid city selection")
-                    return
-                if k == "Phone":
-                    v = self.format_phone(v)
-
                 updates.append(f"{k} = ?")
                 values.append(v)
 
@@ -196,16 +183,17 @@ class Traveller:
 
     def delete_traveller(self, traveller_id, deletor):
         cursor = self.connection.cursor()
+        cursor.execute("SELECT 1 FROM Traveller WHERE TravellerID = ?", (traveller_id,))
+        if cursor.fetchone() is None:
+            print("Traveller not found. Deletion aborted.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{deletor}", f"Attempted to delete non-existent Traveller ID: {traveller_id}","No action taken","No")
+            return 
         cursor.execute("DELETE FROM Traveller WHERE TravellerID = ?", (traveller_id,))
         self.connection.commit()
         print("Traveller deleted.")
         logger = EncryptedLogger()
-        logger.log_entry(
-            f"{deletor}",
-            f"Deleted Traveller with Traveller ID: {traveller_id}",
-            " ",
-            "No",
-        )
+        logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " ", "No")
 
     def close(self):
         if self.connection:
