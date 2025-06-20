@@ -281,8 +281,23 @@ def validate_input_pass(
 
 
 def is_valid_email(email):
-    pattern = r"^[\w\.-]+@[\w\.-]+\.\w{2,}$"
-    return re.fullmatch(pattern, email) is not None
+    if not isinstance(email, str):
+        return False
+    email = email.strip()
+    # RFC 5322 Official Standard (simplified for practical use)
+    pattern = (
+        r"^(?![.-])"  # No leading dot or hyphen
+        r"[A-Za-z0-9._%+-]+"  # Local part
+        r"@"
+        r"(?!-)"  # No leading hyphen in domain
+        r"[A-Za-z0-9.-]+"  # Domain part
+        r"\.[A-Za-z]{2,}$"  # TLD
+    )
+    if not re.fullmatch(pattern, email):
+        return False
+    if ".." in email:
+        return False  # No consecutive dots allowed
+    return email
 
 
 def is_valid_license_number(license):

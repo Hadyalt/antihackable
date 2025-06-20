@@ -3,6 +3,8 @@ from datetime import datetime
 from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from traveller.Traveller import Traveller
+from valid_in_out_put import is_valid_email
+
 
 
 def display_cities(cities):
@@ -183,7 +185,7 @@ def add_traveller(creator):
     # Email validation
     email_regex = r"^[\w\.-]+@[\w\.-]+\.\w+$"
     while True:
-        email = input("Email: ").strip()
+        email = is_valid_email(input("Email: ").strip())
         if re.match(email_regex, email):
             logger.log_entry(f"{creator}", "Input accepted", f"Email: {email}", "No")
             break
