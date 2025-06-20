@@ -284,7 +284,8 @@ def is_valid_email(email):
     if not isinstance(email, str):
         return False
     email = email.strip()
-    # RFC 5322 Official Standard (simplified for practical use)
+    if not email:
+        return False
     pattern = (
         r"^(?![.-])"  # No leading dot or hyphen
         r"[A-Za-z0-9._%+-]+"  # Local part
