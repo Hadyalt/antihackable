@@ -13,7 +13,6 @@ def Scooter_Menu_SerEng(choice, updater):
             scooters = db.search_scooters(search_term)
         else:
             scooters = db.get_all_scooters()
-
         if scooters:
             for s in scooters:
                 print(s)
@@ -23,7 +22,7 @@ def Scooter_Menu_SerEng(choice, updater):
         print("\nList of Scooters:")
         scooters = db.get_all_serial_numbers()
         if not scooters:
-            print("No scooters available.")
+            print("No scooters available to update.")
             return
         for s in scooters:
             print(f"- {s[0]}")

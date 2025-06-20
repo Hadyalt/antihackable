@@ -49,6 +49,9 @@ def main(role, username):
             elif choice == "4":
                 print("\nList of Scooters:")
                 scooters = db.get_all_serial_numbers()
+                if not scooters:
+                    print("No scooters available to delete.")
+                    continue
                 for s in scooters:
                     print(f"- {s[0]}")
                 sn = input("\nSerial Number to delete: ")
@@ -224,6 +227,9 @@ def update_scooter(updater):
     db.connect()
     print("\nList of Scooters:")
     scooters = db.get_all_serial_numbers()
+    if not scooters:
+        print("No scooters available to update.")
+        return
     for s in scooters:
         print(f"- {s[0]}")
     sn = input("\nSerial Number to update: ")
