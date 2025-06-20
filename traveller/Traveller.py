@@ -165,15 +165,6 @@ class Traveller:
         for k, v in fields.items():
             if k in allowed:
                 # Special validation for certain fields
-                if k == "ZipCode" and not self.validate_zip_code(v):
-                    print("Invalid Zip Code format. Must be DDDDXX")
-                    return
-                if k == "DrivingLicenseNumber" and not self.validate_driving_license(v):
-                    print("Invalid Driving License format")
-                    return
-                if k == "City" and v not in self.cities:
-                    print("Invalid city selection")
-                    return
                 if k == "Phone":
                     v = self.format_phone(v)
 
