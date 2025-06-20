@@ -11,12 +11,14 @@ def validate_input_user(
     value_type=None,
     allowed_values=None,
     context=None,
+    mode="create",  # New parameter: 'create' or 'login'
 ):
     """
     Username validation according to project rules.
     - Must be unique (case-insensitive)
     - 8-10 chars, starts with letter or _, allowed: a-z, 0-9, _, ', .
     - Case-insensitive
+    - mode: 'create' (default) or 'login'. If 'login', no print statements.
     """
     if value == "super_admin":
         return "super_admin"  # Special case for super_admin
@@ -33,7 +35,8 @@ def validate_input_user(
             "Input cannot be empty",
             suspicious=suspicious_flag,
         )
-        print("Input cannot be empty.")
+        if mode != "login":
+            print("Input cannot be empty.")
         return False
 
     value = value.lower()
@@ -49,7 +52,8 @@ def validate_input_user(
             f"Input too short (min {min_length}).",
             suspicious=suspicious_flag,
         )
-        print(f"Input too short (min {min_length}).")
+        if mode != "login":
+            print(f"Input too short (min {min_length}).")
         return False
 
     if max_length and len(value) > max_length:
@@ -64,7 +68,8 @@ def validate_input_user(
             f"Input too long (max {max_length}).",
             suspicious=suspicious_flag,
         )
-        print(f"Input too long (max {max_length}).")
+        if mode != "login":
+            print(f"Input too long (max {max_length}).")
         return False
 
     # Username regex: starts with letter or _, then allowed chars
@@ -83,7 +88,8 @@ def validate_input_user(
             f"Pattern mismatch: {pattern}",
             suspicious=suspicious_flag,
         )
-        print("Username does not match required format.")
+        if mode != "login":
+            print("Username does not match required format.")
         return False
 
     if existing_usernames and value in [u.lower() for u in existing_usernames]:
@@ -98,7 +104,8 @@ def validate_input_user(
             "Username must be unique.",
             suspicious=suspicious_flag,
         )
-        print("Username must be unique.")
+        if mode != "login":
+            print("Username must be unique.")
         return False
 
     if "\x00" in value:
@@ -113,7 +120,8 @@ def validate_input_user(
             "Null byte detected in input.",
             suspicious=suspicious_flag,
         )
-        print("Null byte detected in input.")
+        if mode != "login":
+            print("Null byte detected in input.")
         return False
 
     return value
@@ -126,12 +134,14 @@ def validate_input_pass(
     value_type=None,
     allowed_values=None,
     context=None,
+    mode="create",  # New parameter: 'create' or 'login'
 ):
     """
     Password validation according to project rules.
     - 12-30 chars
     - Allowed: a-z, A-Z, 0-9, ~!@#$%&_+=`|\(){}[]:;'<>,.?/
     - Must have at least one lowercase, one uppercase, one digit, one special char
+    - mode: 'create' (default) or 'login'. If 'login', no print statements.
     """
     if value == "Admin_123?":
         return "Admin_123?"  # Special case for Admin password
@@ -148,7 +158,8 @@ def validate_input_pass(
             "Input cannot be empty",
             suspicious=suspicious_flag,
         )
-        print("Input cannot be empty.")
+        if mode != "login":
+            print("Input cannot be empty.")
         return False
 
     if min_length and len(value) < min_length:
@@ -163,7 +174,8 @@ def validate_input_pass(
             f"Input too short (min {min_length}).",
             suspicious=suspicious_flag,
         )
-        print(f"Input too short (min {min_length}).")
+        if mode != "login":
+            print(f"Input too short (min {min_length}).")
         return False
 
     if max_length and len(value) > max_length:
@@ -178,7 +190,8 @@ def validate_input_pass(
             f"Input too long (max {max_length}).",
             suspicious=suspicious_flag,
         )
-        print(f"Input too long (max {max_length}).")
+        if mode != "login":
+            print(f"Input too long (max {max_length}).")
         return False
 
     # Allowed special chars: ~!@#$%&_+=`|\(){}[]:;'<>,.?/
@@ -198,7 +211,8 @@ def validate_input_pass(
             f"Pattern mismatch: {pattern}",
             suspicious=suspicious_flag,
         )
-        print("Password contains invalid characters.")
+        if mode != "login":
+            print("Password contains invalid characters.")
         return False
 
     # At least one lowercase, one uppercase, one digit, one special char
@@ -214,7 +228,8 @@ def validate_input_pass(
             "Password must contain at least one lowercase letter.",
             suspicious=suspicious_flag,
         )
-        print("Password must contain at least one lowercase letter.")
+        if mode != "login":
+            print("Password must contain at least one lowercase letter.")
         return False
 
     if not re.search(r"[A-Z]", value):
@@ -229,7 +244,8 @@ def validate_input_pass(
             "Password must contain at least one uppercase letter.",
             suspicious=suspicious_flag,
         )
-        print("Password must contain at least one uppercase letter.")
+        if mode != "login":
+            print("Password must contain at least one uppercase letter.")
         return False
 
     if not re.search(r"[0-9]", value):
@@ -244,7 +260,8 @@ def validate_input_pass(
             "Password must contain at least one digit.",
             suspicious=suspicious_flag,
         )
-        print("Password must contain at least one digit.")
+        if mode != "login":
+            print("Password must contain at least one digit.")
         return False
 
     if not re.search(rf"[{allowed_special}]", value):
@@ -259,7 +276,8 @@ def validate_input_pass(
             "Password must contain at least one special character.",
             suspicious=suspicious_flag,
         )
-        print("Password must contain at least one special character.")
+        if mode != "login":
+            print("Password must contain at least one special character.")
         return False
 
     if "\x00" in value:
@@ -274,7 +292,8 @@ def validate_input_pass(
             "Null byte detected in input.",
             suspicious=suspicious_flag,
         )
-        print("Null byte detected in input.")
+        if mode != "login":
+            print("Null byte detected in input.")
         return False
 
     return value
