@@ -403,6 +403,7 @@ def update_traveller(updater):
         while not new_val.isdigit() or len(new_val) != 8:
             print("Phone number must contain exactly 8 digits. Please try again.")
             new_val = input("New Phone (8 digits only): ").strip()
+        new_val = db.format_phone(new_val)
     elif field == "11":  # Driving License
         new_val = (
             input("New Driving License (XXDDDDDDD or XDDDDDDDD format): ")

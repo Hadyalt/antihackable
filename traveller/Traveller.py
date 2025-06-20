@@ -164,10 +164,6 @@ class Traveller:
         values = []
         for k, v in fields.items():
             if k in allowed:
-                # Special validation for certain fields
-                if k == "Phone":
-                    v = self.format_phone(v)
-
                 updates.append(f"{k} = ?")
                 values.append(v)
 
