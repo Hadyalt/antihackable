@@ -12,6 +12,8 @@ import getpass
 def system_admin_menu(username):
     current_user = username  # Replace with actual logged-in username
     sysAd= systemAdmin()
+    logger = EncryptedLogger()
+    
     
     while True:
         print(f"\nWelcome, {current_user}!")
