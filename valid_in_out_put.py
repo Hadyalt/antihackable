@@ -19,7 +19,7 @@ def validate_input_user(
     - Case-insensitive
     """
     if value == "super_admin":
-        return "super_admin"  # Special case for super_admin
+        return (True, "super_admin")  # Special case for super_admin
 
     if value is None or (isinstance(value, str) and value.strip() == ""):
         logger = EncryptedLogger()
@@ -34,7 +34,7 @@ def validate_input_user(
             suspicious=suspicious_flag,
         )
         print("Input cannot be empty.")
-        return False
+        return (False, value)
 
     value = value.lower()
     if min_length and len(value) < min_length:
@@ -50,7 +50,7 @@ def validate_input_user(
             suspicious=suspicious_flag,
         )
         print(f"Input too short (min {min_length}).")
-        return False
+        return (False, value)
 
     if max_length and len(value) > max_length:
         logger = EncryptedLogger()
@@ -65,7 +65,7 @@ def validate_input_user(
             suspicious=suspicious_flag,
         )
         print(f"Input too long (max {max_length}).")
-        return False
+        return (False, value)
 
     # Username regex: starts with letter or _, then allowed chars
     pattern = r"^[a-z_][a-z0-9_'.]{7,9}$"
@@ -84,7 +84,7 @@ def validate_input_user(
             suspicious=suspicious_flag,
         )
         print("Username does not match required format.")
-        return False
+        return (False, value)
 
     if existing_usernames and value in [u.lower() for u in existing_usernames]:
         logger = EncryptedLogger()
@@ -99,7 +99,7 @@ def validate_input_user(
             suspicious=suspicious_flag,
         )
         print("Username must be unique.")
-        return False
+        return (False, value)
 
     if "\x00" in value:
         logger = EncryptedLogger()
@@ -114,9 +114,9 @@ def validate_input_user(
             suspicious=suspicious_flag,
         )
         print("Null byte detected in input.")
-        return False
+        return (False, value)
 
-    return value
+    return (True, value)
 
 
 def validate_input_pass(
@@ -134,7 +134,7 @@ def validate_input_pass(
     - Must have at least one lowercase, one uppercase, one digit, one special char
     """
     if value == "Admin_123?":
-        return "Admin_123?"  # Special case for Admin password
+        return (True, "Admin_123?")  # Special case for Admin password
 
     if value is None or (isinstance(value, str) and value.strip() == ""):
         logger = EncryptedLogger()
@@ -149,7 +149,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print("Input cannot be empty.")
-        return False
+        return (False, value)
 
     if min_length and len(value) < min_length:
         logger = EncryptedLogger()
@@ -164,7 +164,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print(f"Input too short (min {min_length}).")
-        return False
+        return (False, value)
 
     if max_length and len(value) > max_length:
         logger = EncryptedLogger()
@@ -179,7 +179,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print(f"Input too long (max {max_length}).")
-        return False
+        return (False, value)
 
     # Allowed special chars: ~!@#$%&_+=`|\(){}[]:;'<>,.?/
     allowed_special = r"~!@#$%&_+=`|\\(){}\[\]:;'<>,\.\?/"
@@ -199,7 +199,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print("Password contains invalid characters.")
-        return False
+        return (False, value)
 
     # At least one lowercase, one uppercase, one digit, one special char
     if not re.search(r"[a-z]", value):
@@ -215,7 +215,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print("Password must contain at least one lowercase letter.")
-        return False
+        return (False, value)
 
     if not re.search(r"[A-Z]", value):
         logger = EncryptedLogger()
@@ -230,7 +230,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print("Password must contain at least one uppercase letter.")
-        return False
+        return (False, value)
 
     if not re.search(r"[0-9]", value):
         logger = EncryptedLogger()
@@ -245,7 +245,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print("Password must contain at least one digit.")
-        return False
+        return (False, value)
 
     if not re.search(rf"[{allowed_special}]", value):
         logger = EncryptedLogger()
@@ -260,7 +260,7 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print("Password must contain at least one special character.")
-        return False
+        return (False, value)
 
     if "\x00" in value:
         logger = EncryptedLogger()
@@ -275,9 +275,9 @@ def validate_input_pass(
             suspicious=suspicious_flag,
         )
         print("Null byte detected in input.")
-        return False
+        return (False, value)
 
-    return value
+    return (True, value)
 
 
 def is_valid_email(email):
