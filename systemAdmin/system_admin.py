@@ -3,6 +3,7 @@ from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_passw
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 import getpass
+from valid_in_out_put import validate_input_user, validate_input_pass
 
 
 class systemAdmin:
@@ -53,11 +54,11 @@ class systemAdmin:
     def create_service_engineer(self, creator):
         verified_username = False
         while not verified_username:
-            user_name = input("Enter username: ")
+            user_name = validate_input_user(input("Enter username: "))
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
-            password = getpass.getpass("Enter password: ")
+            password = validate_input_pass(getpass.getpass("Enter password: "))
             verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
