@@ -1,3 +1,4 @@
+from datetime import datetime
 import hashlib
 from DbContext.DbContext import DbContext
 import re
@@ -87,9 +88,52 @@ class Verification:
         if not name:
             print("Name cannot be empty.")
             return False
+        # Control characters (null byte, tabs, etc.)
+        if any(ord(c) < 32 or ord(c) == 127 for c in name):
+            return False
         # Allow only letters, hyphens, apostrophes, and spaces
         if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ'\- ]{1,50}", name):
             print("Invalid characters in name. Please use letters, hyphens (-), or apostrophes (').")
             return False
         return True
+    
+    def is_valid_birthday(birthday_str):
+        try:
+            birthday = datetime.strptime(birthday_str, "%Y-%m-%d")
+            today = datetime.today()
+
+            # Birthday should not be in the future or unrealistically old
+            if birthday > today:
+                return False
+            if birthday.year < 1900:
+                return False
+
+            return True
+        except ValueError:
+            return False
+
+    def is_valid_street_name(street: str) -> bool:
+        # Reject empty or whitespace-only
+        if not street:
+            return False
+
+        # Control characters (null byte, tabs, etc.)
+        if any(ord(c) < 32 or ord(c) == 127 for c in street):
+            return False
+
+        # ASCII only (no Unicode)
+        try:
+            street.encode('ascii')
+        except UnicodeEncodeError:
+            return False
+
+        # Allow only specific characters
+        if not re.fullmatch(r"[A-Za-z0-9 .'-]+", street):
+            return False
+
+        # Must contain at least one letter
+        if not re.search(r"[A-Za-z]", street):
+            return False
+        return True
+
 

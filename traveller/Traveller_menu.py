@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
+from Login.verification import Verification
 from traveller.Traveller import Traveller
 from valid_in_out_put import is_valid_email
 
@@ -30,14 +31,20 @@ def traveller_menu(username):
         elif choice == "2":
             view_travellers(username)
         elif choice == "3":
-            view_travellers()
-            update_traveller(username)
+            shown = show_travellers()
+            if not shown:
+                continue
+            else:
+                update_traveller(username)
         elif choice == "4":
             db = Traveller()
             db.connect()
-            tid = input("Traveller ID to delete: ").strip()
-            enc_tid = encrypt(tid)
-            db.delete_traveller(enc_tid, username)
+            shown = show_travellers()
+            if not shown:
+                continue
+            else:
+                tid = input("Traveller ID to delete: ").strip()
+                db.delete_traveller(tid, username)
 
         elif choice == "5":
             return
@@ -64,7 +71,7 @@ def add_traveller(creator):
     # First name validation
     while True:
         first_name = input("First Name: ").strip()
-        if first_name and first_name.isalpha():
+        if first_name and Verification.verify_name(first_name):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"First Name: {first_name}", "No"
             )
@@ -80,7 +87,7 @@ def add_traveller(creator):
     # Last name validation
     while True:
         last_name = input("Last Name: ").strip()
-        if last_name and last_name.isalpha():
+        if last_name and Verification.verify_name(last_name):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"Last Name: {last_name}", "No"
             )
@@ -96,17 +103,13 @@ def add_traveller(creator):
     # Birthday validation
     while True:
         birthday = input("Birthday (YYYY-MM-DD): ").strip()
-        try:
-            datetime.strptime(birthday, "%Y-%m-%d")
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"Birthday: {birthday}", "No"
-            )
+        if Verification.is_valid_birthday(birthday):
+            logger.log_entry(f"{creator}", "Input accepted", f"Birthday: {birthday}", "No")
             break
-        except ValueError:
-            print("Invalid date format. Please use YYYY-MM-DD.")
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid Birthday entry", "No"
-            )
+        else:
+            print("Invalid birthday. Please use format YYYY-MM-DD and a realistic date.")
+            logger.log_entry(f"{creator}", "Input failed", "Invalid Birthday entry", "No")
+
 
     print("\nGender:")
     print("[1] Male")
@@ -128,16 +131,12 @@ def add_traveller(creator):
     # Street name validation
     while True:
         street_name = input("Street Name: ").strip()
-        if street_name:
-            logger.log_entry(
-                f"{creator}", "Input accepted", f"Street Name: {street_name}", "No"
-            )
+        if Verification.is_valid_street_name(street_name):
+            logger.log_entry(f"{creator}", "Input accepted", f"Street Name: {street_name}", "No")
             break
         else:
-            print("Street name cannot be empty. Please try again.")
-            logger.log_entry(
-                f"{creator}", "Input failed", "Invalid Street Name entry", "No"
-            )
+            print("Invalid street name. Must include letters and only allowed characters.")
+            logger.log_entry(f"{creator}", "Input failed", f"Invalid Street Name entry: {street_name!r}", "No")
 
     # House number validation
     while True:
@@ -261,6 +260,34 @@ def add_traveller(creator):
         print("Failed to add traveller. Please check your input and try again.")
 
 
+def show_travellers():
+    db = Traveller()
+    db.connect()
+    travellers = db.get_all_travellers()
+    if travellers:
+        print("\nTraveller List:")
+        print("-" * 100)
+        print(
+            "ID  | First Name   | Last Name    | Email                | Phone         | City"
+        )
+        print("-" * 100)
+        for t in travellers:
+            # Decrypt all relevant fields before displaying
+            tid = t[0]
+            first_name = decrypt(t[1])
+            last_name = decrypt(t[2])
+            email = decrypt(t[9])
+            phone = decrypt(t[10])
+            city = decrypt(t[8])
+            print(
+                f"{tid:<4}| {first_name:<12}| {last_name:<12}| {email:<20}| {phone:<14}| {city}"
+            )
+        print("-" * 100)
+        return travellers
+    else:
+        print("No travellers found.")
+        return None
+
 def view_travellers(username):
     db = Traveller()
     db.connect()
@@ -319,21 +346,45 @@ def update_traveller(updater):
     print("[9] Email")
     print("[10] Phone")
     print("[11] Driving License")
+    print("[12] Cancel Update")
     field = input("Field to update: ").strip()
 
     new_val = None
-    if field in ("1", "2", "3", "5", "6", "9"):
-        new_val = input(f"New value: ").strip()
-
+    if field == "1":  # first Name
+        new_val = input("New first Name: ").strip()
+        while not new_val or not Verification.verify_name(new_val):
+            new_val = input("New first Name: ").strip()
+    elif field == "2":  # Last Name
+        new_val = input("New Last Name: ").strip()
+        while not new_val or not Verification.verify_name(new_val):
+            new_val = input("New Last Name: ").strip()
+    elif field == "3":  # Birthday
+        new_val = input("New Birthday (YYYY-MM-DD): ").strip()
+        while not new_val or not Verification.is_valid_birthday(new_val):
+            print("Invalid birthday. Please use format YYYY-MM-DD and a realistic date.")
+            new_val = input("New Birthday (YYYY-MM-DD): ").strip()
     elif field == "4":  # Gender
         print("[1] Male")
         print("[2] Female")
         gender_choice = input("Select gender: ").strip()
         new_val = "Male" if gender_choice == "1" else "Female"
-
+    elif field == "5":  # Street Name
+        new_val = input("New Street Name: ").strip()
+        while not new_val or not Verification.is_valid_street_name(new_val):
+            print("Invalid street name. Must include letters and only allowed characters.")
+            new_val = input("New Street Name: ").strip()
+    elif field == "6":  # House Number
+        new_val = input("New House Number: ").strip()
+        while not new_val or not new_val.isdigit():
+            print("House number must be digits only. Please try again.")
+            new_val = input("New House Number: ").strip()
     elif field == "7":  # Zip Code
         new_val = input("New Zip Code (DDDDXX format): ").strip().upper()
-
+        while not db.validate_zip_code(new_val):
+            print(
+                "Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again."
+            )
+            new_val = input("New Zip Code (DDDDXX format): ").strip().upper()
     elif field == "8":  # City
         display_cities(db.cities)
         new_val = None
@@ -344,19 +395,37 @@ def update_traveller(updater):
                 new_val = db.cities[city_idx]
             except (ValueError, IndexError):
                 print("Invalid city selection")
-
+    elif field == "9":  # Email
+        new_val = input("New first Email: ").strip()
+        while not new_val or not re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", new_val):
+            print("Invalid email format. Please try again.")
+            new_val = input("New Email: ").strip()
     elif field == "10":  # Phone
         new_val = input("New Phone (8 digits only): ").strip()
-
+        while not new_val.isdigit() or len(new_val) != 8:
+            print("Phone number must contain exactly 8 digits. Please try again.")
+            new_val = input("New Phone (8 digits only): ").strip()
+        new_val = db.format_phone(new_val)
     elif field == "11":  # Driving License
         new_val = (
             input("New Driving License (XXDDDDDDD or XDDDDDDDD format): ")
             .strip()
             .upper()
         )
+        while not db.validate_driving_license(new_val):
+            print(
+                "Invalid Driving License format. Must be XXDDDDDDD or XDDDDDDDD (e.g., AB1234567 or A12345678). Please try again."
+            )
+            new_val = (
+                input("New Driving License (XXDDDDDDD or XDDDDDDDD format): ")
+                .strip()
+                .upper()
+            )
+    elif field == "12":  # Cancel Update
+        print("Update cancelled.")
+        return
     else:
         print("Invalid field.")
-        return
 
     # Map menu choice to field name
     field_map = {
