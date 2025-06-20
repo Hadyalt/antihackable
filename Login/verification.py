@@ -26,6 +26,11 @@ class Verification:
     def verify_username(username):
         username = username.lower()
 
+        # Check if username is empty
+        if username is None or username.strip() == "":
+            print("Username cannot be empty.")
+            return False
+
         # Check length constraints
         if len(username) < 8 or len(username) > 10:
             print("Username must be between 8 and 10 characters.")
@@ -51,6 +56,11 @@ class Verification:
         # Check length constraints
         if len(password) < 12 or len(password) > 30:
             print("Password must be between 12 and 30 characters.")
+            return False
+        
+        # Check if password is empty
+        if password is None or password.strip() == "":
+            print("Password cannot be empty.")
             return False
 
         # Define allowed characters
