@@ -98,7 +98,7 @@ def backup_menu(role, username=None):
                     if not validate_restore_code(backups[sel_idx], username, code):
                         print("Invalid or already used restore code.")
                         logger.log_entry(username or "system", "Backup Menu", f"Invalid or used restore code for {backups[sel_idx]}", "Yes")
-                        continue
+                        break
                 try:
                     restore_backup(backups[sel_idx], username)
                     print("Restore complete. Please restart the application.")

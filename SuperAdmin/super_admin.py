@@ -14,7 +14,7 @@ class SuperAdmin:
     def create_system_admin(self):
         verified_username = False
         while not verified_username:
-            user_name = validate_input_user(input("Enter username: ").strip())
+            verified_username, user_name = validate_input_user(input("Enter username: ").strip())
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
