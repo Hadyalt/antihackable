@@ -22,6 +22,9 @@ def Scooter_Menu_SerEng(choice, updater):
     elif choice == "2":
         print("\nList of Scooters:")
         scooters = db.get_all_serial_numbers()
+        if not scooters:
+            print("No scooters available.")
+            return
         for s in scooters:
             print(f"- {s[0]}")
         sn = input("Serial Number to update: ")
