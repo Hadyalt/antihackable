@@ -11,10 +11,9 @@ def display_menu():
     print("\n==== Service Engineer Menu ====")
     print("[1] Scooter Menu")
     print("[2] Change My Password")
-    print("[3] Go Back")
-    print("[4] Logout")
-    print("[5] Exit")
-    return input("Enter your choice (1-5): ").strip()
+    print("[3] Logout")
+    print("[4] Exit")
+    return input("Enter your choice (1-4): ").strip()
 
 
 def reset_password_flow(current_user):
@@ -67,13 +66,11 @@ def main(username):
         elif choice == "2":
             reset_password_flow(username)
         elif choice == "3":
-            return  # Go back to previous menu
-        elif choice == "4":
             print("👋 Logging out.")
             from um_members import pre_login_menu
             pre_login_menu()
             return
-        elif choice == "5":
+        elif choice == "4":
             print("Exiting Service Engineer Portal. Goodbye!")
             exit()
         else:
