@@ -148,12 +148,12 @@ class systemAdmin:
             print(f"No service engineer found with username '{username_to_update}'.")
             return
         print ("What do you want to update?")
-        print(f"1. Update Username: ({decrypt(matching_users[0][0])})")
-        print("2. Reset Password")
-        print("3. Update First Name")
-        print("4. Update Last Name")
-        print("5. Go Back")
-        choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
+        print(f"[1] Update Username: ({decrypt(matching_users[0][0])})")
+        print("[2] Reset Password")
+        print("[3] Update First Name")
+        print("[4] Update Last Name")
+        print("[5] Go Back")
+        choice = input("Enter your choice [1, 2, 3, 4 or 5]: ").strip()
         if choice == "1":
             if (self.confirm_password(updater)):
                 tries = 0
