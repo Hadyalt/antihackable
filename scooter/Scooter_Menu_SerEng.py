@@ -51,7 +51,12 @@ def Scooter_Menu_SerEng(choice, updater):
                 except ValueError:
                     print("Error: Invalid number format")
             db.update_scooter_fields(sn, StateOfCharge=new_value)
-            logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the State of Charge to {new_value}", "No")
+            logger.log_entry(
+                f"{updater}",
+                f"Updated scooter {sn}",
+                f"Updated the State of Charge to {new_value}",
+                "No",
+            )
 
         elif field_choice == "2":
             # Validate Target Range SOC (min < max, both 0-100%)
@@ -67,7 +72,12 @@ def Scooter_Menu_SerEng(choice, updater):
             db.update_scooter_fields(
                 sn, TargetRangeSocMin=min_val, TargetRangeSocMax=max_val
             )
-            logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the target range SOC to {min_val} - {max_val}", "No")
+            logger.log_entry(
+                f"{updater}",
+                f"Updated scooter {sn}",
+                f"Updated the target range SOC to {min_val} - {max_val}",
+                "No",
+            )
 
         elif field_choice == "3":
             # Validate Location (5 decimal places, within Rotterdam)
@@ -96,7 +106,12 @@ def Scooter_Menu_SerEng(choice, updater):
                 except ValueError:
                     print("Error: Invalid coordinate format")
             db.update_scooter_fields(sn, LocationLat=lat, LocationLong=lon)
-            logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the location to ({lat}, {lon})", "No")
+            logger.log_entry(
+                f"{updater}",
+                f"Updated scooter {sn}",
+                f"Updated the location to ({lat}, {lon})",
+                "No",
+            )
 
         elif field_choice == "4":
             # Validate Out-of-Service status (y/n)
@@ -107,7 +122,12 @@ def Scooter_Menu_SerEng(choice, updater):
                     break
                 print("Error: Enter 'y' or 'n'")
             db.update_scooter_fields(sn, OutOfService=int(oos))
-            logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated out of service to {oos_input}", "No")
+            logger.log_entry(
+                f"{updater}",
+                f"Updated scooter {sn}",
+                f"Updated out of service to {oos_input}",
+                "No",
+            )
 
         elif field_choice == "5":
             # Validate Mileage (non-negative)
@@ -120,7 +140,12 @@ def Scooter_Menu_SerEng(choice, updater):
                 except ValueError:
                     print("Error: Invalid number format")
             db.update_scooter_fields(sn, Mileage=mileage)
-            logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the mileage to {mileage}", "No")
+            logger.log_entry(
+                f"{updater}",
+                f"Updated scooter {sn}",
+                f"Updated the mileage to {mileage}",
+                "No",
+            )
 
         elif field_choice == "6":
             # Validate Last Maintenance Date (ISO 8601)
@@ -132,7 +157,12 @@ def Scooter_Menu_SerEng(choice, updater):
                 except ValueError:
                     print("Error: Use YYYY-MM-DD format")
             db.update_scooter_fields(sn, LastMaintenanceDate=date)
-            logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the last maintenance date to {date}", "No")
+            logger.log_entry(
+                f"{updater}",
+                f"Updated scooter {sn}",
+                f"Updated the last maintenance date to {date}",
+                "No",
+            )
         elif choice == "3":
             return
         else:
