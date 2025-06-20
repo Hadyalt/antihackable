@@ -74,7 +74,9 @@ def validate_input_user(
         if not hasattr(validate_input_user, "_pattern_mismatch_count"):
             validate_input_user._pattern_mismatch_count = 0
         validate_input_user._pattern_mismatch_count += 1
-        suspicious_flag = "Yes" if validate_input_user._pattern_mismatch_count > 3 else "No"
+        suspicious_flag = (
+            "Yes" if validate_input_user._pattern_mismatch_count > 3 else "No"
+        )
         logger.log_entry(
             "system",
             "Input validation failed",
@@ -163,7 +165,7 @@ def validate_input_pass(
         )
         print(f"Input too short (min {min_length}).")
         return False
-    
+
     if max_length and len(value) > max_length:
         logger = EncryptedLogger()
         if not hasattr(validate_input_pass, "_too_long_count"):
@@ -178,7 +180,7 @@ def validate_input_pass(
         )
         print(f"Input too long (max {max_length}).")
         return False
-    
+
     # Allowed special chars: ~!@#$%&_+=`|\(){}[]:;'<>,.?/
     allowed_special = r"~!@#$%&_+=`|\\(){}\[\]:;'<>,\.\?/"
     pattern = rf"^[a-zA-Z0-9{allowed_special}]+$"
@@ -187,7 +189,9 @@ def validate_input_pass(
         if not hasattr(validate_input_pass, "_pattern_mismatch_count"):
             validate_input_pass._pattern_mismatch_count = 0
         validate_input_pass._pattern_mismatch_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._pattern_mismatch_count > 3 else "No"
+        suspicious_flag = (
+            "Yes" if validate_input_pass._pattern_mismatch_count > 3 else "No"
+        )
         logger.log_entry(
             "system",
             "Password validation failed",
@@ -196,7 +200,7 @@ def validate_input_pass(
         )
         print("Password contains invalid characters.")
         return False
-    
+
     # At least one lowercase, one uppercase, one digit, one special char
     if not re.search(r"[a-z]", value):
         logger = EncryptedLogger()
@@ -212,7 +216,7 @@ def validate_input_pass(
         )
         print("Password must contain at least one lowercase letter.")
         return False
-    
+
     if not re.search(r"[A-Z]", value):
         logger = EncryptedLogger()
         if not hasattr(validate_input_pass, "_no_uppercase_count"):
@@ -227,7 +231,7 @@ def validate_input_pass(
         )
         print("Password must contain at least one uppercase letter.")
         return False
-    
+
     if not re.search(r"[0-9]", value):
         logger = EncryptedLogger()
         if not hasattr(validate_input_pass, "_no_digit_count"):
@@ -242,7 +246,7 @@ def validate_input_pass(
         )
         print("Password must contain at least one digit.")
         return False
-    
+
     if not re.search(rf"[{allowed_special}]", value):
         logger = EncryptedLogger()
         if not hasattr(validate_input_pass, "_no_special_count"):
@@ -257,7 +261,7 @@ def validate_input_pass(
         )
         print("Password must contain at least one special character.")
         return False
-    
+
     if "\x00" in value:
         logger = EncryptedLogger()
         if not hasattr(validate_input_pass, "_null_byte_count"):
