@@ -4,7 +4,7 @@ from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 from traveller.Traveller import Traveller
-from valid_in_out_put import is_valid_email
+from validation.isValidEmail import is_valid_email
 
 
 def display_cities(cities):
