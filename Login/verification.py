@@ -125,29 +125,3 @@ class Verification:
             return True
         except ValueError:
             return False
-
-    def is_valid_street_name(street: str) -> bool:
-        # Reject empty or whitespace-only
-        if not street:
-            return False
-
-        # Control characters (null byte, tabs, etc.)
-        if any(ord(c) < 32 or ord(c) == 127 for c in street):
-            return False
-
-        # ASCII only (no Unicode)
-        try:
-            street.encode('ascii')
-        except UnicodeEncodeError:
-            return False
-
-        # Allow only specific characters
-        if not re.fullmatch(r"[A-Za-z0-9 .'-]+", street):
-            return False
-
-        # Must contain at least one letter
-        if not re.search(r"[A-Za-z]", street):
-            return False
-        return True
-
-

@@ -15,7 +15,6 @@ from valid_in_out_put import sanitize_output, validate_input_user, validate_inpu
 
 DB_PATH = "data.db"
 
-
 # === LOGIN ===
 def login():
     logger = EncryptedLogger()
@@ -30,8 +29,8 @@ def login():
             print("\n" + "=" * 50)
             print("🔐 URBAN MOBILITY - LOGIN")
             print("=" * 50)
-            bool, username = validate_input_user(input("Username: ").strip(), mode="login")
-            bool2, password = validate_input_pass(getpass.getpass("Password: ").strip(), mode="login")
+            bool, username = validate_input_user(input("Username: "), mode="login")
+            bool2, password = validate_input_pass(getpass.getpass("Password: "), mode="login")
 
             # Hardcoded super admin
             if username == "super_admin" and password == "Admin_123?":

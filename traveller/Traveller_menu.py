@@ -4,7 +4,8 @@ from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 from traveller.Traveller import Traveller
-from valid_in_out_put import is_valid_email
+from validation.isValidEmail import is_valid_email
+from validation.isValidStreetName import is_valid_street_name
 
 
 def display_cities(cities):
@@ -135,7 +136,7 @@ def add_traveller(creator):
     # Street name validation
     while True:
         street_name = input("Street Name: ").strip()
-        if Verification.is_valid_street_name(street_name):
+        if is_valid_street_name(street_name):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"Street Name: {street_name}", "No"
             )
@@ -435,8 +436,8 @@ def update_traveller(updater):
 
     elif field == "5":  # Street Name
         while True:
-            new_val = input("New Street Name: ").strip()
-            if new_val and Verification.is_valid_street_name(new_val):
+            new_val = input("New Street Name: ")
+            if new_val and is_valid_street_name(new_val):
                 break
             print(
                 "Invalid street name. Must include letters and only allowed characters."

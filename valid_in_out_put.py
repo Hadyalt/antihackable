@@ -298,33 +298,6 @@ def validate_input_pass(
 
     return (True, value)
 
-
-def is_valid_email(email):
-    if not isinstance(email, str):
-        return False
-    email = email.strip()
-    if not email:
-        return False
-    pattern = (
-        r"^(?![.-])"  # No leading dot or hyphen
-        r"[A-Za-z0-9._%+-]+"  # Local part
-        r"@"
-        r"(?!-)"  # No leading hyphen in domain
-        r"[A-Za-z0-9.-]+"  # Domain part
-        r"\.[A-Za-z]{2,}$"  # TLD
-    )
-    if not re.fullmatch(pattern, email):
-        return False
-    if ".." in email:
-        return False  # No consecutive dots allowed
-    return True
-
-
-def is_valid_license_number(license):
-    pattern = r"^[A-Z0-9-]{5,20}$"
-    return re.fullmatch(pattern, license) is not None
-
-
 def sanitize_output(text):
     """Remove control characters (e.g., \x1b) from output."""
     return re.sub(r"[\x00-\x1f\x7f-\x9f]", "", str(text))
