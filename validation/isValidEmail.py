@@ -3,15 +3,13 @@ import re
 def is_valid_email(email):
     if isinstance(email, str):
         pattern = (
-            r"^(?![.-])"  # No leading dot or hyphen
-            r"(?!.*\.\.)"  # No consecutive dots
-            r"[A-Za-z0-9._%+-]+"  # Local part
+            r"[A-Za-z0-9_%+]+"               # Local part start (cannot be . or -)
+            r"(?:\.[A-Za-z0-9_%+-]+)*"       # Additional parts after dots (no consecutive dots)
             r"@"
-            r"(?!-)"  # No leading hyphen in domain
-            r"[A-Za-z0-9.-]+"  # Domain part
-            r"\.[A-Za-z]{2,}$"  # TLD
+            r"[A-Za-z0-9]+"                  # Domain start (cannot be -)
+            r"(?:[-A-Za-z0-9]*[A-Za-z0-9])?"  # Domain middle and end
+            r"(?:\.[A-Za-z]{2,})+$"          # TLDs
         )
         if re.fullmatch(pattern, email):
-                return True
+            return True
     return False
-    
