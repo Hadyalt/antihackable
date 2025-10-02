@@ -5,6 +5,7 @@ from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
 from scooter.Scooter_data import Scooter_data
 from datetime import datetime
 
+from validation.isValidBrand import is_valid_brand
 from validation.isValidModel import is_valid_model
 
 def show_menu(role):
@@ -90,7 +91,7 @@ def add_scooter(creator):
     }
 
     brand = input("Brand: ")
-    while not is_valid_brand(brand):
+    while not (brand):
         brand = input("Brand: ")
     model = input("Model: ")
     while not is_valid_model(model):
