@@ -4,6 +4,7 @@ from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 from traveller.Traveller import Traveller
+from validation.isValidBirthday import is_valid_birthday
 from validation.isValidEmail import is_valid_email
 from validation.isValidStreetName import is_valid_street_name
 
@@ -102,8 +103,8 @@ def add_traveller(creator):
 
     # Birthday validation
     while True:
-        birthday = input("Birthday (YYYY-MM-DD): ").strip()
-        if Verification.is_valid_birthday(birthday):
+        birthday = input("Birthday (YYYY-MM-DD): ")
+        if is_valid_birthday(birthday):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"Birthday: {birthday}", "No"
             )
@@ -405,8 +406,8 @@ def update_traveller(updater):
 
     elif field == "3":  # Birthday
         while True:
-            new_val = input("New Birthday (YYYY-MM-DD): ").strip()
-            if new_val and Verification.is_valid_birthday(new_val):
+            new_val = input("New Birthday (YYYY-MM-DD): ")
+            if new_val and is_valid_birthday(new_val):
                 break
             print(
                 "Invalid birthday. Please use format YYYY-MM-DD and a realistic date."

@@ -111,17 +111,4 @@ class Verification:
             return False
         return True
     
-    def is_valid_birthday(birthday_str):
-        try:
-            birthday = datetime.strptime(birthday_str, "%Y-%m-%d")
-            today = datetime.today()
-
-            # Birthday should not be in the future or unrealistically old
-            if birthday > today:
-                return False
-            if birthday.year < 1900:
-                return False
-
-            return True
-        except ValueError:
-            return False
+    
