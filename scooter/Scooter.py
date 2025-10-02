@@ -5,6 +5,8 @@ from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
 from scooter.Scooter_data import Scooter_data
 from datetime import datetime
 
+from validation.isValidModel import is_valid_model
+
 def show_menu(role):
     if role in ["superadmin", "systemadmin"]:
         print("""
@@ -87,11 +89,11 @@ def add_scooter(creator):
         "max_lon": 4.6,
     }
 
-    brand = input("Brand: ").strip()
-    while not Verification.verify_model(brand):
-        brand = input("Brand: ").strip()
+    brand = input("Brand: ")
+    while not is_valid_brand(brand):
+        brand = input("Brand: ")
     model = input("Model: ")
-    while not Verification.verify_model(model):
+    while not is_valid_model(model):
         model = input("Model: ")
 
     # Validate Serial Number (10-17 alphanumeric characters)
@@ -257,8 +259,8 @@ def update_scooter(updater):
     if field_choice == "1":  # Brand
         tries = 0
         while tries < MAX_TRIES:
-            new_brand = input("New Brand: ").strip()
-            if new_brand and Verification.verify_model(new_brand):
+            new_brand = input("New Brand: ")
+            if new_brand and is_valid_brand(new_brand):
                 db.update_scooter_fields(sn, Brand=new_brand)
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the brand to {new_brand}", "No")
                 return
@@ -270,8 +272,8 @@ def update_scooter(updater):
     elif field_choice == "2":  # Model
         tries = 0
         while tries < MAX_TRIES:
-            new_model = input("New Model: ").strip()
-            if new_model and Verification.verify_model(new_model):
+            new_model = input("New Model: ")
+            if new_model and is_valid_model(new_model):
                 db.update_scooter_fields(sn, Model=new_model)
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the model to {new_model}", "No")
                 return
