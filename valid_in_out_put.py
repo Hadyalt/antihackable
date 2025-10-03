@@ -27,8 +27,8 @@ def check_length_limits(value, min_length=None, max_length=None):
         length = len(value)
         if min_length is not None and length >= min_length:
             if max_length is not None and length <= max_length:
-                return True, None
-    return False, None
+                return True
+    return False
 
 # --- Character whitelist validators ---
 def is_whitelisted_username_char(char):
@@ -165,7 +165,7 @@ def validate_password(value, min_length=12, max_length=30, mode="create"):
 
                     # Length checks
                     if check_length_limits(value, min_length, max_length):
-
+                        
                         # Character whitelist for entire password
                         if check_password_pattern(value):
 
