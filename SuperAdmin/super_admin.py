@@ -5,6 +5,7 @@ from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 import getpass
 from valid_in_out_put import validate_input_user, validate_input_pass
+from validation.isValidName import is_valid_name
 
 
 class SuperAdmin:
@@ -14,7 +15,7 @@ class SuperAdmin:
     def create_system_admin(self):
         verified_username = False
         while not verified_username:
-            verified_username, user_name = validate_input_user(input("Enter username: ").strip())
+            verified_username, user_name = validate_input_user(input("Enter username: "))
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
@@ -23,11 +24,11 @@ class SuperAdmin:
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
-            verified_first_name = Verification.verify_name(firstname)
+            verified_first_name = is_valid_name(firstname)
         verified_last_name = False
         while not verified_last_name:
             lastname = input("Enter last name: ")
-            verified_last_name = Verification.verify_name(lastname)
+            verified_last_name = is_valid_name(lastname)
 
         hashed = hash_password(password)
         system_data = {
@@ -107,8 +108,8 @@ class SuperAdmin:
         elif choice == "3":
             tries = 0
             while tries < 3:
-                new_first_name = input("Enter the new first name: ").strip()
-                if Verification.verify_name(new_first_name):
+                new_first_name = input("Enter the new first name: ")
+                if is_valid_name(new_first_name):
                     self.set_new_first_name(matching_users[0][0], new_first_name)
                     print(f"First name for system admin {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
                     logger = EncryptedLogger()
@@ -121,8 +122,8 @@ class SuperAdmin:
         elif choice == "4":
             tries = 0
             while tries < 3:
-                new_last_name = input("Enter the new last name: ").strip()
-                if Verification.verify_name(new_last_name):
+                new_last_name = input("Enter the new last name: ")
+                if is_valid_name(new_last_name):
                     self.set_new_last_name(matching_users[0][0], new_last_name)
                     print(f"Last name for system admin {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
                     logger = EncryptedLogger()

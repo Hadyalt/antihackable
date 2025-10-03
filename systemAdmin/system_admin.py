@@ -4,6 +4,7 @@ from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 import getpass
 from valid_in_out_put import validate_input_user, validate_input_pass
+from validation.isValidName import is_valid_name
 
 
 class systemAdmin:
@@ -54,7 +55,7 @@ class systemAdmin:
     def create_service_engineer(self, creator):
         verified_username = False
         while not verified_username:
-            verified_username, user_name = validate_input_user(input("Enter username: ").strip())
+            verified_username, user_name = validate_input_user(input("Enter username: "))
             verified_username = Verification.verify_username(user_name)
         verified_password = False
         while not verified_password:
@@ -63,12 +64,12 @@ class systemAdmin:
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
-            verified_first_name = Verification.verify_name(firstname)
+            verified_first_name = is_valid_name(firstname)
         verified_last_name = False
         while not verified_last_name:
             lastname = input("Enter last name: ")
-            verified_last_name = Verification.verify_name(lastname)
-    
+            verified_last_name = is_valid_name(lastname)
+
         hashed = hash_password(password)
         system_data = {
             "Username": user_name,
@@ -153,12 +154,12 @@ class systemAdmin:
         print("[3] Update First Name")
         print("[4] Update Last Name")
         print("[5] Go Back")
-        choice = input("Enter your choice [1, 2, 3, 4 or 5]: ").strip()
+        choice = input("Enter your choice [1, 2, 3, 4 or 5]: ")
         if choice == "1":
             if (self.confirm_password(updater)):
                 tries = 0
                 while tries < 3:
-                    new_username = input("Enter the new username: ").strip()
+                    new_username = input("Enter the new username: ")
                     if Verification.verify_username(new_username):
                         self.set_new_username(matching_users[0][0], new_username)
                         print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
@@ -179,7 +180,7 @@ class systemAdmin:
             if (self.confirm_password(updater)):
                 tries = 0
                 while tries < 3:
-                    new_password = getpass.getpass("Enter the new password: ").strip()
+                    new_password = getpass.getpass("Enter the new password: ")
                     if Verification.verify_Password(new_password):
                         hashed = hash_password(new_password)
                         self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
@@ -200,8 +201,8 @@ class systemAdmin:
         elif choice == "3":
             tries = 0
             while tries < 3:
-                new_first_name = input("Enter the new first name: ").strip()
-                if Verification.verify_name(new_first_name):
+                new_first_name = input("Enter the new first name: ")
+                if is_valid_name(new_first_name):
                     self.set_new_first_name(matching_users[0][0], new_first_name)
                     print(f"First name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
                     logger = EncryptedLogger()
@@ -214,8 +215,8 @@ class systemAdmin:
         elif choice == "4":
             tries = 0
             while tries < 3:
-                new_last_name = input("Enter the new last name: ").strip()
-                if Verification.verify_name(new_last_name):
+                new_last_name = input("Enter the new last name: ")
+                if is_valid_name(new_last_name):
                     self.set_new_last_name(matching_users[0][0], new_last_name)
                     print(f"Last name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
                     logger = EncryptedLogger()
