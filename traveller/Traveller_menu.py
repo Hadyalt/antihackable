@@ -5,6 +5,7 @@ from DbContext.encrypted_logger import EncryptedLogger
 from Login.verification import Verification
 from traveller.Traveller import Traveller
 from validation.isValidBirthday import is_valid_birthday
+from validation.isValidDrivingLicense import is_valid_driving_license
 from validation.isValidEmail import is_valid_email
 from validation.isValidName import is_valid_name
 from validation.isValidStreetName import is_valid_street_name
@@ -224,9 +225,9 @@ def add_traveller(creator):
     # Driving license validation loop
     while True:
         driving_license = (
-            input("Driving License (XXDDDDDDD or XDDDDDDDD format): ").strip().upper()
+            input("Driving License (XXDDDDDDD or XDDDDDDDD format): ")
         )
-        if db.validate_driving_license(driving_license):
+        if is_valid_driving_license(driving_license):
             logger.log_entry(
                 f"{creator}",
                 "Input accepted",
@@ -522,10 +523,8 @@ def update_traveller(updater):
         while True:
             new_val = (
                 input("New Driving License (XXDDDDDDD or XDDDDDDDD format): ")
-                .strip()
-                .upper()
             )
-            if db.validate_driving_license(new_val):
+            if is_valid_driving_license(new_val):
                 break
             print(
                 "Invalid Driving License format. Must be XXDDDDDDD or XDDDDDDDD (e.g., AB1234567 or A12345678). Please try again."

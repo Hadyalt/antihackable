@@ -26,19 +26,6 @@ class Traveller:
     def connect(self):
         self.connection = sqlite3.connect(self.db_name)    
 
-    def validate_driving_license(self, license):
-        # XXDDDDDDD or XDDDDDDDD
-        if len(license) == 9:
-            if (
-                license[:2].isalpha()
-                and license[:2].isupper()
-                and license[2:].isdigit()
-            ):
-                return True
-            if license[0].isalpha() and license[0].isupper() and license[1:].isdigit():
-                return True
-        return False
-
     def format_phone(self, phone):
         # Remove non-digit characters
         digits = "".join(c for c in phone if c.isdigit())
