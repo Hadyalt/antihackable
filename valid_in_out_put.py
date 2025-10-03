@@ -26,11 +26,11 @@ def check_length_limits(value, min_length=None, max_length=None):
     if not isinstance(value, str):
         return False, "not_string"
     length = len(value)
-    if not (min_length is not None and length < min_length):
-        return True, None
-    if not (max_length is not None and length > max_length):
-        return True, None
-    return False, None
+    if min_length is not None and length < min_length:
+        return False, "too_short"
+    if max_length is not None and length > max_length:
+        return False, "too_long"
+    return True, None
 
 # --- Character whitelist validators ---
 def is_whitelisted_username_char(char):
