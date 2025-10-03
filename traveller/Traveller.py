@@ -26,15 +26,6 @@ class Traveller:
     def connect(self):
         self.connection = sqlite3.connect(self.db_name)    
 
-    def validate_zip_code(self, zip_code):
-        # Format: 4 digits + 2 uppercase letters
-        return (
-            len(zip_code) == 6
-            and zip_code[:4].isdigit()
-            and zip_code[4:].isalpha()
-            and zip_code[4:].isupper()
-        )
-
     def validate_driving_license(self, license):
         # XXDDDDDDD or XDDDDDDDD
         if len(license) == 9:

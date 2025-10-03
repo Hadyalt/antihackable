@@ -8,6 +8,7 @@ from validation.isValidBirthday import is_valid_birthday
 from validation.isValidEmail import is_valid_email
 from validation.isValidName import is_valid_name
 from validation.isValidStreetName import is_valid_street_name
+from validation.isValidZipCode import is_valid_zip_code
 
 
 def display_cities(cities):
@@ -170,8 +171,8 @@ def add_traveller(creator):
 
     # Zip code validation loop
     while True:
-        zip_code = input("Zip Code (DDDDXX format): ").strip().upper()
-        if db.validate_zip_code(zip_code):
+        zip_code = input("Zip Code (DDDDXX format): ")
+        if is_valid_zip_code(zip_code):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"Zip Code: {zip_code}", "No"
             )
@@ -464,8 +465,8 @@ def update_traveller(updater):
 
     elif field == "7":  # Zip Code
         while True:
-            new_val = input("New Zip Code (DDDDXX format): ").strip().upper()
-            if db.validate_zip_code(new_val):
+            new_val = input("New Zip Code (DDDDXX format): ")
+            if is_valid_zip_code(new_val):
                 break
             print(
                 "Invalid Zip Code format. Must be 4 digits followed by 2 uppercase letters (e.g., 1234AB). Please try again."
