@@ -1,303 +1,188 @@
-import re
-
 from DbContext.encrypted_logger import EncryptedLogger
 
+# --- Module-level state for logging counters (keeps single responsibility) ---
+_validation_counters = {}
 
-def validate_input_user(
-    value,
-    existing_usernames=None,  # New parameter for uniqueness check
-    min_length=8,
-    max_length=10,
-    value_type=None,
-    allowed_values=None,
-    context=None,
-    mode="create",  # New parameter: 'create' or 'login'
-):
-    """
-    Username validation according to project rules.
-    - Must be unique (case-insensitive)
-    - 8-10 chars, starts with letter or _, allowed: a-z, 0-9, _, ', .
-    - Case-insensitive
-    - mode: 'create' (default) or 'login'. If 'login', no print statements.
-    """
-    if value == "super_admin":
-        return (True, "super_admin")  # Special case for super_admin
+# --- Explicit character sets (whitelists) ---
+USERNAME_ALLOWED_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_.'")
+PASSWORD_LOWER = set("abcdefghijklmnopqrstuvwxyz")
+PASSWORD_UPPER = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+PASSWORD_DIGITS = set("0123456789")
+PASSWORD_SPECIALS = set('~!@#$%&_+=`|\\(){}[]:;"<>,.?/-')
+PASSWORD_ALLOWED_CHARS = PASSWORD_LOWER | PASSWORD_UPPER | PASSWORD_DIGITS | PASSWORD_SPECIALS
 
-    if value is None or (isinstance(value, str) and value.strip() == ""):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_user, "_empty_input_count"):
-            validate_input_user._empty_input_count = 0
-        validate_input_user._empty_input_count += 1
-        suspicious_flag = "Yes" if validate_input_user._empty_input_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Input validation failed",
-            "Input cannot be empty",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Input cannot be empty.")
-        return (False, value)
+# --- Special-case checks (explicit whitelist entries) ---
+def check_special_case_username(value):
+    return value == "super_admin"
 
-    value = value.lower()
-    if min_length and len(value) < min_length:
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_user, "_too_short_count"):
-            validate_input_user._too_short_count = 0
-        validate_input_user._too_short_count += 1
-        suspicious_flag = "Yes" if validate_input_user._too_short_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Input validation failed",
-            f"Input too short (min {min_length}).",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print(f"Input too short (min {min_length}).")
-        return (False, value)
+def check_special_case_password(value):
+    return value == "Admin_123?"
 
-    if max_length and len(value) > max_length:
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_user, "_too_long_count"):
-            validate_input_user._too_long_count = 0
-        validate_input_user._too_long_count += 1
-        suspicious_flag = "Yes" if validate_input_user._too_long_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Input validation failed",
-            f"Input too long (max {max_length}).",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print(f"Input too long (max {max_length}).")
-        return (False, value)
+# --- Basic input checks (whitelist semantics: True == valid) ---
+def check_non_empty_string(value):
+    return isinstance(value, str) and len(value) > 0
 
-    # Username regex: starts with letter or _, then allowed chars
-    pattern = r"^[a-z_][a-z0-9_'.]{7,9}$"
-    if not re.fullmatch(pattern, value):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_user, "_pattern_mismatch_count"):
-            validate_input_user._pattern_mismatch_count = 0
-        validate_input_user._pattern_mismatch_count += 1
-        suspicious_flag = (
-            "Yes" if validate_input_user._pattern_mismatch_count > 3 else "No"
-        )
-        logger.log_entry(
-            "system",
-            "Input validation failed",
-            f"Pattern mismatch: {pattern}",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Username does not match required format.")
-        return (False, value)
+def check_length_limits(value, min_length=None, max_length=None):
+    if isinstance(value, str): 
+        length = len(value)
+        if min_length is not None and length >= min_length:
+            if max_length is not None and length <= max_length:
+                return True
+    return False
 
-    if existing_usernames and value in [u.lower() for u in existing_usernames]:
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_user, "_not_unique_count"):
-            validate_input_user._not_unique_count = 0
-        validate_input_user._not_unique_count += 1
-        suspicious_flag = "Yes" if validate_input_user._not_unique_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Input validation failed",
-            "Username must be unique.",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Username must be unique.")
-        return (False, value)
+# --- Character whitelist validators ---
+def is_whitelisted_username_char(char):
+    return char in USERNAME_ALLOWED_CHARS
 
-    if "\x00" in value:
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_user, "_null_byte_count"):
-            validate_input_user._null_byte_count = 0
-        validate_input_user._null_byte_count += 1
-        suspicious_flag = "Yes" if validate_input_user._null_byte_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Input validation failed",
-            "Null byte detected in input.",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Null byte detected in input.")
-        return (False, value)
+def is_whitelisted_password_char(char):
+    return char in PASSWORD_ALLOWED_CHARS
 
-    return (True, value)
+def validate_input_against_whitelist(value, char_validator):
+    if isinstance(value, str) or len(value) == 0:
+        return all(char_validator(ch) for ch in value)
+    return False
 
+# --- Whitelist-based checks for whitespace / control / nulls (keep functions but as whitelists) ---
+def check_whitespace_presence(value):
+    if isinstance(value, str):
+        return all(not ch.isspace() for ch in value)
+    return False
 
-def validate_input_pass(
-    value,
-    min_length=12,
-    max_length=30,
-    value_type=None,
-    allowed_values=None,
-    context=None,
-    mode="create",  # New parameter: 'create' or 'login'
-):
-    """
-    Password validation according to project rules.
-    - 12-30 chars
-    - Allowed: a-z, A-Z, 0-9, ~!@#$%&_+=`|\(){}[]:;'<>,.?/
-    - Must have at least one lowercase, one uppercase, one digit, one special char
-    - mode: 'create' (default) or 'login'. If 'login', no print statements.
-    """
-    if value == "Admin_123?":
-        return (True, "Admin_123?")  # Special case for Admin password
+def check_control_characters(value):
+    if isinstance(value, str):
+        return all(ch.isprintable() for ch in value)
+    return False
 
-    if value is None or (isinstance(value, str) and value.strip() == ""):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_empty_input_count"):
-            validate_input_pass._empty_input_count = 0
-        validate_input_pass._empty_input_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._empty_input_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            "Input cannot be empty",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Input cannot be empty.")
-        return (False, value)
+def check_null_bytes(value):
+    if isinstance(value, str):
+        return "\x00" not in value
+    return False
 
-    if min_length and len(value) < min_length:
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_too_short_count"):
-            validate_input_pass._too_short_count = 0
-        validate_input_pass._too_short_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._too_short_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            f"Input too short (min {min_length}).",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print(f"Input too short (min {min_length}).")
-        return (False, value)
+# --- Higher-level pattern checks using whitelists ---
+def check_username_pattern(value):
+    if isinstance(value, str) and len(value) > 0:
+        if validate_input_against_whitelist(value, is_whitelisted_username_char):
+            return value[0] in "abcdefghijklmnopqrstuvwxyz_"
+    return False
 
-    if max_length and len(value) > max_length:
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_too_long_count"):
-            validate_input_pass._too_long_count = 0
-        validate_input_pass._too_long_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._too_long_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            f"Input too long (max {max_length}).",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print(f"Input too long (max {max_length}).")
-        return (False, value)
+def check_password_pattern(value):
+    return validate_input_against_whitelist(value, is_whitelisted_password_char)
 
-    # Allowed special chars: ~!@#$%&_+=`|\(){}[]:;'<>,.?/
-    allowed_special = r"~!@#$%&_+=`|\\(){}\[\]:;'<>,\.\?/"
-    pattern = rf"^[a-zA-Z0-9{allowed_special}]+$"
-    if not re.fullmatch(pattern, value):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_pattern_mismatch_count"):
-            validate_input_pass._pattern_mismatch_count = 0
-        validate_input_pass._pattern_mismatch_count += 1
-        suspicious_flag = (
-            "Yes" if validate_input_pass._pattern_mismatch_count > 3 else "No"
-        )
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            f"Pattern mismatch: {pattern}",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Password contains invalid characters.")
-        return (False, value)
+# --- Uniqueness & requirements (explicit whitelist checks for required character classes) ---
+def check_username_uniqueness(value, existing_usernames):
+    if existing_usernames:
+        return value.lower() not in [u.lower() for u in existing_usernames]
+    return False
 
-    # At least one lowercase, one uppercase, one digit, one special char
-    if not re.search(r"[a-z]", value):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_no_lowercase_count"):
-            validate_input_pass._no_lowercase_count = 0
-        validate_input_pass._no_lowercase_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._no_lowercase_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            "Password must contain at least one lowercase letter.",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Password must contain at least one lowercase letter.")
-        return (False, value)
+def check_password_requirements(value):
+    if isinstance(value, str) and len(value) > 0:
 
-    if not re.search(r"[A-Z]", value):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_no_uppercase_count"):
-            validate_input_pass._no_uppercase_count = 0
-        validate_input_pass._no_uppercase_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._no_uppercase_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            "Password must contain at least one uppercase letter.",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Password must contain at least one uppercase letter.")
-        return (False, value)
+        has_lower = any(ch in PASSWORD_LOWER for ch in value)
+        has_upper = any(ch in PASSWORD_UPPER for ch in value)
+        has_digit = any(ch in PASSWORD_DIGITS for ch in value)
+        has_special = any(ch in PASSWORD_SPECIALS for ch in value)
 
-    if not re.search(r"[0-9]", value):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_no_digit_count"):
-            validate_input_pass._no_digit_count = 0
-        validate_input_pass._no_digit_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._no_digit_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            "Password must contain at least one digit.",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Password must contain at least one digit.")
-        return (False, value)
+        if has_lower:
+            if  has_upper:
+                if  has_digit:
+                    if has_special:
+                        return True, None
 
-    if not re.search(rf"[{allowed_special}]", value):
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_no_special_count"):
-            validate_input_pass._no_special_count = 0
-        validate_input_pass._no_special_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._no_special_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            "Password must contain at least one special character.",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Password must contain at least one special character.")
-        return (False, value)
+    return False, None
 
-    if "\x00" in value:
-        logger = EncryptedLogger()
-        if not hasattr(validate_input_pass, "_null_byte_count"):
-            validate_input_pass._null_byte_count = 0
-        validate_input_pass._null_byte_count += 1
-        suspicious_flag = "Yes" if validate_input_pass._null_byte_count > 3 else "No"
-        logger.log_entry(
-            "system",
-            "Password validation failed",
-            "Null byte detected in input.",
-            suspicious=suspicious_flag,
-        )
-        if mode != "login":
-            print("Null byte detected in input.")
-        return (False, value)
+# --- Logging helpers (kept simple) ---
+def log_validation_failure(validation_type, error_message, function_name, error_type):
+    logger = EncryptedLogger()
 
-    return (True, value)
+    key = f"{function_name}:{error_type}"
+    count = _validation_counters.get(key, 0) + 1
+    _validation_counters[key] = count
+    suspicious_flag = "Yes" if count > 3 else "No"
 
+    logger.log_entry(
+        "system",
+        f"{validation_type} validation failed ({function_name})",
+        error_message or error_type,
+        suspicious=suspicious_flag,
+    )
+
+def log_username_validation_failure(error_type, error_message=""):
+    log_validation_failure("Input", error_message, "username", error_type)
+
+def log_password_validation_failure(error_type, error_message=""):
+    log_validation_failure("Password", error_message, "password", error_type)
+
+# --- Master validators (treat helper True == valid) ---
+def validate_username(value, existing_usernames=None, min_length=8, max_length=10, mode="create"):
+    # Special-case whitelist entry
+    if check_special_case_username(value):
+        return True, "super_admin"
+
+    # Non-empty string (whitelist)
+    if check_non_empty_string(value):
+
+        # No whitespace (whitelist)
+        if check_whitespace_presence(value):
+
+            # No control characters (whitelist)
+            if check_control_characters(value):
+                
+                # No null bytes (whitelist)
+                if check_null_bytes(value):
+
+                    # Must be a string (already ensured by check_non_empty_string, but double-check)
+                    if isinstance(value, str):
+                        normalized = value.lower()
+
+                        # Length (whitelist)
+                        if check_length_limits(normalized, min_length, max_length):
+
+                            # Pattern (explicit char whitelist + first char rule)
+                            if check_username_pattern(normalized):
+
+                                # Uniqueness
+                                if check_username_uniqueness(normalized, existing_usernames):
+                                    return True, value
+
+    return False, value
+
+def validate_password(value, min_length=12, max_length=30, mode="create"):
+    # Special-case whitelist entry
+    if check_special_case_password(value):
+        return True, "Admin_123?"
+
+    # Non-empty string (whitelist)
+    if check_non_empty_string(value):
+
+        # No whitespace (whitelist)
+        if check_whitespace_presence(value):
+
+            # No control characters (whitelist)
+            if check_control_characters(value):
+
+                # No null bytes (whitelist)
+                if check_null_bytes(value):
+
+                    # Length checks
+                    if check_length_limits(value, min_length, max_length):
+                        
+                        # Character whitelist for entire password
+                        if check_password_pattern(value):
+
+                            # Requirements: explicit whitelist-based checks for required subsets
+                            if check_password_requirements(value):
+                                return True, value
+
+    return False, value
+
+# --- Backwards-compatible wrappers ---
+def validate_input_user(value, existing_usernames=None, min_length=8, max_length=10, mode="create"):
+    return validate_username(value, existing_usernames, min_length, max_length, mode)
+
+def validate_input_pass(value, min_length=12, max_length=30, mode="create"):
+    return validate_password(value, min_length, max_length, mode)
+
+# --- Output sanitization (whitelist-based: keep only printable characters) ---
 def sanitize_output(text):
-    """Remove control characters (e.g., \x1b) from output."""
-    return re.sub(r"[\x00-\x1f\x7f-\x9f]", "", str(text))
+    s = str(text)
+    return "".join(ch for ch in s if ch.isprintable() and ch != "\x00")
