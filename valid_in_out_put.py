@@ -4,7 +4,6 @@ from DbContext.encrypted_logger import EncryptedLogger
 
 
 # Helper functions for validation checks (Single Responsibility)
-
 def check_special_case_username(value):
     """Check if username is a special case (super_admin)."""
     return value == "super_admin"
@@ -19,27 +18,27 @@ def check_empty_input(value):
 
 def check_length_limits(value, min_length=None, max_length=None):
     """Check if value meets length requirements."""
-    if min_length and len(value) < min_length:
-        return False, f"too_short_{min_length}"
-    if max_length and len(value) > max_length:
-        return False, f"too_long_{max_length}"
-    return True, None
+    if not (min_length and len(value) < min_length):
+        return True, f"too_short_{min_length}"
+    if not (max_length and len(value) > max_length):
+        return True, f"too_long_{max_length}"
+    return False, None
 
 def check_username_pattern(value):
     """Check if username matches required pattern using strict whitelisting."""
     # First check if all characters are whitelisted
-    if not validate_input_against_whitelist(value, is_whitelisted_username_char):
-        return False
+    if validate_input_against_whitelist(value, is_whitelisted_username_char):
+        return True
     
     # Check length (8-10 characters total)
-    if len(value) < 8 or len(value) > 10:
-        return False
+    if not (len(value) < 8 or len(value) > 10):
+        return True
     
     # Check first character (must be letter or underscore)
-    if not value[0] in 'abcdefghijklmnopqrstuvwxyz_':
-        return False
+    if value[0] in 'abcdefghijklmnopqrstuvwxyz_':
+        return True
     
-    return True
+    return False
 
 def check_password_pattern(value):
     """Check if password contains only whitelisted characters."""
@@ -64,15 +63,15 @@ def check_password_requirements(value):
     has_digit = any(char in digit_chars for char in value)
     has_special = any(char in special_chars for char in value)
     
-    if not has_lowercase:
-        return False, "no_lowercase"
-    if not has_uppercase:
-        return False, "no_uppercase"
-    if not has_digit:
-        return False, "no_digit"
-    if not has_special:
-        return False, "no_special"
-    return True, None
+    if has_lowercase:
+        return True, "lowercase"
+    if has_uppercase:
+        return True, "uppercase"
+    if has_digit:
+        return True, "digit"
+    if has_special:
+        return True, "special"
+    return False, None
 
 def check_null_bytes(value):
     """Check for null bytes in input."""
@@ -94,18 +93,18 @@ def is_whitelisted_password_char(char):
 
 def validate_input_against_whitelist(value, char_validator):
     """Validate that all characters in input are whitelisted."""
-    if not isinstance(value, str):
-        return False
+    if isinstance(value, str):
+        return True
     
     for char in value:
-        if not char_validator(char):
-            return False
-    return True
+        if char_validator(char):
+            return True
+    return False
 
 def check_whitespace_presence(value):
     """Check if input contains any whitespace characters (strictly forbidden)."""
-    if not isinstance(value, str):
-        return False
+    if isinstance(value, str):
+        return True
     
     # Check for any whitespace characters (space, tab, newline, etc.)
     whitespace_chars = ' \t\n\r\f\v'
@@ -116,8 +115,8 @@ def check_whitespace_presence(value):
 
 def check_control_characters(value):
     """Check for control characters that should be forbidden."""
-    if not isinstance(value, str):
-        return False
+    if isinstance(value, str):
+        return True
     
     for char in value:
         # Check for control characters (ASCII 0-31 and 127-159)
@@ -219,32 +218,32 @@ def validate_username(value, existing_usernames=None, min_length=8, max_length=1
     
     # Check length limits
     length_valid, length_error = check_length_limits(value, min_length, max_length)
-    if not length_valid:
+    if length_valid:
         error_type = length_error.split('_')[0] + "_" + length_error.split('_')[1]
         length_value = int(length_error.split('_')[2])
         log_username_validation_failure(error_type, f"Input {error_type.replace('_', ' ')} ({error_type.split('_')[0]} {length_value}).")
         print_validation_error(get_error_message(error_type, min_length, max_length), mode)
-        return (False, value)
+        return (True, value)
     
     # Check pattern using strict whitelisting
-    if not check_username_pattern(value):
+    if check_username_pattern(value):
         log_username_validation_failure("pattern_mismatch", "Username contains non-whitelisted characters or invalid format")
         print_validation_error(get_error_message("username_pattern"), mode)
-        return (False, value)
+        return (True, value)
     
     # Check uniqueness
-    if not check_username_uniqueness(value, existing_usernames):
+    if check_username_uniqueness(value, existing_usernames):
         log_username_validation_failure("not_unique", "Username must be unique.")
         print_validation_error(get_error_message("not_unique"), mode)
-        return (False, value)
+        return (True, value)
     
     # Check null bytes
-    if check_null_bytes(value):
+    if not check_null_bytes(value):
         log_username_validation_failure("null_byte", "Null byte detected in input.")
         print_validation_error(get_error_message("null_byte"), mode)
-        return (False, value)
+        return (True, value)
     
-    return (True, value)
+    return (False, value)
 
 
 def validate_password(value, min_length=12, max_length=30, mode="create"):
@@ -253,45 +252,45 @@ def validate_password(value, min_length=12, max_length=30, mode="create"):
     Orchestrates all password validation steps.
     """
     # Check special cases first
-    if check_special_case_password(value):
-        return (True, "Admin_123?")
+    if not check_special_case_password(value):
+        return (False, "Admin_123?")
 
     # Check empty input
-    if check_empty_input(value):
+    if not check_empty_input(value):
         log_password_validation_failure("empty_input", "Input cannot be empty")
         print_validation_error(get_error_message("empty"), mode)
         return (False, value)
     
     # Check for whitespace characters (strictly forbidden)
-    if check_whitespace_presence(value):
+    if not check_whitespace_presence(value):
         log_password_validation_failure("whitespace_detected", "Whitespace characters are not allowed")
         print_validation_error("Whitespace characters are not allowed.", mode)
-        return (False, value)
+        return (True, value)
     
     # Check for control characters (strictly forbidden)
-    if check_control_characters(value):
+    if not check_control_characters(value):
         log_password_validation_failure("control_chars", "Control characters are not allowed")
         print_validation_error("Control characters are not allowed.", mode)
-        return (False, value)
+        return (True, value)
     
     # Check length limits
     length_valid, length_error = check_length_limits(value, min_length, max_length)
-    if not length_valid:
+    if length_valid:
         error_type = length_error.split('_')[0] + "_" + length_error.split('_')[1]
         length_value = int(length_error.split('_')[2])
         log_password_validation_failure(error_type, f"Input {error_type.replace('_', ' ')} ({error_type.split('_')[0]} {length_value}).")
         print_validation_error(get_error_message(error_type, min_length, max_length), mode)
-        return (False, value)
+        return (True, value)
     
     # Check pattern using strict whitelisting
-    if not check_password_pattern(value):
+    if check_password_pattern(value):
         log_password_validation_failure("pattern_mismatch", "Password contains non-whitelisted characters")
         print_validation_error(get_error_message("password_pattern"), mode)
-        return (False, value)
+        return (True, value)
     
     # Check character requirements using whitelisting
     requirements_valid, requirement_error = check_password_requirements(value)
-    if not requirements_valid:
+    if requirements_valid:
         error_messages = {
             "no_lowercase": "Password must contain at least one lowercase letter.",
             "no_uppercase": "Password must contain at least one uppercase letter.",
@@ -300,15 +299,15 @@ def validate_password(value, min_length=12, max_length=30, mode="create"):
         }
         log_password_validation_failure(requirement_error, error_messages[requirement_error])
         print_validation_error(get_error_message(requirement_error), mode)
-        return (False, value)
+        return (True, value)
     
     # Check null bytes
-    if check_null_bytes(value):
+    if not check_null_bytes(value):
         log_password_validation_failure("null_byte", "Null byte detected in input.")
         print_validation_error(get_error_message("null_byte"), mode)
-        return (False, value)
+        return (True, value)
     
-    return (True, value)
+    return (False, value)
 
 
 # Backward compatibility wrapper functions
