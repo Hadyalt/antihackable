@@ -6,6 +6,7 @@ from Login.verification import Verification
 from traveller.Traveller import Traveller
 from validation.isValidBirthday import is_valid_birthday
 from validation.isValidEmail import is_valid_email
+from validation.isValidName import is_valid_name
 from validation.isValidStreetName import is_valid_street_name
 
 
@@ -71,8 +72,8 @@ def add_traveller(creator):
     print("\nAdd New Traveller")
     # First name validation
     while True:
-        first_name = input("First Name: ").strip()
-        if first_name and Verification.verify_name(first_name):
+        first_name = input("First Name: ")
+        if first_name and is_valid_name(first_name):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"First Name: {first_name}", "No"
             )
@@ -87,8 +88,8 @@ def add_traveller(creator):
 
     # Last name validation
     while True:
-        last_name = input("Last Name: ").strip()
-        if last_name and Verification.verify_name(last_name):
+        last_name = input("Last Name: ")
+        if last_name and is_valid_name(last_name):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"Last Name: {last_name}", "No"
             )
@@ -121,7 +122,7 @@ def add_traveller(creator):
     print("[1] Male")
     print("[2] Female")
     while True:
-        gender_choice = input("Select gender (1 or 2): ").strip()
+        gender_choice = input("Select gender (1 or 2): ")
         if gender_choice == "1":
             gender = "Male"
             logger.log_entry(f"{creator}", "Input accepted", "Gender: Male", "No")
@@ -136,7 +137,7 @@ def add_traveller(creator):
 
     # Street name validation
     while True:
-        street_name = input("Street Name: ").strip()
+        street_name = input("Street Name: ")
         if is_valid_street_name(street_name):
             logger.log_entry(
                 f"{creator}", "Input accepted", f"Street Name: {street_name}", "No"
@@ -384,8 +385,8 @@ def update_traveller(updater):
 
     if field == "1":  # first Name
         while True:
-            new_val = input("New first Name: ").strip()
-            if new_val and Verification.verify_name(new_val):
+            new_val = input("New first Name: ")
+            if new_val and is_valid_name(new_val):
                 break
             fail_count += 1
             if fail_count >= max_fails:
@@ -395,8 +396,8 @@ def update_traveller(updater):
 
     elif field == "2":  # Last Name
         while True:
-            new_val = input("New Last Name: ").strip()
-            if new_val and Verification.verify_name(new_val):
+            new_val = input("New Last Name: ")
+            if new_val and is_valid_name(new_val):
                 break
             fail_count += 1
             if fail_count >= max_fails:

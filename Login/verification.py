@@ -84,17 +84,6 @@ class Verification:
             return False
         return True
 
-    def verify_name(name):
-        if not name:
-            print("Name cannot be empty.")
-            return False
-        # Control characters (null byte, tabs, etc.)
-        if any(ord(c) < 32 or ord(c) == 127 for c in name):
-            return False
-        # Allow only letters, hyphens, apostrophes, and spaces
-        if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ'\- ]{1,50}", name):
-            print("Invalid characters in name. Please use letters, hyphens (-), or apostrophes (').")
-            return False
-        return True
+    
     
     
