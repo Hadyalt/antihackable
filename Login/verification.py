@@ -97,31 +97,4 @@ class Verification:
             return False
         return True
     
-    def verify_model(name):
-        if not name:
-            print("Cannot be empty.")
-            return False
-        # Control characters (null byte, tabs, etc.)
-        if any(ord(c) < 32 or ord(c) == 127 for c in name):
-            print("Invalid characters included.")
-            return False
-        # Allow only letters, hyphens, apostrophes, and spaces
-        if not re.fullmatch(r"[A-Za-zÀ-ÖØ-öø-ÿ0-9 ./'()\-]{1,150}", name):
-            print("Invalid characters included.")
-            return False
-        return True
     
-    def is_valid_birthday(birthday_str):
-        try:
-            birthday = datetime.strptime(birthday_str, "%Y-%m-%d")
-            today = datetime.today()
-
-            # Birthday should not be in the future or unrealistically old
-            if birthday > today:
-                return False
-            if birthday.year < 1900:
-                return False
-
-            return True
-        except ValueError:
-            return False
