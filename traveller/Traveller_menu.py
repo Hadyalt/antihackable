@@ -47,7 +47,7 @@ def traveller_menu(username):
             if not shown:
                 continue
             else:
-                tid = input("Traveller ID to delete: ").strip()
+                tid = input("Traveller ID to delete: ")
                 db.delete_traveller(tid, username)
 
         elif choice == "5":
@@ -158,7 +158,7 @@ def add_traveller(creator):
 
     # House number validation
     while True:
-        house_number = input("House Number: ").strip()
+        house_number = input("House Number: ")
         if house_number.isdigit():
             logger.log_entry(
                 f"{creator}", "Input accepted", f"House Number: {house_number}", "No"
@@ -190,7 +190,7 @@ def add_traveller(creator):
     city = None
     while city is None:
         try:
-            city_choice = input("Select city (1-10): ").strip()
+            city_choice = input("Select city (1-10): ")
             city_idx = int(city_choice) - 1
             city = db.cities[city_idx]
             logger.log_entry(f"{creator}", "Input accepted", f"City: {city}", "No")
@@ -202,7 +202,7 @@ def add_traveller(creator):
     # Email validation
     email_regex = r"^[\w\.-]+@[\w\.-]+\.\w+$"
     while True:
-        email_input = input("Email: ").strip()
+        email_input = input("Email: ")
         if re.match(email_regex, email_input) and is_valid_email(email_input):
             email = email_input
             logger.log_entry(f"{creator}", "Input accepted", f"Email: {email}", "No")
@@ -213,7 +213,7 @@ def add_traveller(creator):
 
     # Phone validation loop
     while True:
-        phone = input("Phone (8 digits only): ").strip()
+        phone = input("Phone (8 digits only): ")
         try:
             phone = db.format_phone(phone)
             logger.log_entry(f"{creator}", "Input accepted", f"Phone: {phone}", "No")
@@ -312,7 +312,7 @@ def view_travellers(username):
     db = Traveller()
     db.connect()
     logger = EncryptedLogger()
-    search_term = input("Enter search term (leave blank for all): ").strip()
+    search_term = input("Enter search term (leave blank for all): ")
     if search_term:
         travellers = db.search_travellers(search_term)
         logger.log_entry(
@@ -348,7 +348,7 @@ def update_traveller(updater):
     db = Traveller()
     logger = EncryptedLogger()
     db.connect()
-    tid = input("Traveller ID to update: ").strip()
+    tid = input("Traveller ID to update: ")
     traveller = db.get_traveller_by_id(tid)
     if not traveller:
         print("Traveller not found.")
@@ -367,7 +367,7 @@ def update_traveller(updater):
     print("[10] Phone")
     print("[11] Driving License")
     print("[12] Cancel Update")
-    field = input("Field to update: ").strip()
+    field = input("Field to update: ")
 
     new_val = None
     fail_count = 0
@@ -425,7 +425,7 @@ def update_traveller(updater):
         while True:
             print("[1] Male")
             print("[2] Female")
-            gender_choice = input("Select gender: ").strip()
+            gender_choice = input("Select gender (1 or 2): ")
             if gender_choice == "1":
                 new_val = "Male"
             elif gender_choice == "2":
@@ -454,7 +454,7 @@ def update_traveller(updater):
 
     elif field == "6":  # House Number
         while True:
-            new_val = input("New House Number: ").strip()
+            new_val = input("New House Number: ")
             if new_val and new_val.isdigit():
                 break
             print("House number must be digits only. Please try again.")
@@ -482,7 +482,7 @@ def update_traveller(updater):
         display_cities(db.cities)
         while True:
             try:
-                city_choice = input("Select city (1-10): ").strip()
+                city_choice = input("Select city (1-10): ")
                 city_idx = int(city_choice) - 1
                 new_val = db.cities[city_idx]
                 break
@@ -496,8 +496,8 @@ def update_traveller(updater):
 
     elif field == "9":  # Email
         while True:
-            new_val = input("New Email: ").strip()
-            if new_val and re.match(r"^[\w\.-]+@[\w\.-]+\.\w+$", new_val):
+            new_val = input("New Email: ")
+            if is_valid_email(new_val):
                 break
             print("Invalid email format. Please try again.")
             fail_count += 1
@@ -508,7 +508,7 @@ def update_traveller(updater):
 
     elif field == "10":  # Phone
         while True:
-            new_val = input("New Phone (8 digits only): ").strip()
+            new_val = input("New Phone (8 digits only): ")
             if new_val.isdigit() and len(new_val) == 8:
                 new_val = db.format_phone(new_val)
                 break

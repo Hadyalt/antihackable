@@ -49,7 +49,7 @@ class SuperAdmin:
         if not sysAdmins:
             print("No system admins available to update.")
             return
-        username_to_update = input("Enter the username of the system admin you want to update: ").strip().lower()
+        username_to_update = input("Enter the username of the system admin you want to update: ").lower()
         matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update]
         if not matching_users:
             print(f"No system admin found with username '{username_to_update}'.")
@@ -60,12 +60,12 @@ class SuperAdmin:
         print("3. Update First Name")
         print("4. Update Last Name")
         print("5. Go Back")
-        choice = input("Enter your choice (1, 2, 3, 4 or 5): ").strip()
+        choice = input("Enter your choice (1, 2, 3, 4 or 5): ")
         if choice == "1":  
             if self.confirm_password():
                 tries = 0
                 while tries < 3:
-                    new_username = input("Enter the new username: ").strip()
+                    new_username = input("Enter the new username: ")
                     if Verification.verify_username(new_username):
                         self.set_new_username(matching_users[0][0], new_username)
                         print(f"System admin {decrypt(matching_users[0][0])} updated to {new_username}.")
@@ -144,7 +144,7 @@ class SuperAdmin:
         if not sysAdmins:
             print("No system admins available to delete.")
             return
-        username_to_delete = input("Enter the username of the system admin you want to delete: ").strip()
+        username_to_delete = input("Enter the username of the system admin you want to delete: ")
         matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_delete.lower()]
         if not matching_users:
             print(f"No system admin found with username '{username_to_delete}'.")
@@ -262,7 +262,7 @@ class SuperAdmin:
         for idx, user in enumerate(users, 1):
             print(f"[{idx}] Username: {decrypt(user[0])}, Role: {user[1]}")
         try:
-            choice = int(input("Enter the number of the account to activate: ").strip())
+            choice = int(input("Enter the number of the account to activate: "))
             if 1 <= choice <= len(users):
                 username = users[choice-1][0]
                 cursor.execute("UPDATE User SET IsActive = 1 WHERE Username = ?", (username,))

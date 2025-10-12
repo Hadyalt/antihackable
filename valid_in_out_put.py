@@ -113,7 +113,7 @@ def log_password_validation_failure(error_type, error_message=""):
     log_validation_failure("Password", error_message, "password", error_type)
 
 # --- Master validators (treat helper True == valid) ---
-def validate_username(value, existing_usernames=None, min_length=8, max_length=10, mode="create"):
+def validate_username(value, existing_usernames, min_length=8, max_length=10, mode="create"):
     # Special-case whitelist entry
     if check_special_case_username(value):
         return True, "super_admin"

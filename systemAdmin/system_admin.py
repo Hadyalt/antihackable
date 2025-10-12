@@ -141,7 +141,7 @@ class systemAdmin:
         if not servEng:
             print("No service engineers available to update.")
             return
-        username_to_update = input("Enter the username of the service engineer you want to update: ").strip().lower()
+        username_to_update = input("Enter the username of the service engineer you want to update: ").lower()
 
         # Check if the username exists in the servEng list
         matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update]
@@ -237,7 +237,7 @@ class systemAdmin:
         if not servEng:
             print("No service engineers available to delete.")
             return
-        username_to_delete = input("Enter the username of the service engineer you want to delete: ").strip()
+        username_to_delete = input("Enter the username of the service engineer you want to delete: ")
 
         # Check if the username exists in the servEng list
         matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_delete.lower()]  # assumes username is in column 0
@@ -345,7 +345,7 @@ class systemAdmin:
         if not service_engineers:
             print("No service engineers available to reset password.")
             return
-        username_to_reset = input("Enter the username of the service engineer whose password you want to reset: ").strip()
+        username_to_reset = input("Enter the username of the service engineer whose password you want to reset: ")
 
         # Check if the username exists in the service_engineers list
         matching_users = [user for user in service_engineers if user[0].lower() == username_to_reset.lower()]
@@ -353,7 +353,7 @@ class systemAdmin:
             print(f"No service engineer found with username '{username_to_reset}'.")
             return
 
-        new_password = getpass.getpass("Enter the new temporary password: ").strip()
+        new_password = getpass.getpass("Enter the new temporary password: ")
         if Verification.verify_Password(new_password):
             hashed_password = hash_password(new_password)
             self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")

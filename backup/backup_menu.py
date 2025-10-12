@@ -22,7 +22,7 @@ def backup_menu(role, username=None):
         else:
             print("[5] Exit Backup Menu")
             valid_choices = ["1", "2", "3", "4", "5"]
-        choice = input("Enter your choice: ").strip()
+        choice = input("Enter your choice: ")
         if choice not in valid_choices:
             print("Invalid choice. Please enter a valid option.")
             logger.log_entry(username or "system", "Backup Menu", f"Invalid menu choice: {choice}", "No")
@@ -35,7 +35,7 @@ def backup_menu(role, username=None):
                 print("please contact a Super Admin to add a recovery code for this backup.")
             if role == "superadmin":
                 while True:
-                    add_code = input("Do you want to add a recovery code for a System Admin? (yes/no): ").strip().lower()
+                    add_code = input("Do you want to add a recovery code for a System Admin? (yes/no): ")
                     if add_code not in ["yes", "no"]:
                         print("Invalid input. Please enter 'yes' or 'no'.")
                         logger.log_entry(username or "system", "Backup Menu", f"Invalid input for add recovery code: {add_code}", "No")
@@ -52,7 +52,7 @@ def backup_menu(role, username=None):
                         print("System Admins:")
                         for idx, admin in enumerate(admins, 1):
                             print(f"{idx}. {admin}")
-                        sel = input("Select System Admin number: ").strip()
+                        sel = input("Select System Admin number: ")
                         if not sel.isdigit() or int(sel) < 1 or int(sel) > len(admins):
                             print("Invalid selection. Please enter a valid number.")
                             logger.log_entry(username or "system", "Backup Menu", f"Invalid System Admin selection: {sel}", "No")
@@ -87,14 +87,14 @@ def backup_menu(role, username=None):
                 print("Available backups:")
                 for idx, b in enumerate(backups, 1):
                     print(f"{idx}. {b}")
-                sel = input("Select backup number to restore: ").strip()
+                sel = input("Select backup number to restore: ")
                 if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
                     print("Invalid selection. Please enter a valid number.")
                     logger.log_entry(username or "system", "Backup Menu", f"Invalid restore selection: {sel}", "No")
                     continue
                 sel_idx = int(sel) - 1
                 if role == "systemadmin":
-                    code = input("Enter your restore code: ").strip()
+                    code = input("Enter your restore code: ")
                     if not validate_restore_code(backups[sel_idx], username, code):
                         print("Invalid or already used restore code.")
                         logger.log_entry(username or "system", "Backup Menu", f"Invalid or used restore code for {backups[sel_idx]}", "Yes")
@@ -118,7 +118,7 @@ def backup_menu(role, username=None):
                 print("Available backups:")
                 for idx, b in enumerate(backups, 1):
                     print(f"{idx}. {b}")
-                sel = input("Select backup number to delete: ").strip()
+                sel = input("Select backup number to delete: ")
                 if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
                     print("Invalid selection. Please enter a valid number.")
                     logger.log_entry(username or "system", "Backup Menu", f"Invalid delete selection: {sel}", "No")
@@ -142,7 +142,7 @@ def backup_menu(role, username=None):
                 print("Available backups:")
                 for idx, b in enumerate(backups, 1):
                     print(f"{idx}. {b}")
-                sel = input("Select backup number: ").strip()
+                sel = input("Select backup number: ")
                 if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
                     print("Invalid selection. Please enter a valid number.")
                     logger.log_entry(username or "system", "Backup Menu", f"Invalid backup selection for code: {sel}", "No")
@@ -157,7 +157,7 @@ def backup_menu(role, username=None):
                     print("System Admins:")
                     for idx, admin in enumerate(admins, 1):
                         print(f"{idx}. {admin}")
-                    admin_sel = input("Select System Admin number: ").strip()
+                    admin_sel = input("Select System Admin number: ")
                     if not admin_sel.isdigit() or int(admin_sel) < 1 or int(admin_sel) > len(admins):
                         print("Invalid selection. Please enter a valid number.")
                         logger.log_entry(username or "system", "Backup Menu", f"Invalid System Admin selection for code: {admin_sel}", "No")
@@ -183,7 +183,7 @@ def backup_menu(role, username=None):
                 print("Available backups:")
                 for idx, b in enumerate(backups, 1):
                     print(f"{idx}. {b}")
-                sel = input("Select backup number: ").strip()
+                sel = input("Select backup number: ")
                 if not sel.isdigit() or int(sel) < 1 or int(sel) > len(backups):
                     print("Invalid selection. Please enter a valid number.")
                     logger.log_entry(username or "system", "Backup Menu", f"Invalid backup selection for revoke: {sel}", "No")
@@ -198,7 +198,7 @@ def backup_menu(role, username=None):
                     print("System Admins:")
                     for idx, admin in enumerate(admins, 1):
                         print(f"{idx}. {admin}")
-                    admin_sel = input("Select System Admin number: ").strip()
+                    admin_sel = input("Select System Admin number: ")
                     if not admin_sel.isdigit() or int(admin_sel) < 1 or int(admin_sel) > len(admins):
                         print("Invalid selection. Please enter a valid number.")
                         logger.log_entry(username or "system", "Backup Menu", f"Invalid System Admin selection for revoke: {admin_sel}", "No")
