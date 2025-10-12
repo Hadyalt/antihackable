@@ -134,7 +134,7 @@ def edit_account_menu(username):
                 verified_username = False
                 while not verified_username:
                     new_username = input("Enter username: ")
-                    verified_username = validate_input_username(new_username)
+                    verified_username, new_username = validate_input_username(new_username)
                 user = sysAd.get_username(username)
                 if sysAd.set_new_username_system(user, new_username):
                     print("Username updated successfully.")
