@@ -1,13 +1,13 @@
 from DbContext.crypto_utils import hash_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
 import os
-from Login.verification import Verification
-from Login.verification import Verification
 from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
 from um_members import pre_login_menu
 from scooter.Scooter import main
 import getpass
+
+from valid_in_out_put import validate_input_pass, validate_input_username
 
 def system_admin_menu(username):
     current_user = username  # Replace with actual logged-in username
@@ -134,7 +134,7 @@ def edit_account_menu(username):
                 verified_username = False
                 while not verified_username:
                     new_username = input("Enter username: ")
-                    verified_username = Verification.verify_username(new_username)
+                    verified_username = validate_input_username(new_username)
                 user = sysAd.get_username(username)
                 if sysAd.set_new_username_system(user, new_username):
                     print("Username updated successfully.")
@@ -152,7 +152,7 @@ def edit_account_menu(username):
                 verified_password = False
                 while not verified_password:
                     new_password = getpass.getpass("Enter new password: ")
-                    verified_password = Verification.verify_Password(new_password)
+                    verified_password, new_password = validate_input_pass(new_password)
                 hashed_password = hash_password(new_password)
                 user = sysAd.get_username(username)
                 if sysAd.reset_password_system(user, hashed_password):

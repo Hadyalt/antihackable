@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
-from Login.verification import Verification
+
 from traveller.Traveller import Traveller
 from validation.isValidBirthday import is_valid_birthday
 from validation.isValidDrivingLicense import is_valid_driving_license
