@@ -54,7 +54,7 @@ class systemAdmin:
     def create_service_engineer(self, creator):
         verified_username = False
         while not verified_username:
-            verified_username, user_name = validate_input_username(input("Enter username: ")) #needs existing usernames
+            verified_username, user_name = validate_input_username(input("Enter username: "))
         verified_password = False
         while not verified_password:
             verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
@@ -157,7 +157,7 @@ class systemAdmin:
                 tries = 0
                 while tries < 3:
                     new_username = input("Enter the new username: ")
-                    verified, new_username = validate_input_username(new_username) #needs existing usernames
+                    verified, new_username = validate_input_username(new_username)
                     if verified:
                         self.set_new_username(matching_users[0][0], new_username)
                         print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
