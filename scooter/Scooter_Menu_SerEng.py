@@ -8,7 +8,7 @@ def Scooter_Menu_SerEng(choice, updater):
     logger = EncryptedLogger()
     db.connect()
     if choice == "1":  # View Scooters
-        search_term = input("Enter search term (leave blank for all): ").strip()
+        search_term = input("Enter search term (leave blank for all): ")
         if search_term:
             scooters = db.search_scooters(search_term)
         else:
@@ -150,7 +150,7 @@ def Scooter_Menu_SerEng(choice, updater):
             # Validate Out-of-Service status (y/n)
             tries = 0
             while tries < MAX_TRIES:
-                oos_input = input("Out of Service? (y/n): ").lower().strip()
+                oos_input = input("Out of Service? (y/n): ")
                 if oos_input in ("y", "n"):
                     oos = oos_input == "y"
                     db.update_scooter_fields(sn, OutOfService=int(oos))
@@ -202,12 +202,11 @@ def Scooter_Menu_SerEng(choice, updater):
 
         elif field_choice == "6":
             tries = 0
+            today = datetime.today()
             while tries < MAX_TRIES:
-                date = input("Last Maintenance Date (YYYY-MM-DD): ").strip()
+                date = input("Last Maintenance Date (YYYY-MM-DD): ")
                 try:
                     date_obj = datetime.strptime(date, "%Y-%m-%d")
-                    today = datetime.today()
-
                     if date_obj > today:
                         print("Error: Maintenance date cannot be in the future.")
                         tries += 1

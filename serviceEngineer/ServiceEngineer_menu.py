@@ -13,7 +13,7 @@ def display_menu():
     print("[2] Change My Password")
     print("[3] Logout")
     print("[4] Exit")
-    return input("Enter your choice (1-4): ").strip()
+    return input("Enter your choice (1-4): ")
 
 
 def reset_password_flow(current_user):

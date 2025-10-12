@@ -37,7 +37,7 @@ def main(role, username):
             if choice == "1":
                 add_scooter(username)
             elif choice == "2":
-                search_term = input("Enter search term (leave blank for all): ").strip()
+                search_term = input("Enter search term (leave blank for all): ")
                 if search_term:
                     scooters = db.search_scooters(search_term)
                 else:
@@ -101,7 +101,7 @@ def add_scooter(creator):
     while True:
         serial_number = input(
             "Serial Number (10-17 alphanumeric chars): "
-        ).strip()
+        )
         if 10 <= len(serial_number) <= 17 and serial_number.isalnum():
             break
         print("Error: Must be 10-17 alphanumeric characters")
@@ -171,7 +171,7 @@ def add_scooter(creator):
 
     # Validate Out-of-Service status (y/n)
     while True:
-        oos_input = input("Out of Service? (y/n): ").lower().strip()
+        oos_input = input("Out of Service? (y/n): ")
         if oos_input in ("y", "n"):
             out_of_service = oos_input == "y"
             break
@@ -189,7 +189,7 @@ def add_scooter(creator):
 
     # Validate Last Maintenance Date (ISO 8601)
     while True:
-        last_maintenance_date = input("Last Maintenance Date (YYYY-MM-DD): ").strip()
+        last_maintenance_date = input("Last Maintenance Date (YYYY-MM-DD): ")
         try:
             date_obj = datetime.strptime(last_maintenance_date, "%Y-%m-%d")
             today = datetime.today()
@@ -286,7 +286,7 @@ def update_scooter(updater):
     elif field_choice == "3":  # Serial Number
         tries = 0
         while tries < MAX_TRIES:
-            new_serial = input("New Serial Number (10-17 alphanumeric chars): ").strip()
+            new_serial = input("New Serial Number (10-17 alphanumeric chars): ")
             if 10 <= len(new_serial) <= 17 and new_serial.isalnum():
                 if db.get_scooter_by_serial(new_serial) and new_serial != sn:
                     print("Error: Serial number already exists")
@@ -397,7 +397,7 @@ def update_scooter(updater):
     elif field_choice == "9":  # Out-of-Service
         tries = 0
         while tries < MAX_TRIES:
-            oos_input = input("Out of Service? (y/n): ").lower().strip()
+            oos_input = input("Out of Service? (y/n): ")
             if oos_input in ("y", "n"):
                 oos = oos_input == "y"
                 db.update_scooter_fields(sn, OutOfService=int(oos))
@@ -434,7 +434,7 @@ def update_scooter(updater):
                 print("Too many invalid attempts. Update cancelled.")
                 logger.log_entry(f"{updater}", f"Update cancelled for scooter {sn}", "Too many invalid attempts", "Yes")
                 return
-            date = input("Last Maintenance Date (YYYY-MM-DD): ").strip()
+            date = input("Last Maintenance Date (YYYY-MM-DD): ")
             try:
                 date_obj = datetime.strptime(date, "%Y-%m-%d")
                 today = datetime.today()
