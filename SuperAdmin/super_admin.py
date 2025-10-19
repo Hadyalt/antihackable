@@ -54,8 +54,8 @@ class SuperAdmin:
         if not sysAdmins:
             print("No system admins available to update.")
             return
-        username_to_update = input("Enter the username of the system admin you want to update: ").lower()
-        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update]
+        username_to_update = input("Enter the username of the system admin you want to update: ")
+        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update.lower()]
         if not matching_users:
             print(f"No system admin found with username '{username_to_update}'.")
             return
@@ -104,9 +104,10 @@ class SuperAdmin:
                     else:
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
-                print("Failed to reset password after 3 invalid attempts.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Failed System Admin Password Reset", f"Username: {decrypt(matching_users[0][0])} - 3 invalid password attempts", "Yes")
+                if tries == 3:
+                    print("Failed to reset password after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Failed System Admin Password Reset", f"Username: {decrypt(matching_users[0][0])} - 3 invalid password attempts", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")

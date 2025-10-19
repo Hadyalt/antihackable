@@ -133,8 +133,7 @@ class Scooter_data:
             self.connection.commit()
             print("Scooter deleted.")
             logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")
-            
+            logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")    
         else:
             print("No connection.")
 

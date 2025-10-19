@@ -138,10 +138,10 @@ class systemAdmin:
         if not servEng:
             print("No service engineers available to update.")
             return
-        username_to_update = input("Enter the username of the service engineer you want to update: ").lower()
+        username_to_update = input("Enter the username of the service engineer you want to update: ")
 
         # Check if the username exists in the servEng list
-        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update]
+        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update.lower()]
         if not matching_users:
             print(f"No service engineer found with username '{username_to_update}'.")
             return

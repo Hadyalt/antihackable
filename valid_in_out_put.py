@@ -200,8 +200,7 @@ def validate_username(value, min_length=8, max_length=10, mode="create"):
                                 if not isinstance(existing_usernames, str):
 
                                     if check_username_uniqueness(normalized, existing_usernames):
-                                        return True, value
-                                
+                                        return True, value                           
     return False, value
 
 def validate_password(value, min_length=12, max_length=30, mode="create"):
@@ -230,7 +229,6 @@ def validate_password(value, min_length=12, max_length=30, mode="create"):
                             # Requirements: explicit whitelist-based checks for required subsets
                             if check_password_requirements(value):
                                 return True, value
-
     return False, value
 
 # --- Backwards-compatible wrappers ---
