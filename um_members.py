@@ -5,13 +5,12 @@ import getpass
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
-from Login.verification import Verification
 from SuperAdmin import super_admin_menu as SuperMenu
 from systemAdmin import system_admin_menu as SystemMenu
 from serviceEngineer import ServiceEngineer_menu
 from backup.backup_menu import backup_menu
 from systemAdmin.system_admin import systemAdmin
-from valid_in_out_put import sanitize_output, validate_input_user, validate_input_pass
+from valid_in_out_put import sanitize_output, validate_input_username, validate_input_pass
 
 DB_PATH = "data.db"
 
@@ -29,7 +28,7 @@ def login():
             print("\n" + "=" * 50)
             print("🔐 URBAN MOBILITY - LOGIN")
             print("=" * 50)
-            bool, username = validate_input_user(input("Username: "), mode="login")
+            bool, username = validate_input_username(input("Username: "), mode="login")
             bool2, password = validate_input_pass(getpass.getpass("Password: "), mode="login")
 
             # Hardcoded super admin
@@ -272,7 +271,7 @@ def show_main_menu(role, username):
                     password = validate_input_pass(
                         getpass.getpass(sanitize_output("Enter password: "))
                     )
-                    verified_password = Verification.verify_Password(password)
+                    verified_password, password = validate_input_pass(password)
                 hashed_password = hash_password(password)
                 sysAd.reset_password_function(user, hashed_password, "systemadmin")
                 sysAd.reset_resetted_password_check(user, "systemadmin")

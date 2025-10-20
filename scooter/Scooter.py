@@ -1,5 +1,4 @@
 from DbContext.encrypted_logger import EncryptedLogger
-from Login.verification import Verification
 from models.Scooter import Scooter
 from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
 from scooter.Scooter_data import Scooter_data
