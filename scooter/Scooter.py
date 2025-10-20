@@ -42,6 +42,7 @@ def main(role, username):
             choice = input("Choose an option: ")
             if choice == "1":
                 add_scooter(username)
+            
             elif choice == "2":
                 search_term = input("Enter search term (leave blank for all): ")
                 if search_term:
@@ -52,8 +53,10 @@ def main(role, username):
                     print_scooter_table(scooters)
                 else:
                     print("No matching scooters found")
+            
             elif choice == "3":
                 update_scooter(username)
+            
             elif choice == "4":
                 print("\nList of Scooters:")
                 scooters = db.get_all_serial_numbers()
