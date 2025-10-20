@@ -106,7 +106,8 @@ def add_scooter(creator):
     tries = 0
     while not is_valid_brand(brand):
         tries += 1
-        if tries <= MAX_TRIES:
+        print(f"You have {MAX_TRIES - tries} attempts left")
+        if tries < MAX_TRIES:
             print("Invalid brand format")
             brand = input("Brand: ")
         else:
@@ -118,7 +119,8 @@ def add_scooter(creator):
     tries = 0
     while not is_valid_model(model):
         tries += 1
-        if tries <= MAX_TRIES:
+        print(f"You have {MAX_TRIES - tries} attempts left")
+        if tries < MAX_TRIES:
             print("Invalid model format")
             model = input("Model: ")
         else:
@@ -131,7 +133,8 @@ def add_scooter(creator):
     tries = 0
     while validate_serial_number(serial_number) is False:
         tries += 1
-        if tries <= MAX_TRIES:
+        print(f"You have {MAX_TRIES - tries} attempts left")
+        if tries < MAX_TRIES:
             print("Invalid serial number format or serial number already exists")
             serial_number = input("Serial Number (10-17 alphanumeric chars): ")
         else:
@@ -270,6 +273,7 @@ def update_scooter(updater):
     field_choice = input("\nChoose field to update: ")
 
     MAX_TRIES = 3
+    
     if field_choice == "1":  # Brand
         tries = 0
         while tries < MAX_TRIES:

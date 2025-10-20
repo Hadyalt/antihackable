@@ -34,14 +34,6 @@ class Traveller:
             print(f"Database file not found: {e}")
         except Exception as e:
             print(f"Unexpected error while connecting to the database: {e}")
-    
-
-    def format_phone(self, phone):
-        # Remove non-digit characters
-        digits = "".join(c for c in phone if c.isdigit())
-        if len(digits) != 8:
-            raise ValueError("Phone number must contain exactly 8 digits")
-        return f"+31-6-{digits}"
 
     def insert_traveller(
         self,
