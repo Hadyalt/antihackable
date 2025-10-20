@@ -24,7 +24,17 @@ class Traveller:
         ]
 
     def connect(self):
-        self.connection = sqlite3.connect(self.db_name)    
+        try:
+            self.connection = sqlite3.connect(self.db_name)
+        except sqlite3.OperationalError as e:
+            print(f"SQLite operational error: {e}")
+        except sqlite3.DatabaseError as e:
+            print(f"SQLite database error: {e}")
+        except FileNotFoundError as e:
+            print(f"Database file not found: {e}")
+        except Exception as e:
+            print(f"Unexpected error while connecting to the database: {e}")
+    
 
     def format_phone(self, phone):
         # Remove non-digit characters

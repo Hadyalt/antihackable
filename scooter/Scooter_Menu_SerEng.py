@@ -1,6 +1,5 @@
 from datetime import datetime
 from DbContext.encrypted_logger import EncryptedLogger
-from scooter.Scooter import print_scooter_table
 from scooter.Scooter_data import Scooter_data
 from validation.isValidMaintenanceDate import is_valid_maintenance_date
 from validation.isValidMileage import is_valid_mileage
@@ -19,6 +18,7 @@ def Scooter_Menu_SerEng(choice, updater):
         else:
             scooters = db.get_all_scooters()
         if scooters:
+            from scooter.Scooter import print_scooter_table
             print_scooter_table(scooters)
         else:
             print("No matching scooters found")
@@ -85,8 +85,8 @@ def update_scooter_SerEng(updater):
     elif field_choice == "2":  # Target Range SOC
         tries = 0
         while tries < MAX_TRIES:
-            min_val = float(input("New Min SoC (%): "))
-            max_val = float(input("New Max SoC (%): "))
+            min_val = input("New Min SoC (%): ")
+            max_val = input("New Max SoC (%): ")
             if is_valid_target_range_soc(min_val, max_val):
                 db.update_scooter_fields(sn, TargetRangeSocMin=min_val, TargetRangeSocMax=max_val)
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the target range SOC to {min_val} - {max_val}", "No")
