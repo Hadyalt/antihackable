@@ -147,21 +147,21 @@ def add_scooter(creator):
         top_speed = input("Top Speed (km/h): ")
         if is_valid_top_speed(top_speed):
             break
-        print("Error: Must be a whole positive number between 0 and 100 km/h")
+        print("Invalid top speed: Must be a whole positive number between 0 and 100 km/h")
 
     # Validate Battery Capacity (positive number)
     while True:
         battery_capacity = input("Battery Capacity (Wh): ")
         if is_valid_battery_capacity(battery_capacity):
             break
-        print("Error: Must be a positive number and between 0 and 10000 Wh")
+        print("Invalid battery capacity: Must be a positive number and between 0 and 10000 Wh")
 
     # Validate State of Charge (0-100%)
     while True:
         state_of_charge = input("State of Charge (%): ")
         if is_valid_state_of_charge(state_of_charge):
             break
-        print("Error: Must be 0-100%")
+        print("Invalid state of charge: Must be 0-100%")
 
     # Validate Target Range SOC (min < max, both 0-100%)
     while True:
@@ -170,7 +170,7 @@ def add_scooter(creator):
         if is_valid_target_range_soc(min_soc, max_soc):
             target_range_soc = (min_soc, max_soc)
             break
-        print("Error: Min must be ≤ Max (both 0-100%)")
+        print("Invalid target range: Min must be ≤ Max (both 0-100%)")
 
     # Validate Location (5 decimal places, within Rotterdam)
     while True:
@@ -188,7 +188,7 @@ def add_scooter(creator):
                 location = (lat, lon)
                 break
             print(
-                f"Error: Must be within Rotterdam (Lat: 51.85-52.00, Lon: 4.30-4.60)"
+                f"Invalid location: Must be within Rotterdam (Lat: 51.85-52.00, Lon: 4.30-4.60)"
             )
         except ValueError:
             print("Error: Invalid coordinate format")
@@ -199,21 +199,21 @@ def add_scooter(creator):
         if oos_input in ("y", "n"):
             out_of_service = oos_input == "y"
             break
-        print("Error: Enter 'y' or 'n'")
+        print("Invalid input: Enter 'y' or 'n'")
 
     # Validate Mileage (non-negative)
     while True:
         mileage = input("Mileage (km): ")
         if is_valid_mileage(mileage):
             break
-        print("Error: Cannot be negative")
+        print("Invalid mileage: Cannot be negative")
 
     # Validate Last Maintenance Date (ISO 8601)
     while True:
         last_maintenance_date = input("Last Maintenance Date (YYYY-MM-DD): ")
         if is_valid_maintenance_date(last_maintenance_date):
             break
-        print("Error: Use YYYY-MM-DD format, not older than 1980, not in the future")
+        print("Invalid date: Use YYYY-MM-DD format, not older than 1980, not in the future")
 
     # Create Scooter object and insert into DB
     scooter = Scooter(
@@ -273,7 +273,7 @@ def update_scooter(updater):
     field_choice = input("\nChoose field to update: ")
 
     MAX_TRIES = 3
-    
+
     if field_choice == "1":  # Brand
         tries = 0
         while tries < MAX_TRIES:
