@@ -1,5 +1,7 @@
 import re
 
+from valid_in_out_put import check_control_characters, check_null_bytes
+
 def is_valid_name(name):
     """
     Verify that a name contains only allowed characters (whitelisting):
@@ -15,6 +17,8 @@ def is_valid_name(name):
     )
 
     if isinstance(name, str):
-        if re.fullmatch(pattern, name):
-            return True
+        if check_null_bytes(name):
+            if check_control_characters(name):
+                if re.fullmatch(pattern, name):
+                    return True
     return False
