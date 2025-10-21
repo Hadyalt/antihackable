@@ -2,7 +2,7 @@ import sqlite3
 import os
 import uuid
 
-from DbContext.crypto_utils import decrypt
+from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 
 
@@ -46,7 +46,7 @@ class Traveller:
                 (candidate,),
             )
             if cursor.fetchone() is None:
-                return candidate
+                return encrypt(candidate)
 
     def insert_traveller(
         self,
