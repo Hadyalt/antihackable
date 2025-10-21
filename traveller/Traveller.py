@@ -1,7 +1,9 @@
+from datetime import datetime
 import sqlite3
 import os
+import uuid
 
-from DbContext.crypto_utils import decrypt
+from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 
 
@@ -35,6 +37,18 @@ class Traveller:
         except Exception as e:
             print(f"Unexpected error while connecting to the database: {e}")
 
+    def _generate_traveller_id(self):
+        """Generate a random traveller ID and ensure it does not collide."""
+        cursor = self.connection.cursor()
+        while True:
+            candidate = uuid.uuid4().hex[:12].upper()
+            cursor.execute(
+                "SELECT 1 FROM Traveller WHERE TravellerID = ?",
+                (candidate,),
+            )
+            if cursor.fetchone() is None:
+                return encrypt(candidate)
+
     def insert_traveller(
         self,
         first_name,
@@ -52,15 +66,18 @@ class Traveller:
         try:
             # Only format phone (not validate other fields, as they are already validated and encrypted)
             cursor = self.connection.cursor()
+            traveller_id = self._generate_traveller_id()
+            registered_date = encrypt(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             cursor.execute(
                 """
                 INSERT INTO Traveller (
-                    FirstName, LastName, Birthday, Gender, StreetName,
+                    TravellerID, FirstName, LastName, Birthday, Gender, StreetName,
                     HouseNumber, ZipCode, City, Email, Phone,
                     DrivingLicenseNumber, RegisteredDate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
+                    traveller_id,
                     first_name,
                     last_name,
                     birthday,
@@ -72,11 +89,12 @@ class Traveller:
                     email,
                     phone,
                     driving_license,
+                    registered_date
                 ),
             )
             self.connection.commit()
             print("Traveller added successfully.")
-            return True
+            return traveller_id
         except sqlite3.IntegrityError as e:
             print(f"Error: Email already exists. [DEBUG] {e}")
             return False
@@ -94,7 +112,7 @@ class Traveller:
         cursor.execute("SELECT * FROM Traveller")
         return cursor.fetchall()
 
-    def search_travellers(self, search_term):
+    def search_travellers(self, search_term=""):
         if not self.connection:
             print("No connection.")
             return []
@@ -108,12 +126,14 @@ class Traveller:
         for t in all_travellers:
             # Decrypt all relevant fields
             decrypted_fields = [
+                  # TravellerID
                 decrypt(t[1]),  # FirstName
                 decrypt(t[2]),  # LastName
                 decrypt(t[9]),  # Email
                 decrypt(t[8]),  # City
                 decrypt(t[10]),  # Phone
-                decrypt(t[11]),  # DrivingLicenseNumber
+                decrypt(t[11])  # DrivingLicenseNumber
+      # RegisteredDate
             ]
             # If search term is in any field, add to results
             if any(
