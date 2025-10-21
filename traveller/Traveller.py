@@ -25,14 +25,16 @@ class Traveller:
         ]
 
     def connect(self):
-        self.connection = sqlite3.connect(self.db_name)    
-
-    def format_phone(self, phone):
-        # Remove non-digit characters
-        digits = "".join(c for c in phone if c.isdigit())
-        if len(digits) != 8:
-            raise ValueError("Phone number must contain exactly 8 digits")
-        return f"+31-6-{digits}"
+        try:
+            self.connection = sqlite3.connect(self.db_name)
+        except sqlite3.OperationalError as e:
+            print(f"SQLite operational error: {e}")
+        except sqlite3.DatabaseError as e:
+            print(f"SQLite database error: {e}")
+        except FileNotFoundError as e:
+            print(f"Database file not found: {e}")
+        except Exception as e:
+            print(f"Unexpected error while connecting to the database: {e}")
 
     def _generate_traveller_id(self):
         """Generate a random traveller ID and ensure it does not collide."""

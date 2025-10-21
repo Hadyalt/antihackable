@@ -2,9 +2,8 @@ import hashlib
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
-from Login.verification import Verification
 import getpass
-from valid_in_out_put import validate_input_user, validate_input_pass
+from valid_in_out_put import validate_input_username, validate_input_pass
 from validation.isValidName import is_valid_name
 
 
@@ -15,20 +14,26 @@ class SuperAdmin:
     def create_system_admin(self):
         verified_username = False
         while not verified_username:
-            verified_username, user_name = validate_input_user(input("Enter username: "))
-            verified_username = Verification.verify_username(user_name)
+            verified_username, user_name = validate_input_username(input("Enter username: "))
+            if not verified_username:
+                print("Invalid username. Please try again.")
         verified_password = False
         while not verified_password:
             verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
-            #verified_password = Verification.verify_Password(password)
+            if not verified_password:
+                print("Invalid password. Please try again.")
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
             verified_first_name = is_valid_name(firstname)
+            if not verified_first_name:
+                print("Invalid first name. Please try again.")
         verified_last_name = False
         while not verified_last_name:
             lastname = input("Enter last name: ")
             verified_last_name = is_valid_name(lastname)
+            if not verified_last_name:
+                print("Invalid last name. Please try again.")
 
         hashed = hash_password(password)
         system_data = {
@@ -49,8 +54,8 @@ class SuperAdmin:
         if not sysAdmins:
             print("No system admins available to update.")
             return
-        username_to_update = input("Enter the username of the system admin you want to update: ").lower()
-        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update]
+        username_to_update = input("Enter the username of the system admin you want to update: ")
+        matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update.lower()]
         if not matching_users:
             print(f"No system admin found with username '{username_to_update}'.")
             return
@@ -66,7 +71,8 @@ class SuperAdmin:
                 tries = 0
                 while tries < 3:
                     new_username = input("Enter the new username: ")
-                    if Verification.verify_username(new_username):
+                    verified, new_username = validate_input_username(new_username)
+                    if verified:
                         self.set_new_username(matching_users[0][0], new_username)
                         print(f"System admin {decrypt(matching_users[0][0])} updated to {new_username}.")
                         logger = EncryptedLogger()
@@ -87,7 +93,8 @@ class SuperAdmin:
                 tries = 0
                 while tries < 3:
                     password = getpass.getpass("Enter new password: ")
-                    if Verification.verify_Password(password):
+                    verified_password, password = validate_input_pass(password)
+                    if verified_password:
                         hashed = hash_password(password)
                         self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
                         print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
@@ -97,9 +104,10 @@ class SuperAdmin:
                     else:
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
-                print("Failed to reset password after 3 invalid attempts.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Failed System Admin Password Reset", f"Username: {decrypt(matching_users[0][0])} - 3 invalid password attempts", "Yes")
+                if tries == 3:
+                    print("Failed to reset password after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Failed System Admin Password Reset", f"Username: {decrypt(matching_users[0][0])} - 3 invalid password attempts", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")

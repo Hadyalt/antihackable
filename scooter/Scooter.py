@@ -1,12 +1,18 @@
 from DbContext.encrypted_logger import EncryptedLogger
-from Login.verification import Verification
 from models.Scooter import Scooter
 from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
 from scooter.Scooter_data import Scooter_data
 from datetime import datetime
 
+from validation.isValidBatteryCapacity import is_valid_battery_capacity
 from validation.isValidBrand import is_valid_brand
+from validation.isValidMaintenanceDate import is_valid_maintenance_date
+from validation.isValidMileage import is_valid_mileage
 from validation.isValidModel import is_valid_model
+from validation.isValidSerialNumber import is_valid_serial_number, validate_serial_number
+from validation.isValidStateOfCharge import is_valid_state_of_charge
+from validation.isValidTargetRangeSoc import is_valid_target_range_soc
+from validation.isValidTopSpeed import is_valid_top_speed
 
 def show_menu(role):
     if role in ["superadmin", "systemadmin"]:
@@ -36,6 +42,7 @@ def main(role, username):
             choice = input("Choose an option: ")
             if choice == "1":
                 add_scooter(username)
+            
             elif choice == "2":
                 search_term = input("Enter search term (leave blank for all): ")
                 if search_term:
@@ -46,8 +53,10 @@ def main(role, username):
                     print_scooter_table(scooters)
                 else:
                     print("No matching scooters found")
+            
             elif choice == "3":
                 update_scooter(username)
+            
             elif choice == "4":
                 print("\nList of Scooters:")
                 scooters = db.get_all_serial_numbers()
@@ -81,6 +90,7 @@ def main(role, username):
 
 def add_scooter(creator):
     db = Scooter_data()
+    logger = EncryptedLogger()
     db.connect()
     # Define Rotterdam geographic bounds
     ROTTERDAM_BOUNDS = {
@@ -90,63 +100,77 @@ def add_scooter(creator):
         "max_lon": 4.6,
     }
 
+    MAX_TRIES = 3
+
     brand = input("Brand: ")
-    while not (brand):
-        brand = input("Brand: ")
+    tries = 0
+    while not is_valid_brand(brand):
+        tries += 1
+        print(f"You have {MAX_TRIES - tries} attempts left")
+        if tries < MAX_TRIES:
+            print("Invalid brand format")
+            brand = input("Brand: ")
+        else:
+            print("Too many invalid attempts. Exiting add scooter.")
+            logger.log_entry(f"{creator}", "Add scooter cancelled", "Too many invalid brand attempts", "Yes")
+            return
+    
     model = input("Model: ")
+    tries = 0
     while not is_valid_model(model):
-        model = input("Model: ")
+        tries += 1
+        print(f"You have {MAX_TRIES - tries} attempts left")
+        if tries < MAX_TRIES:
+            print("Invalid model format")
+            model = input("Model: ")
+        else:
+            print("Too many invalid attempts. Exiting add scooter.")
+            logger.log_entry(f"{creator}", "Add scooter cancelled", "Too many invalid model attempts", "Yes")
+            return
 
     # Validate Serial Number (10-17 alphanumeric characters)
-    while True:
-        serial_number = input(
-            "Serial Number (10-17 alphanumeric chars): "
-        )
-        if 10 <= len(serial_number) <= 17 and serial_number.isalnum():
-            break
-        print("Error: Must be 10-17 alphanumeric characters")
+    serial_number = input("Serial Number (10-17 alphanumeric chars): ")
+    tries = 0
+    while validate_serial_number(serial_number) is False:
+        tries += 1
+        print(f"You have {MAX_TRIES - tries} attempts left")
+        if tries < MAX_TRIES:
+            print("Invalid serial number format or serial number already exists")
+            serial_number = input("Serial Number (10-17 alphanumeric chars): ")
+        else:
+            print("Too many invalid attempts. Exiting add scooter.")
+            logger.log_entry(f"{creator}", "Add scooter cancelled", "Too many invalid serial number attempts", "Yes")
+            return
 
     # Validate Top Speed (positive number)
     while True:
-        try:
-            top_speed = float(input("Top Speed (km/h): "))
-            if top_speed > 0 and top_speed <= 100:
-                break
-            print("Error: Must be a positive number between 0 and 100 km/h")
-        except ValueError:
-            print("Error: Invalid number format")
+        top_speed = input("Top Speed (km/h): ")
+        if is_valid_top_speed(top_speed):
+            break
+        print("Invalid top speed: Must be a whole positive number between 0 and 100 km/h")
 
     # Validate Battery Capacity (positive number)
     while True:
-        try:
-            battery_capacity = float(input("Battery Capacity (Wh): "))
-            if 0 <= battery_capacity <= 10000:
-                break
-            print("Error: Must be a positive number and between 0 and 10000 Wh")
-        except ValueError:
-            print("Error: Invalid number format")
+        battery_capacity = input("Battery Capacity (Wh): ")
+        if is_valid_battery_capacity(battery_capacity):
+            break
+        print("Invalid battery capacity: Must be a positive number and between 0 and 10000 Wh")
 
     # Validate State of Charge (0-100%)
     while True:
-        try:
-            state_of_charge = float(input("State of Charge (%): "))
-            if 0 <= state_of_charge <= 100:
-                break
-            print("Error: Must be 0-100%")
-        except ValueError:
-            print("Error: Invalid number format")
+        state_of_charge = input("State of Charge (%): ")
+        if is_valid_state_of_charge(state_of_charge):
+            break
+        print("Invalid state of charge: Must be 0-100%")
 
     # Validate Target Range SOC (min < max, both 0-100%)
     while True:
-        try:
-            min_soc = float(input("Target Range Min (%): "))
-            max_soc = float(input("Target Range Max (%): "))
-            if 0 <= min_soc <= max_soc <= 100:
-                target_range_soc = (min_soc, max_soc)
-                break
-            print("Error: Min must be ≤ Max (both 0-100%)")
-        except ValueError:
-            print("Error: Invalid number format")
+        min_soc = input("Target Range Min (%): ")
+        max_soc = input("Target Range Max (%): ")
+        if is_valid_target_range_soc(min_soc, max_soc):
+            target_range_soc = (min_soc, max_soc)
+            break
+        print("Invalid target range: Min must be ≤ Max (both 0-100%)")
 
     # Validate Location (5 decimal places, within Rotterdam)
     while True:
@@ -164,7 +188,7 @@ def add_scooter(creator):
                 location = (lat, lon)
                 break
             print(
-                f"Error: Must be within Rotterdam (Lat: 51.85-52.00, Lon: 4.30-4.60)"
+                f"Invalid location: Must be within Rotterdam (Lat: 51.85-52.00, Lon: 4.30-4.60)"
             )
         except ValueError:
             print("Error: Invalid coordinate format")
@@ -175,35 +199,21 @@ def add_scooter(creator):
         if oos_input in ("y", "n"):
             out_of_service = oos_input == "y"
             break
-        print("Error: Enter 'y' or 'n'")
+        print("Invalid input: Enter 'y' or 'n'")
 
     # Validate Mileage (non-negative)
     while True:
-        try:
-            mileage = float(input("Mileage (km): "))
-            if mileage >= 0:
-                break
-            print("Error: Cannot be negative")
-        except ValueError:
-            print("Error: Invalid number format")
+        mileage = input("Mileage (km): ")
+        if is_valid_mileage(mileage):
+            break
+        print("Invalid mileage: Cannot be negative")
 
     # Validate Last Maintenance Date (ISO 8601)
     while True:
         last_maintenance_date = input("Last Maintenance Date (YYYY-MM-DD): ")
-        try:
-            date_obj = datetime.strptime(last_maintenance_date, "%Y-%m-%d")
-            today = datetime.today()
-
-            if date_obj > today:
-                print("Error: Maintenance date cannot be in the future.")
-                continue
-            if date_obj.year < 1980:
-                print("Error: Maintenance date cannot be older than 1980.")
-                continue
-
-            break  # valid date, exit loop
-        except ValueError:
-            print("Error: Use YYYY-MM-DD format")
+        if is_valid_maintenance_date(last_maintenance_date):
+            break
+        print("Invalid date: Use YYYY-MM-DD format, not older than 1980, not in the future")
 
     # Create Scooter object and insert into DB
     scooter = Scooter(
@@ -227,6 +237,7 @@ def update_scooter(updater):
     db = Scooter_data()
     logger = EncryptedLogger()
     db.connect()
+
     print("\nList of Scooters:")
     scooters = db.get_all_serial_numbers()
     if not scooters:
@@ -234,11 +245,16 @@ def update_scooter(updater):
         return
     for s in scooters:
         print(f"- {s[0]}")
+    
     sn = input("\nSerial Number to update: ")
-    # Fetch existing scooter data
-    scooter = db.get_scooter_by_serial(sn)
-    if not scooter:
-        print("Scooter not found!")
+    if is_valid_serial_number(sn):
+        # Fetch existing scooter data
+        scooter = db.get_scooter_by_serial(sn)
+        if not scooter:
+            print("Scooter not found!")
+            return
+    else:
+        print("Invalid serial number format")
         return
 
     print("\n[1] Brand")
@@ -257,6 +273,7 @@ def update_scooter(updater):
     field_choice = input("\nChoose field to update: ")
 
     MAX_TRIES = 3
+
     if field_choice == "1":  # Brand
         tries = 0
         while tries < MAX_TRIES:
@@ -265,6 +282,8 @@ def update_scooter(updater):
                 db.update_scooter_fields(sn, Brand=new_brand)
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the brand to {new_brand}", "No")
                 return
+            else:
+                print("Invalid brand format")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -278,6 +297,8 @@ def update_scooter(updater):
                 db.update_scooter_fields(sn, Model=new_model)
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the model to {new_model}", "No")
                 return
+            else:
+                print("Invalid model format")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -287,15 +308,12 @@ def update_scooter(updater):
         tries = 0
         while tries < MAX_TRIES:
             new_serial = input("New Serial Number (10-17 alphanumeric chars): ")
-            if 10 <= len(new_serial) <= 17 and new_serial.isalnum():
-                if db.get_scooter_by_serial(new_serial) and new_serial != sn:
-                    print("Error: Serial number already exists")
-                else:
-                    db.update_scooter_fields(sn, SerialNumber=new_serial)
-                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the serial number to {new_serial}", "No")
-                    return
+            if new_serial and validate_serial_number(new_serial): 
+                db.update_scooter_fields(sn, SerialNumber=new_serial)
+                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the serial number to {new_serial}", "No")
+                return
             else:
-                print("Error: Must be 10-17 alphanumeric characters")
+                print("Invalid serial number format or serial number already exists")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -304,15 +322,13 @@ def update_scooter(updater):
     elif field_choice == "4":  # Top Speed
         tries = 0
         while tries < MAX_TRIES:
-            try:
-                new_top_speed = float(input("New Top Speed (km/h): "))
-                if 0 < new_top_speed <= 100:
-                    db.update_scooter_fields(sn, TopSpeed=new_top_speed)
-                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the top speed to {new_top_speed}", "No")
-                    return
-                print("Error: Must be a positive number between 0 and 100 km/h")
-            except ValueError:
-                print("Error: Invalid number format")
+            new_top_speed = input("New Top Speed (km/h): ")
+            if new_top_speed and is_valid_top_speed(new_top_speed):
+                db.update_scooter_fields(sn, TopSpeed=new_top_speed)
+                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the top speed to {new_top_speed}", "No")
+                return
+            else:
+                print("Invalid Top Speed: Must be a positive number between 0 and 100 km/h")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -321,15 +337,13 @@ def update_scooter(updater):
     elif field_choice == "5":  # Battery Capacity
         tries = 0
         while tries < MAX_TRIES:
-            try:
-                new_battery_capacity = float(input("New Battery Capacity (Wh): "))
-                if 0 < new_battery_capacity <= 10000:
-                    db.update_scooter_fields(sn, BatteryCapacity=new_battery_capacity)
-                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the battery capacity to {new_battery_capacity}", "No")
-                    return
-                print("Error: Must be a positive number (max 10000 Wh)")
-            except ValueError:
-                print("Error: Invalid number format")
+            new_battery_capacity = input("New Battery Capacity (Wh): ")
+            if new_battery_capacity and is_valid_battery_capacity(new_battery_capacity):
+                db.update_scooter_fields(sn, BatteryCapacity=new_battery_capacity)
+                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the battery capacity to {new_battery_capacity}", "No")
+                return
+            else:
+                print("Invalid Battery Capacity: Must be a positive number (max 10000 Wh)")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -338,15 +352,13 @@ def update_scooter(updater):
     elif field_choice == "6":  # State of Charge
         tries = 0
         while tries < MAX_TRIES:
-            try:
-                new_value = float(input("New State of Charge (%): "))
-                if 0 <= new_value <= 100:
-                    db.update_scooter_fields(sn, StateOfCharge=new_value)
-                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the State of Charge to {new_value}", "No")
-                    return
-                print("Error: Must be between 0% and 100%")
-            except ValueError:
-                print("Error: Invalid number format")
+            new_value = input("New State of Charge (%): ")
+            if new_value and is_valid_state_of_charge(new_value):
+                db.update_scooter_fields(sn, StateOfCharge=new_value)
+                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the State of Charge to {new_value}", "No")
+                return
+            else:
+                print("Invalid State of Charge: Must be between 0% and 100%")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -355,16 +367,14 @@ def update_scooter(updater):
     elif field_choice == "7":  # Target Range SOC
         tries = 0
         while tries < MAX_TRIES:
-            try:
-                min_val = float(input("New Min SoC (%): "))
-                max_val = float(input("New Max SoC (%): "))
-                if 0 <= min_val <= max_val <= 100:
-                    db.update_scooter_fields(sn, TargetRangeSocMin=min_val, TargetRangeSocMax=max_val)
-                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the target range SOC to {min_val} - {max_val}", "No")
-                    return
-                print("Error: Min must be ≤ Max (both 0-100%)")
-            except ValueError:
-                print("Error: Invalid number format")
+            min_val = input("New Min SoC (%): ")
+            max_val = input("New Max SoC (%): ")
+            if is_valid_target_range_soc(min_val, max_val):
+                db.update_scooter_fields(sn, TargetRangeSocMin=min_val, TargetRangeSocMax=max_val)
+                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the target range SOC to {min_val} - {max_val}", "No")
+                return
+            else:
+                print("Invalid Target Range SOC: Min must be ≤ Max (both 0-100%)")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -412,15 +422,13 @@ def update_scooter(updater):
     elif field_choice == "10":  # Mileage
         tries = 0
         while tries < MAX_TRIES:
-            try:
-                mileage = float(input("New Mileage (km): "))
-                if mileage >= 0:
-                    db.update_scooter_fields(sn, Mileage=mileage)
-                    logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the mileage to {mileage}", "No")
-                    return
-                print("Error: Cannot be negative")
-            except ValueError:
-                print("Error: Invalid number format")
+            new_mileage = input("New Mileage (km): ")
+            if new_mileage and is_valid_mileage(new_mileage):
+                db.update_scooter_fields(sn, Mileage=new_mileage)
+                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the mileage to {new_mileage}", "No")
+                return
+            else:
+                print("Invalid Mileage: Cannot be negative")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -429,35 +437,23 @@ def update_scooter(updater):
 
     elif field_choice == "11":  # Last Maintenance Date
         tries = 0
-        while True:
-            if tries >= 3:
-                print("Too many invalid attempts. Update cancelled.")
-                logger.log_entry(f"{updater}", f"Update cancelled for scooter {sn}", "Too many invalid attempts", "Yes")
+        while tries < MAX_TRIES:
+            new_maintenance_date = input("New Last Maintenance Date (YYYY-MM-DD): ")
+            if new_maintenance_date and is_valid_maintenance_date(new_maintenance_date):
+                db.update_scooter_fields(sn, LastMaintenanceDate=new_maintenance_date)
+                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the last maintenance date to {new_maintenance_date}", "No")
                 return
-            date = input("Last Maintenance Date (YYYY-MM-DD): ")
-            try:
-                date_obj = datetime.strptime(date, "%Y-%m-%d")
-                today = datetime.today()
-                if date_obj > today:
-                    print("Error: Maintenance date cannot be in the future.")
-                    tries += 1
-                    print(f"You have {MAX_TRIES - tries} attempts left")
-                    continue
-                if date_obj.year < 1980:
-                    tries += 1
-                    print("Error: Maintenance date cannot be older than 1980.")
-                    print(f"You have {MAX_TRIES - tries} attempts left")
-                    continue
-                db.update_scooter_fields(sn, LastMaintenanceDate=date)
-                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the last maintenance date to {date}", "No")
-                return
-            except ValueError:
-                print("Error: Use YYYY-MM-DD format")
-                tries += 1
-                print(f"You have {MAX_TRIES - tries} attempts left")
+            else:
+                print("Invalid Date: Use YYYY-MM-DD format, not older than 1980, not in the future")
+            tries += 1
+            print(f"You have {MAX_TRIES - tries} attempts left")
+        print("Too many invalid attempts. Update cancelled.")
+        logger.log_entry(f"{updater}", f"Update cancelled for scooter {sn}", "Too many invalid maintenance date attempts", "Yes")
+    
     elif field_choice == "12":
         print("Update cancelled.")
         return
+    
     else:
         print("Invalid field selection")
     

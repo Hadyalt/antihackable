@@ -1,10 +1,11 @@
 from DbContext.encrypted_logger import EncryptedLogger
-from Login.verification import Verification
 from serviceEngineer.ServiceEngineer import ServiceEngineer
 from scooter import Scooter
 from systemAdmin.system_admin import systemAdmin
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 import getpass
+
+from valid_in_out_put import validate_input_pass
 
 
 def display_menu():
@@ -24,7 +25,7 @@ def reset_password_flow(current_user):
         verified_password = False
         while not verified_password:
             password = getpass.getpass("Enter new password: ")
-            verified_password = Verification.verify_Password(password)
+            verified_password, password = validate_input_pass(password)
             confirm_password = getpass.getpass("Confirm new password: ")
             if confirm_password != password:
                 print("Error: Passwords do not match!")
@@ -51,7 +52,7 @@ def main(username):
         verified_password = False
         while not verified_password:
             password = getpass.getpass("Enter password: ")
-            verified_password = Verification.verify_Password(password)
+            verified_password, password = validate_input_pass(password)
         hashed_password = hash_password(password)
         sysAd.reset_password_function(user, hashed_password, "serviceengineer")
         sysAd.reset_resetted_password_check(user, "serviceengineer")

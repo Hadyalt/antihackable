@@ -11,7 +11,16 @@ class Scooter_data:
         self.connection = None
 
     def connect(self):
-        self.connection = sqlite3.connect(self.db_name)
+        try:
+            self.connection = sqlite3.connect(self.db_name)
+        except sqlite3.OperationalError as e:
+            print(f"SQLite operational error: {e}")
+        except sqlite3.DatabaseError as e:
+            print(f"SQLite database error: {e}")
+        except FileNotFoundError as e:
+            print(f"Database file not found: {e}")
+        except Exception as e:
+            print(f"Unexpected error while connecting to the database: {e}")
 
     def insert_scooter(self, scooter):
         if self.connection:
@@ -133,8 +142,7 @@ class Scooter_data:
             self.connection.commit()
             print("Scooter deleted.")
             logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")
-            
+            logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")    
         else:
             print("No connection.")
 

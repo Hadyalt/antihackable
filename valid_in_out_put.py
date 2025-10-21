@@ -1,4 +1,7 @@
+from DbContext.DbContext import DbContext
+from DbContext.crypto_utils import decrypt
 from DbContext.encrypted_logger import EncryptedLogger
+import sqlite3
 
 # --- Module-level state for logging counters (keeps single responsibility) ---
 _validation_counters = {}
@@ -70,9 +73,61 @@ def check_password_pattern(value):
 
 # --- Uniqueness & requirements (explicit whitelist checks for required character classes) ---
 def check_username_uniqueness(value, existing_usernames):
-    if existing_usernames:
-        return value.lower() not in [u.lower() for u in existing_usernames]
+    if not existing_usernames:
+        return True
     return False
+
+def check_username_exists_simple(username):
+    try:
+        db = DbContext()
+        connection = db.connect()
+        cursor = connection.cursor()
+        cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
+        all_users = cursor.fetchall()
+
+        matching_users = [user for user in all_users if decrypt(user[0]).lower() == username]
+        if not matching_users:
+            return None
+        else:
+            return matching_users[0]
+
+    except ConnectionError as e:
+        print(f"Failed because of an error")
+        logger = EncryptedLogger()
+        logger.log_entry("system", "Database connection error", str(e), "Yes")
+        return "connection_error"
+
+    except sqlite3.OperationalError as e:
+        print(f"Failed because of an error")
+        logger = EncryptedLogger()
+        logger.log_entry("system", "Database operational error", str(e), "Yes")
+        return "operational_error"
+
+    except sqlite3.ProgrammingError as e:
+        print(f"Failed because of an error")
+        logger = EncryptedLogger()
+        logger.log_entry("system", "Database programming error", str(e), "Yes")
+        return "programming_error"
+
+    except ValueError as e:
+        print(f"Failed because of an error")
+        logger = EncryptedLogger()
+        logger.log_entry("system", "Decryption or data processing error", str(e), "Yes")
+        return "decrypt_error"
+
+    except Exception as e:
+        print(f"Failed because of an error")
+        logger = EncryptedLogger()
+        logger.log_entry("system", "Unexpected error", str(e), "Yes")
+        return "unknown_error"
+
+    finally:
+        try:
+            if connection:
+                connection.close()
+        except Exception:
+            pass
+
 
 def check_password_requirements(value):
     if isinstance(value, str) and len(value) > 0:
@@ -113,7 +168,7 @@ def log_password_validation_failure(error_type, error_message=""):
     log_validation_failure("Password", error_message, "password", error_type)
 
 # --- Master validators (treat helper True == valid) ---
-def validate_username(value, existing_usernames, min_length=8, max_length=10, mode="create"):
+def validate_username(value, min_length=8, max_length=10, mode="create"):
     # Special-case whitelist entry
     if check_special_case_username(value):
         return True, "super_admin"
@@ -141,9 +196,11 @@ def validate_username(value, existing_usernames, min_length=8, max_length=10, mo
                             if check_username_pattern(normalized):
 
                                 # Uniqueness
-                                if check_username_uniqueness(normalized, existing_usernames):
-                                    return True, value
+                                existing_usernames = check_username_exists_simple(normalized)
+                                if not isinstance(existing_usernames, str):
 
+                                    if check_username_uniqueness(normalized, existing_usernames):
+                                        return True, value                           
     return False, value
 
 def validate_password(value, min_length=12, max_length=30, mode="create"):
@@ -172,12 +229,11 @@ def validate_password(value, min_length=12, max_length=30, mode="create"):
                             # Requirements: explicit whitelist-based checks for required subsets
                             if check_password_requirements(value):
                                 return True, value
-
     return False, value
 
 # --- Backwards-compatible wrappers ---
-def validate_input_user(value, existing_usernames=None, min_length=8, max_length=10, mode="create"):
-    return validate_username(value, existing_usernames, min_length, max_length, mode)
+def validate_input_username(value, min_length=8, max_length=10, mode="create"):
+    return validate_username(value, min_length, max_length, mode)
 
 def validate_input_pass(value, min_length=12, max_length=30, mode="create"):
     return validate_password(value, min_length, max_length, mode)

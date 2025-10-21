@@ -1,9 +1,8 @@
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
-from Login.verification import Verification
 import getpass
-from valid_in_out_put import validate_input_user, validate_input_pass
+from valid_in_out_put import validate_input_username, validate_input_pass
 from validation.isValidName import is_valid_name
 
 
@@ -55,12 +54,10 @@ class systemAdmin:
     def create_service_engineer(self, creator):
         verified_username = False
         while not verified_username:
-            verified_username, user_name = validate_input_user(input("Enter username: "))
-            verified_username = Verification.verify_username(user_name)
+            verified_username, user_name = validate_input_username(input("Enter username: "))
         verified_password = False
         while not verified_password:
             verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
-            #verified_password = Verification.verify_Password(password)
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
@@ -141,10 +138,10 @@ class systemAdmin:
         if not servEng:
             print("No service engineers available to update.")
             return
-        username_to_update = input("Enter the username of the service engineer you want to update: ").lower()
+        username_to_update = input("Enter the username of the service engineer you want to update: ")
 
         # Check if the username exists in the servEng list
-        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update]
+        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update.lower()]
         if not matching_users:
             print(f"No service engineer found with username '{username_to_update}'.")
             return
@@ -160,7 +157,8 @@ class systemAdmin:
                 tries = 0
                 while tries < 3:
                     new_username = input("Enter the new username: ")
-                    if Verification.verify_username(new_username):
+                    verified, new_username = validate_input_username(new_username)
+                    if verified:
                         self.set_new_username(matching_users[0][0], new_username)
                         print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
                         logger = EncryptedLogger()
@@ -181,7 +179,8 @@ class systemAdmin:
                 tries = 0
                 while tries < 3:
                     new_password = getpass.getpass("Enter the new password: ")
-                    if Verification.verify_Password(new_password):
+                    verified_password, new_password = validate_input_pass(new_password)
+                    if verified_password:
                         hashed = hash_password(new_password)
                         self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
                         print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
@@ -354,7 +353,8 @@ class systemAdmin:
             return
 
         new_password = getpass.getpass("Enter the new temporary password: ")
-        if Verification.verify_Password(new_password):
+        verified_password, new_password = validate_input_pass(new_password)
+        if verified_password:
             hashed_password = hash_password(new_password)
             self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
             print(f"Password for service engineer {username_to_reset} has been reset.")
