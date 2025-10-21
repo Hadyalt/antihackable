@@ -268,7 +268,7 @@ def add_traveller(creator):
             f"Traveller: {first_name} is created",
             "No",
         )
-        print(f"Traveller created with ID: {traveller_id}")
+        print(f"Traveller created with ID: {decrypt(traveller_id)}")
     else:
         print("Failed to add traveller. Please check your input and try again.")
 
@@ -545,7 +545,7 @@ def view_travellers(username):
             f"{username}", "Searched Travellers", f"Search term: {search_term}", "No"
         )
     else:
-        travellers = db.get_all_travellers()
+        travellers = db.search_travellers()
         logger.log_entry(f"{username}", "Viewed All Travellers", "", "No")
     if travellers:
         print("\nTraveller List:")
@@ -556,14 +556,15 @@ def view_travellers(username):
         print("-" * 100)
         for t in travellers:
             # Decrypt all relevant fields before displaying
-            tid = t[0]
+            tid = decrypt(t[0])
             first_name = decrypt(t[1])
             last_name = decrypt(t[2])
             email = decrypt(t[9])
             phone = decrypt(t[10])
             city = decrypt(t[8])
+            registered_date = decrypt(t[12])
             print(
-                f"{tid:<4}| {first_name:<12}| {last_name:<12}| {email:<20}| {phone:<14}| {city}"
+                f"{tid:<4}| {first_name:<12}| {last_name:<12}| {email:<20}| {phone:<14}| {city:<12}| {registered_date}"
             )
         print("-" * 100)
     else:

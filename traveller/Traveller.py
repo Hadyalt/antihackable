@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlite3
 import os
 import uuid
@@ -66,13 +67,14 @@ class Traveller:
             # Only format phone (not validate other fields, as they are already validated and encrypted)
             cursor = self.connection.cursor()
             traveller_id = self._generate_traveller_id()
+            registered_date = encrypt(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             cursor.execute(
                 """
                 INSERT INTO Traveller (
                     TravellerID, FirstName, LastName, Birthday, Gender, StreetName,
                     HouseNumber, ZipCode, City, Email, Phone,
                     DrivingLicenseNumber, RegisteredDate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     traveller_id,
@@ -87,6 +89,7 @@ class Traveller:
                     email,
                     phone,
                     driving_license,
+                    registered_date
                 ),
             )
             self.connection.commit()
@@ -109,7 +112,7 @@ class Traveller:
         cursor.execute("SELECT * FROM Traveller")
         return cursor.fetchall()
 
-    def search_travellers(self, search_term):
+    def search_travellers(self, search_term=""):
         if not self.connection:
             print("No connection.")
             return []
@@ -123,12 +126,14 @@ class Traveller:
         for t in all_travellers:
             # Decrypt all relevant fields
             decrypted_fields = [
+                  # TravellerID
                 decrypt(t[1]),  # FirstName
                 decrypt(t[2]),  # LastName
                 decrypt(t[9]),  # Email
                 decrypt(t[8]),  # City
                 decrypt(t[10]),  # Phone
-                decrypt(t[11]),  # DrivingLicenseNumber
+                decrypt(t[11])  # DrivingLicenseNumber
+      # RegisteredDate
             ]
             # If search term is in any field, add to results
             if any(
