@@ -12,9 +12,22 @@ class DbContext:
         self.connection = None
 
     def connect(self):
-        """Establish a connection to the SQLite database."""
-        self.connection = sqlite3.connect(self.db_name)
-        return self.connection
+        try:
+            self.connection = sqlite3.connect(self.db_name)
+            return self.connection
+        except sqlite3.OperationalError as e:
+            print(f"SQLite operational error: {e}")
+            return self.connection
+        except sqlite3.DatabaseError as e:
+            print(f"SQLite database error: {e}")
+            return self.connection
+        except FileNotFoundError as e:
+            print(f"Database file not found: {e}")
+            return self.connection
+        except Exception as e:
+            print(f"Unexpected error while connecting to the database: {e}")
+            return self.connection
+
 
     def create_table(self, table_name, schema):
         # Whitelist allowed table names to prevent SQL injection
