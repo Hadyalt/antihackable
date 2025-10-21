@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import uuid
 
 from DbContext.crypto_utils import decrypt
 from DbContext.encrypted_logger import EncryptedLogger
@@ -33,6 +34,18 @@ class Traveller:
             raise ValueError("Phone number must contain exactly 8 digits")
         return f"+31-6-{digits}"
 
+    def _generate_traveller_id(self):
+        """Generate a random traveller ID and ensure it does not collide."""
+        cursor = self.connection.cursor()
+        while True:
+            candidate = uuid.uuid4().hex[:12].upper()
+            cursor.execute(
+                "SELECT 1 FROM Traveller WHERE TravellerID = ?",
+                (candidate,),
+            )
+            if cursor.fetchone() is None:
+                return candidate
+
     def insert_traveller(
         self,
         first_name,
@@ -50,15 +63,17 @@ class Traveller:
         try:
             # Only format phone (not validate other fields, as they are already validated and encrypted)
             cursor = self.connection.cursor()
+            traveller_id = self._generate_traveller_id()
             cursor.execute(
                 """
                 INSERT INTO Traveller (
-                    FirstName, LastName, Birthday, Gender, StreetName,
+                    TravellerID, FirstName, LastName, Birthday, Gender, StreetName,
                     HouseNumber, ZipCode, City, Email, Phone,
                     DrivingLicenseNumber, RegisteredDate
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
             """,
                 (
+                    traveller_id,
                     first_name,
                     last_name,
                     birthday,
@@ -74,7 +89,7 @@ class Traveller:
             )
             self.connection.commit()
             print("Traveller added successfully.")
-            return True
+            return traveller_id
         except sqlite3.IntegrityError as e:
             print(f"Error: Email already exists. [DEBUG] {e}")
             return False

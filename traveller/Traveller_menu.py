@@ -255,7 +255,7 @@ def add_traveller(creator):
     enc_driving_license = encrypt(driving_license)
 
     # Attempt to add traveller
-    success = db.insert_traveller(
+    traveller_id = db.insert_traveller(
         enc_first_name,
         enc_last_name,
         enc_birthday,
@@ -268,13 +268,14 @@ def add_traveller(creator):
         enc_phone,
         enc_driving_license,
     )
-    if success:
+    if traveller_id:
         logger.log_entry(
             f"{creator}",
             "Created a new Traveller",
             f"Traveller: {first_name} is created",
             "No",
         )
+        print(f"Traveller created with ID: {traveller_id}")
     else:
         print("Failed to add traveller. Please check your input and try again.")
 

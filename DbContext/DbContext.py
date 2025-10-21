@@ -48,7 +48,7 @@ class DbContext:
         self.create_table("User", user_schema)
         # create the traveller table
         traveller_schema = """
-            TravellerID INTEGER PRIMARY KEY AUTOINCREMENT,
+            TravellerID TEXT PRIMARY KEY,
             FirstName TEXT NOT NULL,
             LastName TEXT NOT NULL,
             Birthday TEXT NOT NULL,
