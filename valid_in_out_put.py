@@ -233,8 +233,8 @@ def validate_input_username(value, min_length=8, max_length=10, mode="create"):
     is_valid, value = validate_username(value, min_length, max_length, mode)
     
     if not is_valid:
-        return False, value
-    
+        return True, value
+
     # After validation passes, check database for uniqueness (only in create mode)
     if mode == "create":
         normalized_username = value.lower()
