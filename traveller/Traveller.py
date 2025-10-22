@@ -63,15 +63,18 @@ class Traveller:
         phone,
         driving_license,
     ):
+        logger = EncryptedLogger()
+        cursor = None
         try:
-            # Only format phone (not validate other fields, as they are already validated and encrypted)
-            cursor = self.connection.cursor()
-            traveller_id = self._generate_traveller_id()
-            registered_date = encrypt(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            cursor.execute(
-                """
-                INSERT INTO Traveller (
-                    TravellerID, FirstName, LastName, Birthday, Gender, StreetName,
+            if self.connection:
+                # Only format phone (not validate other fields, as they are already validated and encrypted)
+                cursor = self.connection.cursor()
+                traveller_id = self._generate_traveller_id()
+                registered_date = encrypt(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                cursor.execute(
+                    """
+                    INSERT INTO Traveller (
+                        TravellerID, FirstName, LastName, Birthday, Gender, StreetName,
                     HouseNumber, ZipCode, City, Email, Phone,
                     DrivingLicenseNumber, RegisteredDate
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -95,22 +98,98 @@ class Traveller:
             self.connection.commit()
             print("Traveller added successfully.")
             return traveller_id
+         # --- Specific exceptions ---
         except sqlite3.IntegrityError as e:
-            print(f"Error: Email already exists. [DEBUG] {e}")
-            return False
-        except ValueError as e:
-            print(f"Validation Error: {e}")
-            return False
-        except Exception as e:
-            print(f"[DEBUG] Exception occurred: {e}")
+            # Typically happens on UNIQUE constraint violations (e.g., duplicate email)
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger.log_entry("System", "Integrity Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
             return False
 
+        except sqlite3.OperationalError as e:
+            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger.log_entry("System", "Operational Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.InterfaceError as e:
+            # Raised if wrong data types or bindings are passed to SQL placeholders
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger.log_entry("System", "Interface Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.DatabaseError as e:
+            # Base class for all database-related errors (corrupted DB, etc.)
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger.log_entry("System", "Database Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except ValueError as e:
+            # Custom validation issues (e.g. from earlier preprocessing)
+            print(f"Validation Error: {e}")
+            logger.log_entry("System", "Validation Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except TypeError as e:
+            # When unexpected types are passed (e.g., None where a string is expected)
+            print(f"Type Error: invalid argument type. [DEBUG] {e}")
+            logger.log_entry("System", "Type Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except Exception as e:
+            # Catch-all for anything unexpected
+            print(f"Unexpected Exception occurred.")
+            logger.log_entry("System", "Unexpected Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+        
+        finally:
+            # Always close cursor to prevent resource leaks
+            if cursor:
+                cursor.close()
+        
+
     def get_all_travellers(self):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
-        cursor.execute("SELECT * FROM Traveller")
-        return cursor.fetchall()
+        logger = EncryptedLogger()
+        cursor = None
+        if self.connection:
+            try:
+                if self.connection:
+                    cursor = self.connection.cursor()
+                    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+                    tables = cursor.fetchall()
+                    cursor.execute("SELECT * FROM Traveller")
+                    return cursor.fetchall()
+                
+            except sqlite3.OperationalError as e:
+                # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+                print(f"Operational Error: database or SQL issue. Contact Administrator.")
+                logger.log_entry("System", "Operational Error on getting all travellers", f"{e}", "Yes")
+                return None
+            except sqlite3.DatabaseError as e:
+                # Base class for all database-related errors (corrupted DB, etc.)
+                print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+                logger.log_entry("System", "Database Error on getting all travellers", f"{e}", "Yes")
+                return None
+            except sqlite3.InterfaceError as e:
+                # Raised if wrong data types or bindings are passed to SQL placeholders
+                print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+                logger.log_entry("System", "Interface Error on getting all travellers", f"{e}", "Yes")
+                return None
+            except Exception as e:
+                # Catch-all for anything unexpected
+                print(f"Unexpected Exception occurred.")
+                logger.log_entry("System", "Unexpected Error on getting all travellers", f"{e}", "Yes")
+                return None
+            finally:
+                # Always close cursor to prevent resource leaks
+                if cursor:
+                    cursor.close()
 
     def search_travellers(self, search_term=""):
         if not self.connection:
