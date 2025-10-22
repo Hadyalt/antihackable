@@ -237,8 +237,7 @@ def validate_input_username(value, min_length=8, max_length=10, mode="create"):
 
     # After validation passes, check database for uniqueness (only in create mode)
     if mode == "create":
-        normalized_username = value.lower()
-        existing_user = check_username_exists_simple(normalized_username)
+        existing_user = check_username_exists_simple(value)
         
         # If database error, return error
         if isinstance(existing_user, str):
