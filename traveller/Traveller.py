@@ -39,15 +39,42 @@ class Traveller:
 
     def _generate_traveller_id(self):
         """Generate a random traveller ID and ensure it does not collide."""
-        cursor = self.connection.cursor()
-        while True:
-            candidate = uuid.uuid4().hex[:12].upper()
-            cursor.execute(
-                "SELECT 1 FROM Traveller WHERE TravellerID = ?",
-                (candidate,),
-            )
-            if cursor.fetchone() is None:
-                return encrypt(candidate)
+        try:
+            cursor = self.connection.cursor()
+            while True:
+                candidate = uuid.uuid4().hex[:12].upper()
+                cursor.execute(
+                    "SELECT 1 FROM Traveller WHERE TravellerID = ?",
+                    (candidate,),
+                )
+                if cursor.fetchone() is None:
+                    return encrypt(candidate)
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on generating traveller ID", f"{e}", "Yes")
+            return None
+        except sqlite3.ProgrammingError as e:
+            print(f"Programming Error: database programming issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Programming Error on generating traveller ID", f"{e}", "Yes")
+            return None
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on generating traveller ID", f"{e}", "Yes")
+            return None
+        except ValueError as e:
+            print(f"Validation Error: {e}")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Validation Error on generating traveller ID", f"{e}", "Yes")
+            return None
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on generating traveller ID", f"{e}", "Yes")
+            return None
+
 
     def insert_traveller(
         self,
@@ -192,39 +219,95 @@ class Traveller:
                     cursor.close()
 
     def search_travellers(self, search_term=""):
-        if not self.connection:
-            print("No connection.")
-            return []
+        try:
+            if not self.connection:
+                print("No connection.")
+                return []
 
-        # Fetch all travellers
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM Traveller")
-        all_travellers = cursor.fetchall()
-        results = []
-        search_term_lower = search_term.lower()
-        for t in all_travellers:
-            # Decrypt all relevant fields
-            decrypted_fields = [
-                  # TravellerID
-                decrypt(t[1]),  # FirstName
-                decrypt(t[2]),  # LastName
-                decrypt(t[9]),  # Email
-                decrypt(t[8]),  # City
-                decrypt(t[10]),  # Phone
-                decrypt(t[11])  # DrivingLicenseNumber
-      # RegisteredDate
-            ]
-            # If search term is in any field, add to results
-            if any(
-                search_term_lower in (str(field).lower()) for field in decrypted_fields
-            ):
-                results.append(t)
-        return results
+            # Fetch all travellers
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM Traveller")
+            all_travellers = cursor.fetchall()
+            results = []
+            search_term_lower = search_term.lower()
+            for t in all_travellers:
+                # Decrypt all relevant fields
+                decrypted_fields = [
+                    decrypt(t[1]),  # FirstName
+                    decrypt(t[2]),  # LastName
+                    decrypt(t[9]),  # Email
+                    decrypt(t[8]),  # City
+                    decrypt(t[10]),  # Phone
+                    decrypt(t[11])  # DrivingLicenseNumber
+                ]
+                # If search term is in any field, add to results
+                if any(
+                    search_term_lower in (str(field).lower()) for field in decrypted_fields
+                ):
+                    results.append(t)
+            return results
+        
+        ## --- Specific exceptions ---
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on searching travellers", f"{e}", "Yes")
+            return []
+        except sqlite3.ProgrammingError as e:
+            print(f"Programming Error: database programming issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Programming Error on searching travellers", f"{e}", "Yes")
+            return []
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on searching travellers", f"{e}", "Yes")
+            return []
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on searching travellers", f"{e}", "Yes")
+            return []
+        except ValueError as e:
+            print(f"Value Error: {e}")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Value Error on searching travellers", f"{e}", "Yes")
+            return []
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on searching travellers", f"{e}", "Yes")
+            return []
+        
 
     def get_traveller_by_id(self, traveller_id):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM Traveller WHERE TravellerID = ?", (traveller_id,))
-        return cursor.fetchone()
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM Traveller WHERE TravellerID = ?", (traveller_id,))
+            return cursor.fetchone()
+        
+        ## --- Specific exceptions ---
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on getting traveller by ID", f"{e}", "Yes")
+            return None
+        except sqlite3.ProgrammingError as e:
+            print(f"Programming Error: database programming issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Programming Error on getting traveller by ID", f"{e}", "Yes")
+            return None
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on getting traveller by ID", f"{e}", "Yes")
+            return None
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on getting traveller by ID", f"{e}", "Yes")
+            return None
+        
 
     def update_traveller(self, traveller_id, **fields):
         allowed = {
@@ -241,38 +324,107 @@ class Traveller:
             "DrivingLicenseNumber",
             "RegisteredDate",
         }
-        updates = []
-        values = []
-        for k, v in fields.items():
-            if k in allowed:
-                updates.append(f"{k} = ?")
-                values.append(v)
 
-        if not updates:
-            print("No valid fields to update.")
+        try:
+            updates = []
+            values = []
+            for k, v in fields.items():
+                if k in allowed:
+                    updates.append(f"{k} = ?")
+                    values.append(v)
+
+            if not updates:
+                print("No valid fields to update.")
+                return
+        
+
+            values.append(traveller_id)
+            cursor = self.connection.cursor()
+            cursor.execute(
+                f"UPDATE Traveller SET {', '.join(updates)} WHERE TravellerID = ?", values
+            )
+            self.connection.commit()
+            print("Traveller updated.")
+
+        ## --- Specific exceptions ---
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on updating traveller", f"{e}", "Yes")
             return
-
-        values.append(traveller_id)
-        cursor = self.connection.cursor()
-        cursor.execute(
-            f"UPDATE Traveller SET {', '.join(updates)} WHERE TravellerID = ?", values
-        )
-        self.connection.commit()
-        print("Traveller updated.")
+        except sqlite3.InterfaceError as e:
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error on updating traveller", f"{e}", "Yes")
+            return
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on updating traveller", f"{e}", "Yes")
+            return
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on updating traveller", f"{e}", "Yes")
+            return
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on updating traveller", f"{e}", "Yes")
+            return
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on updating traveller", f"{e}", "Yes")
+            return
+        
 
     def delete_traveller(self, traveller_id, deletor):
-        cursor = self.connection.cursor()
-        cursor.execute("SELECT 1 FROM Traveller WHERE TravellerID = ?", (traveller_id,))
-        if cursor.fetchone() is None:
-            print("Traveller not found. Deletion aborted.")
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT 1 FROM Traveller WHERE TravellerID = ?", (traveller_id,))
+            if cursor.fetchone() is None:
+                print("Traveller not found. Deletion aborted.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{deletor}", f"Attempted to delete non-existent Traveller ID: {traveller_id}","No action taken","No")
+                return 
+            cursor.execute("DELETE FROM Traveller WHERE TravellerID = ?", (traveller_id,))
+            self.connection.commit()
+            print("Traveller deleted.")
             logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", f"Attempted to delete non-existent Traveller ID: {traveller_id}","No action taken","No")
-            return 
-        cursor.execute("DELETE FROM Traveller WHERE TravellerID = ?", (traveller_id,))
-        self.connection.commit()
-        print("Traveller deleted.")
-        logger = EncryptedLogger()
-        logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " ", "No")
+            logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " ", "No")
+        
+        ## --- Specific exceptions ---
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on deleting traveller", f"{e}", "Yes")
+            return
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on deleting traveller", f"{e}", "Yes")
+            return
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on deleting traveller", f"{e}", "Yes")
+            return
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on deleting traveller", f"{e}", "Yes")
+            return
+        except ValueError as e:
+            print(f"Value Error: {e}")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Value Error on deleting traveller", f"{e}", "Yes")
+            return
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on deleting traveller", f"{e}", "Yes")
+            return
 
     def close(self):
         if self.connection:
