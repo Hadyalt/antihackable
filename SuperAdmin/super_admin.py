@@ -1,4 +1,5 @@
 import hashlib
+from sqlite3 import OperationalError
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
@@ -12,42 +13,63 @@ class SuperAdmin:
         self.db_context = DbContext()
 
     def create_system_admin(self):
-        verified_username = False
-        while not verified_username:
-            verified_username, user_name = validate_input_username(input("Enter username: "))
-            if not verified_username:
-                print("Invalid username. Please try again.")
-        verified_password = False
-        while not verified_password:
-            verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
-            if not verified_password:
-                print("Invalid password. Please try again.")
-        verified_first_name = False
-        while not verified_first_name:
-            firstname = input("Enter first name: ")
-            verified_first_name = is_valid_name(firstname)
-            if not verified_first_name:
-                print("Invalid first name. Please try again.")
-        verified_last_name = False
-        while not verified_last_name:
-            lastname = input("Enter last name: ")
-            verified_last_name = is_valid_name(lastname)
-            if not verified_last_name:
-                print("Invalid last name. Please try again.")
+        try:
+            verified_username = False
+            while not verified_username:
+                verified_username, user_name = validate_input_username(input("Enter username: "))
+                if not verified_username:
+                    print("Invalid username. Please try again.")
+            
+            verified_password = False
+            while not verified_password:
+                verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
+                if not verified_password:
+                    print("Invalid password. Please try again.")
+            
+            verified_first_name = False
+            while not verified_first_name:
+                firstname = input("Enter first name: ")
+                verified_first_name = is_valid_name(firstname)
+                if not verified_first_name:
+                    print("Invalid first name. Please try again.")
+            
+            verified_last_name = False
+            while not verified_last_name:
+                lastname = input("Enter last name: ")
+                verified_last_name = is_valid_name(lastname)
+                if not verified_last_name:
+                    print("Invalid last name. Please try again.")
 
-        hashed = hash_password(password)
-        system_data = {
-            "Username": user_name,
-            "Password": hashed,
-            "FirstName": encrypt(firstname),
-            "LastName": encrypt(lastname),
-            "Role": "systemadmin",
-            "IsActive": 1
-        }
-        self.db_context.insert_User(system_data)
-        logger = EncryptedLogger()
-        logger.log_entry("super_admin", "Created System Admin Account", f"username: {user_name}", "No")
-        return user_name
+            hashed = hash_password(password)
+            system_data = {
+                "Username": user_name,
+                "Password": hashed,
+                "FirstName": encrypt(firstname),
+                "LastName": encrypt(lastname),
+                "Role": "systemadmin",
+                "IsActive": 1
+            }
+
+            self.db_context.insert_User(system_data)
+            logger = EncryptedLogger()
+            logger.log_entry("super_admin", "Created System Admin Account", f"username: {user_name}", "No")
+            return user_name
+
+        except ValueError as ve:
+            print(f"Input error: {ve}")
+        except ConnectionError as ce:
+            print(f"Database connection failed: {ce}")
+        except OperationalError as oe:  # if you have a custom DB error
+            print(f"Database operation error: {oe}")
+        except EncryptionError as ee:  # if encrypt() can raise a custom exception
+            print(f"Encryption failed: {ee}")
+        except KeyboardInterrupt:
+            print("\nOperation cancelled by user.")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            logger = EncryptedLogger()
+            logger.log_entry("system", "Error Creating System Admin", str(e), "Yes")
+
     
     def update_system_admin(self):
         sysAdmins = self.view_all_system_admins()
