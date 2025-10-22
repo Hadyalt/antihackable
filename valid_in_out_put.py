@@ -187,20 +187,15 @@ def validate_username(value, min_length=8, max_length=10, mode="create"):
 
                     # Must be a string (already ensured by check_non_empty_string, but double-check)
                     if isinstance(value, str):
-                        normalized = value.lower()
 
-                        # Length (whitelist)
-                        if check_length_limits(normalized, min_length, max_length):
+                        # Length (whitelist) - check on original value first
+                        if check_length_limits(value, min_length, max_length):
 
-                            # Pattern (explicit char whitelist + first char rule)
-                            if check_username_pattern(normalized):
+                            # Pattern (explicit char whitelist + first char rule) - check on original value
+                            if check_username_pattern(value):
 
-                                # Uniqueness
-                                existing_usernames = check_username_exists_simple(normalized)
-                                if not isinstance(existing_usernames, str):
+                                return True, value
 
-                                    if check_username_uniqueness(normalized, existing_usernames):
-                                        return True, value                           
     return False, value
 
 def validate_password(value, min_length=12, max_length=30, mode="create"):
@@ -231,9 +226,30 @@ def validate_password(value, min_length=12, max_length=30, mode="create"):
                                 return True, value
     return False, value
 
+
 # --- Backwards-compatible wrappers ---
 def validate_input_username(value, min_length=8, max_length=10, mode="create"):
-    return validate_username(value, min_length, max_length, mode)
+    # First validate the username format (100% validation)
+    is_valid, value = validate_username(value, min_length, max_length, mode)
+    
+    if not is_valid:
+        return False, value
+    
+    # After validation passes, check database for uniqueness (only in create mode)
+    if mode == "create":
+        normalized_username = value.lower()
+        existing_user = check_username_exists_simple(normalized_username)
+        
+        # If database error, return error
+        if isinstance(existing_user, str):
+            return False, value
+        
+        # If user exists, fail validation
+        if existing_user is not None:
+            return False, value
+    
+    # All checks passed
+    return True, value
 
 def validate_input_pass(value, min_length=12, max_length=30, mode="create"):
     return validate_password(value, min_length, max_length, mode)
@@ -242,3 +258,4 @@ def validate_input_pass(value, min_length=12, max_length=30, mode="create"):
 def sanitize_output(text):
     s = str(text)
     return "".join(ch for ch in s if ch.isprintable() and ch != "\x00")
+
