@@ -242,14 +242,14 @@ def validate_input_username(value, min_length=8, max_length=10, mode="create"):
         
         # If database error, return error
         if isinstance(existing_user, str):
-            return False, value
+            return True, value
         
         # If user exists, fail validation
         if existing_user is not None:
-            return False, value
+            return True, value
     
     # All checks passed
-    return True, value
+    return False, value
 
 def validate_input_pass(value, min_length=12, max_length=30, mode="create"):
     return validate_password(value, min_length, max_length, mode)
