@@ -77,49 +77,49 @@ def check_username_uniqueness(value, existing_usernames):
         return True
     return False
 
-def check_username_exists_simple(username):
+def check_username_exists_simple(username: str):
     try:
         db = DbContext()
         connection = db.connect()
         cursor = connection.cursor()
         cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
         all_users = cursor.fetchall()
-
-        matching_users = [user for user in all_users if decrypt(user[0]).lower() == username]
-        if not matching_users:
-            return None
+        username_lowered = username.lower()
+        matching_users = [user for user in all_users if decrypt(user[0]).lower() == username_lowered]
+        if matching_users:
+            return True
         else:
-            return matching_users[0]
+            return False
 
     except ConnectionError as e:
         print(f"Failed because of an error")
         logger = EncryptedLogger()
         logger.log_entry("system", "Database connection error", str(e), "Yes")
-        return "connection_error"
+        return True
 
     except sqlite3.OperationalError as e:
         print(f"Failed because of an error")
         logger = EncryptedLogger()
         logger.log_entry("system", "Database operational error", str(e), "Yes")
-        return "operational_error"
+        return True
 
     except sqlite3.ProgrammingError as e:
         print(f"Failed because of an error")
         logger = EncryptedLogger()
         logger.log_entry("system", "Database programming error", str(e), "Yes")
-        return "programming_error"
+        return True
 
     except ValueError as e:
         print(f"Failed because of an error")
         logger = EncryptedLogger()
         logger.log_entry("system", "Decryption or data processing error", str(e), "Yes")
-        return "decrypt_error"
+        return True
 
     except Exception as e:
         print(f"Failed because of an error")
         logger = EncryptedLogger()
         logger.log_entry("system", "Unexpected error", str(e), "Yes")
-        return "unknown_error"
+        return True
 
     finally:
         try:
@@ -187,20 +187,15 @@ def validate_username(value, min_length=8, max_length=10, mode="create"):
 
                     # Must be a string (already ensured by check_non_empty_string, but double-check)
                     if isinstance(value, str):
-                        normalized = value.lower()
 
                         # Length (whitelist)
-                        if check_length_limits(normalized, min_length, max_length):
+                        if check_length_limits(value, min_length, max_length):
 
                             # Pattern (explicit char whitelist + first char rule)
-                            if check_username_pattern(normalized):
+                            if check_username_pattern(value):
 
-                                # Uniqueness
-                                existing_usernames = check_username_exists_simple(normalized)
-                                if not isinstance(existing_usernames, str):
-
-                                    if check_username_uniqueness(normalized, existing_usernames):
-                                        return True, value                           
+                                if check_username_uniqueness(value):
+                                    return True, value
     return False, value
 
 def validate_password(value, min_length=12, max_length=30, mode="create"):
@@ -233,7 +228,16 @@ def validate_password(value, min_length=12, max_length=30, mode="create"):
 
 # --- Backwards-compatible wrappers ---
 def validate_input_username(value, min_length=8, max_length=10, mode="create"):
-    return validate_username(value, min_length, max_length, mode)
+    is_valid, value = validate_username(value, min_length, max_length, mode)
+    if is_valid:
+        if mode == "create":
+            existing_user = check_username_exists_simple(value)
+            # If user exists, fail validation
+            if not existing_user:
+                return True, value
+        else:
+            return True, value
+    return False, value
 
 def validate_input_pass(value, min_length=12, max_length=30, mode="create"):
     return validate_password(value, min_length, max_length, mode)
