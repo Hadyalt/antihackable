@@ -149,26 +149,52 @@ class Scooter_data:
         else:
             print("No connection.")
 
-    def search_scooters(self, search_term):
+    def search_scooters(self, search_term=""):
         if not self.connection:
             print("No connection.")
             return []
 
-        term = f"%{search_term}%"
+        # fetch all the scooters
         cursor = self.connection.cursor()
-        cursor.execute(
-            """
-            SELECT * FROM Scooter 
-            WHERE 
-                Brand LIKE ? OR
-                Model LIKE ? OR
-                SerialNumber LIKE ? OR
-                LocationLat LIKE ? OR
-                LocationLong LIKE ?
-            """,
-            (term, term, term, term, term),
-        )
-        return cursor.fetchall()
+        cursor.execute("SELECT * FROM Scooter")
+        all_scooters = cursor.fetchall()
+        results = []
+        term = search_term.lower()
+        for s in all_scooters:
+            decrypted_fields = [
+                decrypt(s[0]),  # serialid
+                decrypt(s[1]),  # Brand
+                decrypt(s[2]),  # Model
+                decrypt(s[3]),  # SerialNumber
+                str(s[4]),     # TopSpeed
+                str(s[5]),     # BatteryCapacity
+                str(s[6]),     # StateOfCharge
+                str(s[7]),     # TargetRangeSocMin
+                str(s[8]),     # TargetRangeSocMax
+                decrypt(s[9]),  # LocationLat
+                decrypt(s[10])  # LocationLong
+            ]
+        if any(
+            term in (str(field).lower()) for field in decrypted_fields
+        ):
+            results.append(s)
+        return results
+
+        # term = f"%{search_term}%"
+        # cursor = self.connection.cursor()
+        # cursor.execute(
+        #     """
+        #     SELECT * FROM Scooter 
+        #     WHERE 
+        #         Brand LIKE ? OR
+        #         Model LIKE ? OR
+        #         SerialNumber LIKE ? OR
+        #         LocationLat LIKE ? OR
+        #         LocationLong LIKE ?
+        #     """,
+        #     (term, term, term, term, term),
+        # )
+        # return cursor.fetchall()
 
     def close(self):
         if self.connection:

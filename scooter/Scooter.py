@@ -1,4 +1,4 @@
-from DbContext.crypto_utils import encrypt
+from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from models.Scooter import Scooter
 from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
@@ -470,18 +470,18 @@ def print_scooter_table(scooters):
     for s in scooters:
         # s: (SerialNumber, Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRangeSocMin, TargetRangeSocMax, LocationLat, LocationLong, OutOfService, Mileage, LastMaintenanceDate, InServiceDate)
         row = [
-            str(s[0]),  # SerialNumber
-            str(s[1]),  # Brand
-            str(s[2]),  # Model
-            str(s[3]),  # TopSpeed
-            str(s[4]),  # BatteryCapacity
-            str(s[5]),  # StateOfCharge
-            f"{s[6]}-{s[7]}",  # TargetRangeSocMin-Max
-            f"{s[8]},{s[9]}",  # LocationLat, LocationLong
+            decrypt(s[0]),  # SerialNumber
+            decrypt(s[1]),  # Brand
+            decrypt(s[2]),  # Model
+            decrypt(s[3]),  # TopSpeed
+            decrypt(s[4]),  # BatteryCapacity
+            decrypt(s[5]),  # StateOfCharge
+            f"{decrypt(s[6])}-{decrypt(s[7])}",  # TargetRangeSocMin-Max
+            f"{decrypt(s[8])},{decrypt(s[9])}",  # LocationLat, LocationLong
             "Yes" if s[10] else "No",  # OutOfService
-            str(s[11]),  # Mileage
-            str(s[12]),  # LastMaintenanceDate
-            str(s[13]),  # InServiceDate
+            decrypt(s[11]),  # Mileage
+            decrypt(s[12]),  # LastMaintenanceDate
+            decrypt(s[13]),  # InServiceDate
         ]
         rows.append(row)
     # Calculate column widths
