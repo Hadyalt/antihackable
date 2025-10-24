@@ -1,6 +1,6 @@
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
-from dbm import sqlite3
+import sqlite3
 from DbContext.encrypted_logger import EncryptedLogger
 from systemAdmin.system_admin import systemAdmin
 
