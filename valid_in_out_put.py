@@ -7,7 +7,7 @@ import sqlite3
 _validation_counters = {}
 
 # --- Explicit character sets (whitelists) ---
-USERNAME_ALLOWED_CHARS = set("abcdefghijklmnopqrstuvwxyz0123456789_.'")
+USERNAME_ALLOWED_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.'")
 PASSWORD_LOWER = set("abcdefghijklmnopqrstuvwxyz")
 PASSWORD_UPPER = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 PASSWORD_DIGITS = set("0123456789")
@@ -65,7 +65,7 @@ def check_null_bytes(value):
 def check_username_pattern(value):
     if isinstance(value, str) and len(value) > 0:
         if validate_input_against_whitelist(value, is_whitelisted_username_char):
-            return value[0] in "abcdefghijklmnopqrstuvwxyz_"
+            return value[0] in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
     return False
 
 def check_password_pattern(value):
@@ -194,8 +194,7 @@ def validate_username(value, min_length=8, max_length=10, mode="create"):
                             # Pattern (explicit char whitelist + first char rule)
                             if check_username_pattern(value):
 
-                                if check_username_uniqueness(value):
-                                    return True, value
+                                return True, value
     return False, value
 
 def validate_password(value, min_length=12, max_length=30, mode="create"):
