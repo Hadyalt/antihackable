@@ -84,9 +84,7 @@ class systemAdmin:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
+        
 
     def create_service_engineer(self, creator):
         verified_username = False

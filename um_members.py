@@ -268,10 +268,10 @@ def show_main_menu(role, username):
                 )
                 verified_password = False
                 while not verified_password:
-                    password = validate_input_pass(
+                    verified_password, password = validate_input_pass(
                         getpass.getpass(sanitize_output("Enter password: "))
                     )
-                    verified_password, password = validate_input_pass(password)
+                    
                 hashed_password = hash_password(password)
                 sysAd.reset_password_function(user, hashed_password, "systemadmin")
                 sysAd.reset_resetted_password_check(user, "systemadmin")
