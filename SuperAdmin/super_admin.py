@@ -597,23 +597,12 @@ class SuperAdmin:
 
 
     def confirm_password(self):
-        try:
-            tries = 0
-            while tries < 3:
-                password = getpass.getpass("Enter your password: ")
-                if password == "Admin_123?":
-                    return True
-                else:
-                    tries += 1
-                    print(f"Incorrect password. You have {3 - tries} tries left.")
-            return False
-        
-        ## --- Specific exceptions ---
-        except (EOFError, KeyboardInterrupt):
-            print("\nInput interrupted.")
-            return False
-        except Exception as e:
-            print("Unexpected error during password confirmation.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in confirm_password", f"{e}", "Yes")
-            return False
+        tries = 0
+        while tries < 3:
+            password = getpass.getpass("Enter your password: ")
+            if password == "Admin_123?":
+                return True
+            else:
+                tries += 1
+                print(f"Incorrect password. You have {3 - tries} tries left.")
+        return False
