@@ -1,3 +1,4 @@
+from DbContext.crypto_utils import encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from models.Scooter import Scooter
 from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
@@ -167,6 +168,7 @@ def add_scooter(creator):
     while True:
         min_soc = input("Target Range Min (%): ")
         max_soc = input("Target Range Max (%): ")
+  
         if is_valid_target_range_soc(min_soc, max_soc):
             target_range_soc = (min_soc, max_soc)
             break
@@ -185,7 +187,8 @@ def add_scooter(creator):
                 <= lon
                 <= ROTTERDAM_BOUNDS["max_lon"]
             ):
-                location = (lat, lon)
+               
+                location = (str(lat), str(lon))
                 break
             print(
                 f"Invalid location: Must be within Rotterdam (Lat: 51.85-52.00, Lon: 4.30-4.60)"
@@ -217,17 +220,17 @@ def add_scooter(creator):
 
     # Create Scooter object and insert into DB
     scooter = Scooter(
-        brand=brand,
-        model=model,
-        serial_number=serial_number,
-        top_speed=top_speed,
-        battery_capacity=battery_capacity,
-        state_of_charge=state_of_charge,
-        target_range_soc=target_range_soc,
-        location=location,
-        out_of_service=out_of_service,
-        mileage=mileage,
-        last_maintenance_date=last_maintenance_date,
+        brand=encrypt(brand),
+        model=encrypt(model),
+        serial_number=encrypt(serial_number),
+        top_speed=encrypt(top_speed),
+        battery_capacity=encrypt(battery_capacity),
+        state_of_charge=encrypt(state_of_charge),
+        target_range_soc=(encrypt(target_range_soc[0]), encrypt(target_range_soc[1])),
+        location=(encrypt(location[0]), encrypt(location[1])),
+        out_of_service=encrypt(str(int(out_of_service))),
+        mileage=encrypt(mileage),
+        last_maintenance_date=encrypt(last_maintenance_date),
     )
     db.insert_scooter(scooter)
     logger = EncryptedLogger()

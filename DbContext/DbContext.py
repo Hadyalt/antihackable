@@ -73,7 +73,7 @@ class DbContext:
             Email TEXT UNIQUE NOT NULL,
             Phone TEXT NOT NULL,
             DrivingLicenseNumber TEXT NOT NULL,
-            RegisteredDate TEXT NOT NULL DEFAULT (datetime('now'))
+            RegisteredDate TEXT NOT NULL 
         """
         self.create_table("Traveller", traveller_schema)
 
@@ -89,10 +89,10 @@ class DbContext:
             TargetRangeSocMax REAL,
             LocationLat REAL,
             LocationLong REAL,
-            OutOfService INTEGER,
+            OutOfService TEXT,
             Mileage REAL,
             LastMaintenanceDate TEXT,
-            InServiceDate TEXT NOT NULL DEFAULT (datetime('now'))
+            InServiceDate TEXT NOT NULL 
         """
         self.create_table("Scooter", scooter_schema)
         # Create the backup_recovery_list table

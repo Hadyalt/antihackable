@@ -1,6 +1,7 @@
+from datetime import datetime
 import sqlite3
 import os
-
+from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 
 
@@ -25,6 +26,7 @@ class Scooter_data:
     def insert_scooter(self, scooter):
         if self.connection:
             cursor = self.connection.cursor()
+            InServiceDate = encrypt(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             try:
                 cursor.execute(
                     """
@@ -33,7 +35,7 @@ class Scooter_data:
                         StateOfCharge, TargetRangeSocMin, TargetRangeSocMax,
                         LocationLat, LocationLong, OutOfService,
                         Mileage, LastMaintenanceDate, InServiceDate
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DateTime('now'))
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
                         scooter.brand,
@@ -46,9 +48,10 @@ class Scooter_data:
                         scooter.target_range_soc[1],
                         scooter.location[0],
                         scooter.location[1],
-                        int(scooter.out_of_service),
+                        scooter.out_of_service,
                         scooter.mileage,
                         scooter.last_maintenance_date,
+                        InServiceDate, 
                     ),
                 )
                 self.connection.commit()

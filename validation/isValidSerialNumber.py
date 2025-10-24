@@ -1,6 +1,7 @@
 import re
 import sqlite3
 
+from DbContext.crypto_utils import decrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from scooter.Scooter_data import Scooter_data
 from valid_in_out_put import check_control_characters, check_null_bytes
@@ -21,9 +22,9 @@ def scooter_serial_number_exists(serial_number) -> bool:
         db.connect()
         existing_serial_numbers = db.get_all_serial_numbers()
         for existing_sn in existing_serial_numbers:
-            validDatabaseSerial = is_valid_serial_number(existing_sn[0])
+            validDatabaseSerial = is_valid_serial_number(decrypt(existing_sn[0]))
             if validDatabaseSerial:
-                if existing_sn[0] == serial_number:
+                if decrypt(existing_sn[0]) == serial_number:
                     return True
             else:
                 faulty_serial_in_db_log(existing_sn)
