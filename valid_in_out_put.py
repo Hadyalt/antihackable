@@ -65,7 +65,7 @@ def check_null_bytes(value):
 def check_username_pattern(value):
     if isinstance(value, str) and len(value) > 0:
         if validate_input_against_whitelist(value, is_whitelisted_username_char):
-            return value[0] in "abcdefghijklmnopqrstuvwxyz_"
+            return value[0] in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
     return False
 
 def check_password_pattern(value):

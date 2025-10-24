@@ -103,7 +103,8 @@ def backup_menu(role, username=None):
                     restore_backup(backups[sel_idx], username)
                     print("Restore complete. Please restart the application.")
                     logger.log_entry(username or "system", "Backup Menu", f"Restored backup: {backups[sel_idx]}", "No")
-                    exit()
+                    from um_members import pre_login_menu
+                    pre_login_menu()
                 except Exception as e:
                     print(f"Restore failed: {e}")
                     logger.log_entry(username or "system", "Backup Menu", f"Restore failed: {e}", "Yes")
