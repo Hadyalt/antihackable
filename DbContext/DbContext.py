@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from DbContext.crypto_utils import encrypt, decrypt
+from DbContext.encrypted_logger import EncryptedLogger
 
 class DbContext:
     def __init__(self, db_name="data.db"):
@@ -124,22 +125,73 @@ class DbContext:
             print("No database connection. Call connect() first.")
 
     def insert_User(self, user_data):
-        self.connection = sqlite3.connect(self.db_name)
-        """Insert a new User record into the database (encrypt Username)."""
-        if self.connection:
-            cursor = self.connection.cursor()
-            user_data = user_data.copy()
-            if 'Username' in user_data:
-                user_data['Username'] = encrypt(user_data['Username'])
-            columns = ", ".join(user_data.keys())
-            placeholders = ", ".join(["?"] * len(user_data))
-            sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
-            cursor.execute(sql, list(user_data.values()))
-            self.connection.commit()
-            print(f"Inserted new User record")
-        else:
-            print("No database connection. Call connect() first.")
-        self.connection.close()        
+        logger = EncryptedLogger()
+        try:
+            self.connection = sqlite3.connect(self.db_name)
+            """Insert a new User record into the database (encrypt Username)."""
+            if self.connection:
+                cursor = self.connection.cursor()
+                user_data = user_data.copy()
+                if 'Username' in user_data:
+                    user_data['Username'] = encrypt(user_data['Username'])
+                columns = ", ".join(user_data.keys())
+                placeholders = ", ".join(["?"] * len(user_data))
+                sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
+                cursor.execute(sql, list(user_data.values()))
+                self.connection.commit()
+                print(f"Inserted new User record")
+            else:
+                print("No database connection. Call connect() first.")
+            self.connection.close()
+
+        except sqlite3.IntegrityError as e:
+            # Typically happens on UNIQUE constraint violations (e.g., duplicate email)
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger.log_entry("System", "Integrity Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.OperationalError as e:
+            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger.log_entry("System", "Operational Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.InterfaceError as e:
+            # Raised if wrong data types or bindings are passed to SQL placeholders
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger.log_entry("System", "Interface Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.DatabaseError as e:
+            # Base class for all database-related errors (corrupted DB, etc.)
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger.log_entry("System", "Database Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except ValueError as e:
+            # Custom validation issues (e.g. from earlier preprocessing)
+            print(f"Validation Error: {e}")
+            logger.log_entry("System", "Validation Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except TypeError as e:
+            # When unexpected types are passed (e.g., None where a string is expected)
+            print(f"Type Error: invalid argument type. [DEBUG] {e}")
+            logger.log_entry("System", "Type Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except Exception as e:
+            # Catch-all for anything unexpected
+            print(f"Unexpected Exception occurred.")
+            logger.log_entry("System", "Unexpected Error on Traveller Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False    
 
 
     def close(self):
