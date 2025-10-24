@@ -367,32 +367,32 @@ class systemAdmin:
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on deleting service engineer", f"{e}", "Yes")
             return
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on deleting service engineer", f"{e}", "Yes")
             return
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Integrity Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Integrity Error on deleting service engineer", f"{e}", "Yes")
             return
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Type Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Type Error on deleting service engineer", f"{e}", "Yes")
             return
         except ValueError as e:
             print(f"Value Error: {e}")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Value Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Value Error on deleting service engineer", f"{e}", "Yes")
             return
         except Exception as e:
             print(f"Unexpected Exception occurred.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on deleting service engineer", f"{e}", "Yes")
             return
     
     def delete_account(self, username):
@@ -409,32 +409,32 @@ class systemAdmin:
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on deleting own account", f"{e}", "Yes")
             return
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on deleting own account", f"{e}", "Yes")
             return
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Integrity Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Integrity Error on deleting own account", f"{e}", "Yes")
             return
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Type Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Type Error on deleting own account", f"{e}", "Yes")
             return
         except ValueError as e:
             print(f"Value Error: {e}")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Value Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Value Error on deleting own account", f"{e}", "Yes")
             return
         except Exception as e:
             print(f"Unexpected Exception occurred.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error on deleting traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on deleting own account", f"{e}", "Yes")
             return
 
     def set_new_username(self, old_username, new_username):
@@ -452,32 +452,32 @@ class systemAdmin:
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on updating username", f"{e}", "Yes")
             return False
         except sqlite3.InterfaceError as e:
             print(f"Interface Error: invalid parameter binding. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Interface Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Interface Error on updating username", f"{e}", "Yes")
             return False
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Integrity Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Integrity Error on updating username", f"{e}", "Yes")
             return False
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on updating username", f"{e}", "Yes")
             return False
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Type Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Type Error on updating username", f"{e}", "Yes")
             return False
         except Exception as e:
             print(f"Unexpected Exception occurred.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on updating username", f"{e}", "Yes")
             return False
     
     def set_new_username_system(self, old_username, new_username):
@@ -495,32 +495,32 @@ class systemAdmin:
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on updating username", f"{e}", "Yes")
             return False
         except sqlite3.InterfaceError as e:
             print(f"Interface Error: invalid parameter binding. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Interface Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Interface Error on updating username", f"{e}", "Yes")
             return False
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Integrity Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Integrity Error on updating username", f"{e}", "Yes")
             return False
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on updating username", f"{e}", "Yes")
             return False
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Type Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Type Error on updating username", f"{e}", "Yes")
             return False
         except Exception as e:
             print(f"Unexpected Exception occurred.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on updating username", f"{e}", "Yes")
             return False
     
     def set_new_first_name(self, username, new_first_name):
@@ -536,32 +536,32 @@ class systemAdmin:
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on updating first name", f"{e}", "Yes")
             return False
         except sqlite3.InterfaceError as e:
             print(f"Interface Error: invalid parameter binding. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Interface Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Interface Error on updating first name", f"{e}", "Yes")
             return False
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Integrity Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Integrity Error on updating first name", f"{e}", "Yes")
             return False
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on updating first name", f"{e}", "Yes")
             return False
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Type Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Type Error on updating first name", f"{e}", "Yes")
             return False
         except Exception as e:
             print(f"Unexpected Exception occurred.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on updating first name", f"{e}", "Yes")
             return False
     
     def set_new_last_name(self, username, new_last_name):
@@ -577,32 +577,32 @@ class systemAdmin:
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on updating last name", f"{e}", "Yes")
             return False
         except sqlite3.InterfaceError as e:
             print(f"Interface Error: invalid parameter binding. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Interface Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Interface Error on updating last name", f"{e}", "Yes")
             return False
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Integrity Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Integrity Error on updating last name", f"{e}", "Yes")
             return False
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on updating last name", f"{e}", "Yes")
             return False
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Type Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Type Error on updating last name", f"{e}", "Yes")
             return False
         except Exception as e:
             print(f"Unexpected Exception occurred.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error on updating traveller", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on updating last name", f"{e}", "Yes")
             return False
     
     def reset_password_function(self, username, new_password, role):
