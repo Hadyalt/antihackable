@@ -1,3 +1,4 @@
+from DbContext.crypto_utils import decrypt, encrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from models.Scooter import Scooter
 from scooter.Scooter_Menu_SerEng import Scooter_Menu_SerEng
@@ -64,7 +65,7 @@ def main(role, username):
                     print("No scooters available to delete.")
                     continue
                 for s in scooters:
-                    print(f"- {s[0]}")
+                    print(f"- {decrypt(s[0])}")
                 sn = input("\nSerial Number to delete: ")
                 db.delete_scooter(sn, username)
 
@@ -167,6 +168,7 @@ def add_scooter(creator):
     while True:
         min_soc = input("Target Range Min (%): ")
         max_soc = input("Target Range Max (%): ")
+  
         if is_valid_target_range_soc(min_soc, max_soc):
             target_range_soc = (min_soc, max_soc)
             break
@@ -185,7 +187,8 @@ def add_scooter(creator):
                 <= lon
                 <= ROTTERDAM_BOUNDS["max_lon"]
             ):
-                location = (lat, lon)
+               
+                location = (str(lat), str(lon))
                 break
             print(
                 f"Invalid location: Must be within Rotterdam (Lat: 51.85-52.00, Lon: 4.30-4.60)"
@@ -217,17 +220,17 @@ def add_scooter(creator):
 
     # Create Scooter object and insert into DB
     scooter = Scooter(
-        brand=brand,
-        model=model,
-        serial_number=serial_number,
-        top_speed=top_speed,
-        battery_capacity=battery_capacity,
-        state_of_charge=state_of_charge,
-        target_range_soc=target_range_soc,
-        location=location,
-        out_of_service=out_of_service,
-        mileage=mileage,
-        last_maintenance_date=last_maintenance_date,
+        brand=encrypt(brand),
+        model=encrypt(model),
+        serial_number=encrypt(serial_number),
+        top_speed=encrypt(top_speed),
+        battery_capacity=encrypt(battery_capacity),
+        state_of_charge=encrypt(state_of_charge),
+        target_range_soc=(encrypt(target_range_soc[0]), encrypt(target_range_soc[1])),
+        location=(encrypt(location[0]), encrypt(location[1])),
+        out_of_service=encrypt(str(int(out_of_service))),
+        mileage=encrypt(mileage),
+        last_maintenance_date=encrypt(last_maintenance_date),
     )
     db.insert_scooter(scooter)
     logger = EncryptedLogger()
@@ -244,7 +247,7 @@ def update_scooter(updater):
         print("No scooters available to update.")
         return
     for s in scooters:
-        print(f"- {s[0]}")
+        print(f"- {decrypt(s[0])}")
     
     sn = input("\nSerial Number to update: ")
     if is_valid_serial_number(sn):
@@ -467,18 +470,18 @@ def print_scooter_table(scooters):
     for s in scooters:
         # s: (SerialNumber, Brand, Model, TopSpeed, BatteryCapacity, StateOfCharge, TargetRangeSocMin, TargetRangeSocMax, LocationLat, LocationLong, OutOfService, Mileage, LastMaintenanceDate, InServiceDate)
         row = [
-            str(s[0]),  # SerialNumber
-            str(s[1]),  # Brand
-            str(s[2]),  # Model
-            str(s[3]),  # TopSpeed
-            str(s[4]),  # BatteryCapacity
-            str(s[5]),  # StateOfCharge
-            f"{s[6]}-{s[7]}",  # TargetRangeSocMin-Max
-            f"{s[8]},{s[9]}",  # LocationLat, LocationLong
-            "Yes" if s[10] else "No",  # OutOfService
-            str(s[11]),  # Mileage
-            str(s[12]),  # LastMaintenanceDate
-            str(s[13]),  # InServiceDate
+            decrypt(s[0]),  # SerialNumber
+            decrypt(s[1]),  # Brand
+            decrypt(s[2]),  # Model
+            decrypt(s[3]),  # TopSpeed
+            decrypt(s[4]),  # BatteryCapacity
+            decrypt(s[5]),  # StateOfCharge
+            f"{decrypt(s[6])}-{decrypt(s[7])}",  # TargetRangeSocMin-Max
+            f"{decrypt(s[8])},{decrypt(s[9])}",  # LocationLat, LocationLong
+            "Yes" if decrypt(s[10]) == '1' else "No",  # OutOfService
+            decrypt(s[11]),  # Mileage
+            decrypt(s[12]),  # LastMaintenanceDate
+            decrypt(s[13]),  # InServiceDate
         ]
         rows.append(row)
     # Calculate column widths
