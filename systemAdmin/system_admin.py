@@ -57,34 +57,35 @@ class systemAdmin:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function1", f"{e}", "Yes")
 
-    def reset_resetted_password_check(self, username, role):
-        try:
-            connection = self.db_context.connect()
-            if connection:
-                cursor = connection.cursor()
-                cursor.execute("UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?", ("0", username, role))
-                connection.commit()
-                connection.close()
-            else:
-                print("Failed to connect to the database.")
-        except sqlite3.OperationalError as e:
-            print("Operational Error: database or SQL issue.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error in reset_password_function", f"{e}", "Yes")
-        except sqlite3.DatabaseError as e:
-            print("Database Error: possible corruption or I/O issue.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error in reset_password_function", f"{e}", "Yes")
-        except sqlite3.InterfaceError as e:
-            print("Interface Error: invalid SQL parameters.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Interface Error in reset_password_function", f"{e}", "Yes")
-        except Exception as e:
-            print("Unexpected error occurred while resetting password.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+    # def reset_resetted_password_check(self, username):
+    #     try:
+    #         connection = self.db_context.connect()
+    #         if connection:
+    #             cursor = connection.cursor()
+    #             ResettedPasswordCheck = encrypt("0")
+    #             cursor.execute("UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ?", (ResettedPasswordCheck, username))
+    #             connection.commit()
+    #             connection.close()
+    #         else:
+    #             print("Failed to connect to the database.")
+    #     except sqlite3.OperationalError as e:
+    #         print("Operational Error: database or SQL issue.")
+    #         logger = EncryptedLogger()
+    #         logger.log_entry("System", "Operational Error in reset_password_function", f"{e}", "Yes")
+    #     except sqlite3.DatabaseError as e:
+    #         print("Database Error: possible corruption or I/O issue.")
+    #         logger = EncryptedLogger()
+    #         logger.log_entry("System", "Database Error in reset_password_function", f"{e}", "Yes")
+    #     except sqlite3.InterfaceError as e:
+    #         print("Interface Error: invalid SQL parameters.")
+    #         logger = EncryptedLogger()
+    #         logger.log_entry("System", "Interface Error in reset_password_function", f"{e}", "Yes")
+    #     except Exception as e:
+    #         print("Unexpected error occurred while resetting password.")
+    #         logger = EncryptedLogger()
+    #         logger.log_entry("System", "Unexpected Error in reset_password_function2", f"{e}", "Yes")
         
 
     def create_service_engineer(self, creator):
@@ -623,13 +624,13 @@ class systemAdmin:
             logger.log_entry("System", "Unexpected Error on updating last name", f"{e}", "Yes")
             return False
     
-    def reset_password_function(self, username, new_password, role):
+    def reset_password_function(self, username, new_password):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
             cursor.execute(
-                "UPDATE User SET Password = ?, ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?",
-                (new_password, encrypt("1"), username, encrypt(role))
+                "UPDATE User SET Password = ?, ResettedPasswordCheck = ? WHERE Username = ?",
+                (new_password, encrypt("0"), username)
             )
             connection.commit()
         else:
@@ -640,7 +641,7 @@ class systemAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, "systemadmin"))
+                cursor.execute("UPDATE User SET Password = ? WHERE Username = ?", (new_password, username))
                 connection.commit()
                 return True
             else:
@@ -661,7 +662,7 @@ class systemAdmin:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function3", f"{e}", "Yes")
 
     def reset_password_service_engineer(self, resetter):
         service_engineers = self.view_all_service_engineers()

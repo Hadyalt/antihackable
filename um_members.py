@@ -275,8 +275,8 @@ def show_main_menu(role, username):
                     )
                     
                 hashed_password = hash_password(password)
-                sysAd.reset_password_function(user, hashed_password, "systemadmin")
-                sysAd.reset_resetted_password_check(user, "systemadmin")
+                sysAd.reset_password_function(user, hashed_password,)
+                #sysAd.reset_resetted_password_check(user)
                 print(
                     sanitize_output(
                         "Password reset completed. You can now proceed with the menu options."
