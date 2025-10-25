@@ -39,23 +39,21 @@ def traveller_menu(username):
         
         elif choice == "2":
             view_travellers(username)
-        
         elif choice == "3":
-            shown = show_travellers()
+            shown = show_travellers(method="update")
             if not shown:
                 continue
             else:
-                update_traveller(username)
+                update_traveller(username, shown)
         
         elif choice == "4":
             db = Traveller()
             db.connect()
-            shown = show_travellers()
+            shown = show_travellers(method="delete")
             if not shown:
                 continue
             else:
-                tid = input("Traveller ID to delete: ")
-                db.delete_traveller(tid, username)
+                db.delete_traveller(username, shown)
 
         elif choice == "5":
             return
@@ -272,11 +270,10 @@ def add_traveller(creator):
     else:
         print("Failed to add traveller. Please check your input and try again.")
 
-def update_traveller(updater):
+def update_traveller(updater,tid):
     db = Traveller()
     logger = EncryptedLogger()
     db.connect()
-    tid = input("Traveller ID to update: ")
     traveller = db.get_traveller_by_id(tid)
     if not traveller:
         print("Traveller not found.")
@@ -504,32 +501,50 @@ def update_traveller(updater):
     enc_val = encrypt(new_val)
 
     db.update_traveller(tid, **{field_map[field]: enc_val})
-    logger.log_entry(f"{updater}", "Updated a Traveller", f"Traveller {tid}: {field_map[field]} is updated to {new_val}", "No")
+    logger.log_entry(f"{updater}", "Updated a Traveller", f"Traveller {decrypt(tid)}: {field_map[field]} is updated to {new_val}", "No")
 
-def show_travellers():
+def show_travellers(method):
     db = Traveller()
     db.connect()
     travellers = db.get_all_travellers()
     if travellers:
         print("\nTraveller List:")
         print("-" * 100)
+        # "TravellerID","FirstName","LastName","Birthday","Gender","StreetName","HouseNumber","ZipCode","City","Email","Phone","DrivingLicenseNumber","RegisteredDate"
         print(
-            "ID  | First Name   | Last Name    | Email                | Phone         | City"
+            "ID  | First Name   | Last Name    | Birthday    | Gender   | Street Name        | House No | Zip Code | City         | Email                | Phone         | Driving License | Registered Date"
         )
         print("-" * 100)
         for t in travellers:
             # Decrypt all relevant fields before displaying
-            tid = t[0]
+            idx = travellers.index(t) + 1
             first_name = decrypt(t[1])
             last_name = decrypt(t[2])
+            birthday = decrypt(t[3])
+            gender = decrypt(t[4])
+            street_name = decrypt(t[5])
+            house_number = decrypt(t[6])
+            zip_code = decrypt(t[7])
+            city = decrypt(t[8])
             email = decrypt(t[9])
             phone = decrypt(t[10])
-            city = decrypt(t[8])
+            driving_license = decrypt(t[11])
+            registered_date = decrypt(t[12])
             print(
-                f"{tid:<4}| {first_name:<12}| {last_name:<12}| {email:<20}| {phone:<14}| {city}"
+                f"{idx:<4}| {first_name:<12}| {last_name:<12}| {birthday:<12}| {gender:<12}| {street_name:<12}| {house_number:<12}| {zip_code:<12}| {city:<12}| {email:<20}| {phone:<14}| {driving_license:<12}| {registered_date:<12}"
             )
         print("-" * 100)
-        return travellers
+        if method == "update":
+            idxchosen = input("Traveller ID to update: ")
+        if method == "delete":
+            idxchosen = input("Traveller ID to delete: ")
+        # Validate selection
+        while not idxchosen.isdigit() or int(idxchosen) < 1 or int(idxchosen) > len(travellers):
+            print("Invalid selection. Please choose a valid Traveller ID from the list.")
+            idxchosen = input("Traveller ID to update: ")
+        encrypted_id = travellers[int(idxchosen)-1][0]
+
+        return encrypted_id
     else:
         print("No travellers found.")
         return None

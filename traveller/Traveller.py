@@ -371,20 +371,20 @@ class Traveller:
             return
         
 
-    def delete_traveller(self, traveller_id, deletor):
+    def delete_traveller(self, deletor, traveller_id):
         try:
             cursor = self.connection.cursor()
             cursor.execute("SELECT 1 FROM Traveller WHERE TravellerID = ?", (traveller_id,))
             if cursor.fetchone() is None:
                 print("Traveller not found. Deletion aborted.")
                 logger = EncryptedLogger()
-                logger.log_entry(f"{deletor}", f"Attempted to delete non-existent Traveller ID: {traveller_id}","No action taken","No")
+                logger.log_entry(f"{deletor}", f"Attempted to delete non-existent Traveller ID: {decrypt(traveller_id)}","No action taken","No")
                 return 
             cursor.execute("DELETE FROM Traveller WHERE TravellerID = ?", (traveller_id,))
             self.connection.commit()
             print("Traveller deleted.")
             logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {traveller_id}", " ", "No")
+            logger.log_entry(f"{deletor}", f"Deleted Traveller with Traveller ID: {decrypt(traveller_id)}", " ", "No")
         
         ## --- Specific exceptions ---
         except sqlite3.OperationalError as e:
