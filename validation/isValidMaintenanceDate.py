@@ -19,3 +19,11 @@ def is_valid_maintenance_date(maintenance_date_str):
                     except ValueError:
                         pass
     return False
+
+def is_newer_maintenance_date(new_date_str, old_date_str):
+    try:
+        new_date = datetime.strptime(new_date_str, "%Y-%m-%d")
+        old_date = datetime.strptime(old_date_str, "%Y-%m-%d")
+        return new_date >= old_date
+    except ValueError:
+        return False
