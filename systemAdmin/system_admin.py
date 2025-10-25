@@ -3,6 +3,7 @@ from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_passw
 from DbContext.encrypted_logger import EncryptedLogger
 import getpass
 import sqlite3
+import datetime
 from valid_in_out_put import validate_input_username, validate_input_pass, validate_username
 from validation.isValidName import is_valid_name
 
@@ -111,11 +112,14 @@ class systemAdmin:
                 print("Invalid last name format. Please try again.")
 
         hashed = hash_password(password)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         system_data = {
             "Username": encrypt(user_name),
             "Password": hashed,
             "FirstName": encrypt(firstname),
             "LastName": encrypt(lastname),
+            "RegistrationDate": encrypt(current_time),
             "ResettedPasswordCheck": encrypt("1"),
             "Role": encrypt("serviceengineer"),
             "IsActive": encrypt("1")

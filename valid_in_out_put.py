@@ -77,7 +77,7 @@ def check_username_uniqueness(value, existing_usernames):
         return True
     return False
 
-def check_username_exists_simple(username: str,viewer):
+def check_username_exists_simple(username: str) -> bool:
     try:
         db = DbContext()
         connection = db.connect()
