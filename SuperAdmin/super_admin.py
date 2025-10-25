@@ -18,7 +18,7 @@ class SuperAdmin:
             while not verified_username:
                 verified_username, user_name = validate_input_username(input("Enter username: "))
                 if not verified_username:
-                    print("Invalid username. Please try again.")
+                    print("Invalid username or already exists. Please try again.")
             
             verified_password = False
             while not verified_password:
@@ -138,6 +138,7 @@ class SuperAdmin:
                             logger.log_entry("super_admin", "Updated System Admin Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
                             break
                         else:
+                            print("Invalid username format or already exists.")
                             tries += 1
                             print(f"You have {3 - tries} tries left.")
                     logger = EncryptedLogger()
@@ -161,6 +162,7 @@ class SuperAdmin:
                             logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
                             break
                         else:
+                            print("Invalid password format.")
                             tries += 1
                             print(f"You have {3 - tries} tries left.")
                     if tries == 3:
@@ -181,7 +183,8 @@ class SuperAdmin:
                         print(f"First name for system admin {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
                         logger = EncryptedLogger()
                         logger.log_entry("super_admin", "Updated System Admin First Name", f"New First Name: {new_first_name}", "No")
-                        break 
+                        break
+                    print("Invalid first name format.")
                     tries += 1
                     print(f"You have {3 - tries} tries left.")
                 logger = EncryptedLogger()
@@ -196,6 +199,7 @@ class SuperAdmin:
                         logger = EncryptedLogger()
                         logger.log_entry("super_admin", "Updated System Admin Last Name", f"New Last Name: {new_last_name}", "No")
                         break
+                    print("Invalid last name format.")
                     tries += 1
                     print(f"You have {3 - tries} tries left.")
                 logger = EncryptedLogger()
