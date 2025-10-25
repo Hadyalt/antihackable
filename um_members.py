@@ -73,6 +73,8 @@ def login():
                 result = cursor.fetchone()
                 if result:
                     stored_hash, role, is_active = result
+                    role = decrypt(role)
+                    is_active = decrypt(is_active) == "1"
                     if not is_active:
                         print(
                             sanitize_output(
@@ -156,8 +158,8 @@ def login():
                                 "Yes",
                             )
                             cursor.execute(
-                                "UPDATE User SET IsActive = 0 WHERE Username = ?",
-                                (found_enc_username,),
+                                "UPDATE User SET IsActive = ? WHERE Username = ?",
+                                (encrypt("0"), found_enc_username),
                             )
                             conn.commit()
                             conn.close()

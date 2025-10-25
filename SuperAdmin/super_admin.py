@@ -42,13 +42,13 @@ class SuperAdmin:
 
             hashed = hash_password(password)
             system_data = {
-                "Username": user_name,
+                "Username": encrypt(user_name),
                 "Password": hashed,
                 "FirstName": encrypt(firstname),
                 "LastName": encrypt(lastname),
-                "resettedPasswordCheck": 1,
-                "Role": "systemadmin",
-                "IsActive": 1
+                "resettedPasswordCheck": encrypt("1"),
+                "Role": encrypt("systemadmin"),
+                "IsActive": encrypt("1")
             }
 
             self.db_context.insert_User(system_data)
@@ -304,7 +304,7 @@ class SuperAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username FROM User WHERE Role = ? AND IsActive = 1", ("systemadmin",))
+                cursor.execute("SELECT Username FROM User WHERE Role = ? ", ("systemadmin",))
                 users = cursor.fetchall()
                 
                 if users:
@@ -350,7 +350,7 @@ class SuperAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username FROM User WHERE Role = ? AND IsActive = 1", ("serviceengineer",))
+                cursor.execute("SELECT Username FROM User WHERE Role = ? ", ("serviceengineer",))
                 users = cursor.fetchall()
                 
                 if users:
@@ -496,8 +496,8 @@ class SuperAdmin:
             if connection:
                 cursor = connection.cursor()
                 cursor.execute(
-                    "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
-                    (new_password, username, role)
+                    "UPDATE User SET Password = ?, ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?",
+                    (new_password, "1", username, role)
                 )
                 connection.commit()
             else:
@@ -530,7 +530,7 @@ class SuperAdmin:
                 return
             
             cursor = connection.cursor()
-            cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 0")
+            cursor.execute("SELECT Username FROM User ")
             users = cursor.fetchall()
             
             if not users:
@@ -539,13 +539,14 @@ class SuperAdmin:
             
             print("\nInactive Accounts:")
             for idx, user in enumerate(users, 1):
-                print(f"[{idx}] Username: {decrypt(user[0])}, Role: {user[1]}")
+                if decrypt(user[7]) == "0":
+                    print(f"[{idx}] Username: {decrypt(user[0])}, Role: {user[1]}")
             
             try:
                 choice = int(input("Enter the number of the account to activate: "))
                 if 1 <= choice <= len(users):
                     username = users[choice-1][0]
-                    cursor.execute("UPDATE User SET IsActive = 1 WHERE Username = ?", (username,))
+                    cursor.execute("UPDATE User SET IsActive = ? WHERE Username = ?", (encrypt("1"), username))
                     connection.commit()
                     print(f"Account '{decrypt(username)}' has been activated.")
                     logger = EncryptedLogger()

@@ -34,9 +34,9 @@ class systemAdmin:
                 if result is None:
                     print(f"No user found with username '{username}'.")
                     return None
-                if result[0] == 1:
+                if result[0] == "1":
                     return True
-                elif result[0] == 0:
+                elif result[0] == "0":
                     return False
                 else:
                     print(f"No user found with username '{username}'.")
@@ -63,7 +63,7 @@ class systemAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?", (username, role))
+                cursor.execute("UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?", ("0", username, role))
                 connection.commit()
                 connection.close()
             else:
@@ -112,13 +112,13 @@ class systemAdmin:
 
         hashed = hash_password(password)
         system_data = {
-            "Username": user_name,
+            "Username": encrypt(user_name),
             "Password": hashed,
             "FirstName": encrypt(firstname),
             "LastName": encrypt(lastname),
-            "ResettedPasswordCheck": 1,
-            "Role": "serviceengineer",
-            "IsActive": 1
+            "ResettedPasswordCheck": encrypt("1"),
+            "Role": encrypt("serviceengineer"),
+            "IsActive": encrypt("1")
         }
         self.db_context.insert_User(system_data)
         logger = EncryptedLogger()
@@ -130,7 +130,7 @@ class systemAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
+                cursor.execute("SELECT Username, Role FROM User")
                 users = cursor.fetchall()
                 if users:
                     print("\nAll User Accounts:")
@@ -171,9 +171,10 @@ class systemAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
+                cursor.execute("SELECT Username FROM User")
                 users = cursor.fetchall()
                 if users:
+
                     return users
                 else:
                     print("No user accounts found.")
@@ -493,7 +494,7 @@ class systemAdmin:
             if connection:
                 cursor = connection.cursor()
                 enc_username = encrypt(new_username)
-                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, old_username, "systemadmin"))
+                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, old_username, encrypt("systemadmin")))
                 connection.commit()
                 return True
             else:
@@ -617,8 +618,8 @@ class systemAdmin:
         if connection:
             cursor = connection.cursor()
             cursor.execute(
-                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
-                (new_password, username, role)
+                "UPDATE User SET Password = ?, ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?",
+                (new_password, encrypt("1"), username, encrypt(role))
             )
             connection.commit()
         else:

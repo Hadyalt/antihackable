@@ -55,7 +55,7 @@ class ServiceEngineer:
                 )
                 result = cursor.fetchone()
                 if result:
-                    return result[0] == 1
+                    return result[0] == "1"
                 else:
                     print("No user found with the given username.")
                     return False
@@ -87,8 +87,8 @@ class ServiceEngineer:
                 cursor = connection.cursor()
                 enc_username = encrypt(username)
                 cursor.execute(
-                    "UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?",
-                    (enc_username, "serviceengineer")
+                    "UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?",
+                    ("0", enc_username, "serviceengineer")
                 )
                 connection.commit()
             else:

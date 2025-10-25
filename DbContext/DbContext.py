@@ -52,10 +52,10 @@ class DbContext:
             Password TEXT NOT NULL,
             FirstName TEXT NOT NULL,
             LastName TEXT NOT NULL,
-            RegistrationDate TEXT NOT NULL DEFAULT (datetime('now')),
-            ResettedPasswordCheck INTEGER NOT NULL DEFAULT 0,
-            Role TEXT NOT NULL DEFAULT 'user',
-            IsActive INTEGER NOT NULL DEFAULT 1
+            RegistrationDate TEXT NOT NULL,
+            ResettedPasswordCheck TEXT NOT NULL,
+            Role TEXT NOT NULL,
+            IsActive TEXT NOT NULL
         """
 
         # Create the User table
@@ -128,12 +128,11 @@ class DbContext:
         logger = EncryptedLogger()
         try:
             self.connection = sqlite3.connect(self.db_name)
-            """Insert a new User record into the database (encrypt Username)."""
+            """Insert a new User record into the database."""
             if self.connection:
                 cursor = self.connection.cursor()
                 user_data = user_data.copy()
-                if 'Username' in user_data:
-                    user_data['Username'] = encrypt(user_data['Username'])
+                
                 columns = ", ".join(user_data.keys())
                 placeholders = ", ".join(["?"] * len(user_data))
                 sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
