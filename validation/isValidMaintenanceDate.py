@@ -20,10 +20,10 @@ def is_valid_maintenance_date(maintenance_date_str):
                         pass
     return False
 
-def is_newer_maintenance_date(new_date_str, current_date_str):
+def is_newer_maintenance_date(new_date_str, old_date_str):
     try:
         new_date = datetime.strptime(new_date_str, "%Y-%m-%d")
-        current_date = datetime.strptime(current_date_str, "%Y-%m-%d")
-        return new_date >= current_date
+        old_date = datetime.strptime(old_date_str, "%Y-%m-%d")
+        return new_date >= old_date
     except ValueError:
         return False

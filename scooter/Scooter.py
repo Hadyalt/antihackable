@@ -444,14 +444,14 @@ def update_scooter(updater):
             new_maintenance_date = input("New Last Maintenance Date (YYYY-MM-DD): ")
 
             if new_maintenance_date and is_valid_maintenance_date(new_maintenance_date):
-                current_date = decrypt(scooter[12])  # index 12 is LastMaintenanceDate in de DB
-                if is_newer_maintenance_date(new_maintenance_date, current_date):
+                old_date = decrypt(scooter[12])  # index 12 is LastMaintenanceDate in de DB
+                if is_newer_maintenance_date(new_maintenance_date, old_date):
                     db.update_scooter_fields(sn, LastMaintenanceDate=new_maintenance_date)
                     logger.log_entry(f"{updater}", f"Updated scooter {sn}",
                                      f"Updated the last maintenance date to {new_maintenance_date}", "No")
                     return
                 else:
-                    print(f"Invalid Date: {new_maintenance_date} is earlier than current maintenance date ({current_date})")
+                    print(f"Invalid Date: {new_maintenance_date} is earlier than current maintenance date ({old_date})")
             else:
                 print("Invalid Date: Use YYYY-MM-DD format, not older than 1980, not in the future")
 
