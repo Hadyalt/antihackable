@@ -424,6 +424,10 @@ def update_traveller(updater,tid):
         while True:
             try:
                 city_choice = input("Select city (1-10): ")
+                if not city_choice.isdigit():
+                    raise ValueError
+                if int(city_choice) < 1 or int(city_choice) > len(db.cities):
+                    raise IndexError
                 city_idx = int(city_choice) - 1
                 new_val = db.cities[city_idx]
                 break
