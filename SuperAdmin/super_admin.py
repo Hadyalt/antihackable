@@ -13,98 +13,47 @@ class SuperAdmin:
         self.db_context = DbContext()
 
     def create_system_admin(self):
-        try:
-            verified_username = False
-            while not verified_username:
-                verified_username, user_name = validate_input_username(input("Enter username: "))
-                if not verified_username:
-                    print("Invalid username. Please try again.")
-            
-            verified_password = False
-            while not verified_password:
-                verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
-                if not verified_password:
-                    print("Invalid password. Please try again.")
-            
-            verified_first_name = False
-            while not verified_first_name:
-                firstname = input("Enter first name: ")
-                verified_first_name = is_valid_name(firstname)
-                if not verified_first_name:
-                    print("Invalid first name. Please try again.")
-            
-            verified_last_name = False
-            while not verified_last_name:
-                lastname = input("Enter last name: ")
-                verified_last_name = is_valid_name(lastname)
-                if not verified_last_name:
-                    print("Invalid last name. Please try again.")
+        verified_username = False
+        while not verified_username:
+            verified_username, user_name = validate_input_username(input("Enter username: "))
+            if not verified_username:
+                print("Invalid username or already exists. Please try again.")
+        
+        verified_password = False
+        while not verified_password:
+            verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
+            if not verified_password:
+                print("Invalid password. Please try again.")
+        
+        verified_first_name = False
+        while not verified_first_name:
+            firstname = input("Enter first name: ")
+            verified_first_name = is_valid_name(firstname)
+            if not verified_first_name:
+                print("Invalid first name. Please try again.")
+        
+        verified_last_name = False
+        while not verified_last_name:
+            lastname = input("Enter last name: ")
+            verified_last_name = is_valid_name(lastname)
+            if not verified_last_name:
+                print("Invalid last name. Please try again.")
 
-            hashed = hash_password(password)
-            system_data = {
-                "Username": user_name,
-                "Password": hashed,
-                "FirstName": encrypt(firstname),
-                "LastName": encrypt(lastname),
-                "resettedPasswordCheck": 1,
-                "Role": "systemadmin",
-                "IsActive": 1
-            }
+        hashed = hash_password(password)
+        system_data = {
+            "Username": user_name,
+            "Password": hashed,
+            "FirstName": encrypt(firstname),
+            "LastName": encrypt(lastname),
+            "resettedPasswordCheck": 1,
+            "Role": "systemadmin",
+            "IsActive": 1
+        }
 
-            self.db_context.insert_User(system_data)
-            logger = EncryptedLogger()
-            logger.log_entry("super_admin", "Created System Admin Account", f"username: {user_name}", "No")
-            return user_name
-
-        # --- Specific exceptions ---
-        except sqlite3.IntegrityError as e:
-            # Typically happens on UNIQUE constraint violations (e.g., duplicate email)
-            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
-            logger.log_entry("System", "Integrity Error on super_admin creation", f"{e}", "Yes")
-            self.connection.rollback()
-            return False
-
-        except sqlite3.OperationalError as e:
-            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
-            print(f"Operational Error: database or SQL issue. Contact Administrator.")
-            logger.log_entry("System", "Operational Error on super_admin creation", f"{e}", "Yes")
-            self.connection.rollback()
-            return False
-
-        except sqlite3.InterfaceError as e:
-            # Raised if wrong data types or bindings are passed to SQL placeholders
-            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
-            logger.log_entry("System", "Interface Error on super_admin creation", f"{e}", "Yes")
-            self.connection.rollback()
-            return False
-
-        except sqlite3.DatabaseError as e:
-            # Base class for all database-related errors (corrupted DB, etc.)
-            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
-            logger.log_entry("System", "Database Error on super_admin creation", f"{e}", "Yes")
-            self.connection.rollback()
-            return False
-
-        except ValueError as e:
-            # Custom validation issues (e.g. from earlier preprocessing)
-            print(f"Validation Error: {e}")
-            logger.log_entry("System", "Validation Error on super_admin creation", f"{e}", "Yes")
-            self.connection.rollback()
-            return False
-
-        except TypeError as e:
-            # When unexpected types are passed (e.g., None where a string is expected)
-            print(f"Type Error: invalid argument type. [DEBUG] {e}")
-            logger.log_entry("System", "Type Error on super_admin creation", f"{e}", "Yes")
-            self.connection.rollback()
-            return False
-
-        except Exception as e:
-            # Catch-all for anything unexpected
-            print(f"Unexpected Exception occurred.")
-            logger.log_entry("System", "Unexpected Error on super_admin creation", f"{e}", "Yes")
-            self.connection.rollback()
-            return False
+        self.db_context.insert_User(system_data)
+        logger = EncryptedLogger()
+        logger.log_entry("super_admin", "Created System Admin Account", f"username: {user_name}", "No")
+        return user_name
 
     
     def update_system_admin(self):
@@ -138,6 +87,7 @@ class SuperAdmin:
                             logger.log_entry("super_admin", "Updated System Admin Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
                             break
                         else:
+                            print("Invalid username format or already exists.")
                             tries += 1
                             print(f"You have {3 - tries} tries left.")
                     logger = EncryptedLogger()
@@ -161,6 +111,7 @@ class SuperAdmin:
                             logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
                             break
                         else:
+                            print("Invalid password format.")
                             tries += 1
                             print(f"You have {3 - tries} tries left.")
                     if tries == 3:
@@ -181,7 +132,8 @@ class SuperAdmin:
                         print(f"First name for system admin {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
                         logger = EncryptedLogger()
                         logger.log_entry("super_admin", "Updated System Admin First Name", f"New First Name: {new_first_name}", "No")
-                        break 
+                        break
+                    print("Invalid first name format.")
                     tries += 1
                     print(f"You have {3 - tries} tries left.")
                 logger = EncryptedLogger()
@@ -196,6 +148,7 @@ class SuperAdmin:
                         logger = EncryptedLogger()
                         logger.log_entry("super_admin", "Updated System Admin Last Name", f"New Last Name: {new_last_name}", "No")
                         break
+                    print("Invalid last name format.")
                     tries += 1
                     print(f"You have {3 - tries} tries left.")
                 logger = EncryptedLogger()
