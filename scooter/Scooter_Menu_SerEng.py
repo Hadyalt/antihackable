@@ -1,4 +1,5 @@
 from datetime import datetime
+from DbContext.crypto_utils import decrypt
 from DbContext.encrypted_logger import EncryptedLogger
 from scooter.Scooter_data import Scooter_data
 from validation.isValidMaintenanceDate import is_valid_maintenance_date
@@ -43,7 +44,7 @@ def update_scooter_SerEng(updater):
         print("No scooters available to update.")
         return
     for s in scooters:
-        print(f"- {s[0]}")
+        print(f"- {decrypt(s[0])}")
     
     sn = input("\nSerial Number to update: ")
     if is_valid_serial_number(sn):

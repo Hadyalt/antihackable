@@ -65,7 +65,7 @@ def main(role, username):
                     print("No scooters available to delete.")
                     continue
                 for s in scooters:
-                    print(f"- {s[0]}")
+                    print(f"- {decrypt(s[0])}")
                 sn = input("\nSerial Number to delete: ")
                 db.delete_scooter(sn, username)
 
@@ -247,7 +247,7 @@ def update_scooter(updater):
         print("No scooters available to update.")
         return
     for s in scooters:
-        print(f"- {s[0]}")
+        print(f"- {decrypt(s[0])}")
     
     sn = input("\nSerial Number to update: ")
     if is_valid_serial_number(sn):

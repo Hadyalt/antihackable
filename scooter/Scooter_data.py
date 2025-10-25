@@ -80,19 +80,18 @@ class Scooter_data:
             return []
 
     def get_scooter_by_serial(self, serial_number):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute(
-                "SELECT * FROM Scooter WHERE SerialNumber = ?", (serial_number,)
-            )
-            return cursor.fetchone()
-        else:
-            print("No connection.")
-            return None
+        all_scooters = self.get_all_scooters()
+        for s in all_scooters:
+            if decrypt(s[0]) == serial_number:
+                return s
 
     def update_scooter_fields(self, serial_number, **fields):
         if not self.connection:
             print("No connection.")
+            return False
+
+        if not fields:
+            print("No fields provided to update.")
             return False
 
         # Valid column check
@@ -117,9 +116,37 @@ class Scooter_data:
             print(f"Invalid fields: {', '.join(invalid_fields)}")
             return False
 
-        set_clause = ", ".join([f"{key} = ?" for key in fields])
-        values = list(fields.values())
-        values.append(serial_number)
+        # Locate the row using the stored encrypted serial number so we can keep
+        # working with decrypted identifiers in the UI.
+        current_record = self.get_scooter_by_serial(serial_number)
+        if not current_record:
+            print("Error: Scooter not found")
+            return False
+        stored_serial = current_record[0]
+
+        encrypted_fields = {}
+        for column, value in fields.items():
+            if value is None:
+                encrypted_fields[column] = None
+                continue
+
+            if column == "OutOfService":
+                try:
+                    normalized = int(value)
+                except (TypeError, ValueError):
+                    print("Invalid value for OutOfService: expected 0 or 1")
+                    return False
+                encrypted_fields[column] = encrypt(str(normalized))
+            else:
+                encrypted_fields[column] = encrypt(str(value))
+
+        if not encrypted_fields:
+            print("No valid fields to update.")
+            return False
+
+        set_clause = ", ".join([f"{key} = ?" for key in encrypted_fields])
+        values = list(encrypted_fields.values())
+        values.append(stored_serial)
 
         try:
             cursor = self.connection.cursor()
@@ -137,17 +164,37 @@ class Scooter_data:
             return False
 
     def delete_scooter(self, serial_number, deletor):
-        if self.connection:
-            cursor = self.connection.cursor()
-            cursor.execute(
-                "DELETE FROM Scooter WHERE SerialNumber = ?", (serial_number,)
-            )
-            self.connection.commit()
-            print("Scooter deleted.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")    
-        else:
+        if not self.connection:
             print("No connection.")
+            return False
+        current_record = self.get_scooter_by_serial(serial_number)
+        if not current_record:
+            print("Error: Scooter not found")
+            return False
+      
+        cursor = self.connection.cursor()
+        cursor.execute(
+            "DELETE FROM Scooter WHERE SerialNumber = ?", (current_record[0],)
+        )
+        if cursor.rowcount == 0:
+            print("Error: Scooter not found")
+            return False
+        self.connection.commit()
+        print("Scooter deleted.")
+        logger = EncryptedLogger()
+        logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")    
+            
+        # if self.connection:
+        #     cursor = self.connection.cursor()
+        #     cursor.execute(
+        #         "DELETE FROM Scooter WHERE SerialNumber = ?", (serial_number,)
+        #     )
+        #     self.connection.commit()
+        #     print("Scooter deleted.")
+        #     logger = EncryptedLogger()
+        #     logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")    
+        # else:
+        #     print("No connection.")
 
     def search_scooters(self, search_term=""):
         if not self.connection:
