@@ -7,7 +7,7 @@ from datetime import datetime
 
 from validation.isValidBatteryCapacity import is_valid_battery_capacity
 from validation.isValidBrand import is_valid_brand
-from validation.isValidMaintenanceDate import is_valid_maintenance_date
+from validation.isValidMaintenanceDate import is_valid_maintenance_date, is_newer_maintenance_date
 from validation.isValidMileage import is_valid_mileage
 from validation.isValidModel import is_valid_model
 from validation.isValidSerialNumber import is_valid_serial_number, validate_serial_number
@@ -442,16 +442,26 @@ def update_scooter(updater):
         tries = 0
         while tries < MAX_TRIES:
             new_maintenance_date = input("New Last Maintenance Date (YYYY-MM-DD): ")
+
             if new_maintenance_date and is_valid_maintenance_date(new_maintenance_date):
-                db.update_scooter_fields(sn, LastMaintenanceDate=new_maintenance_date)
-                logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the last maintenance date to {new_maintenance_date}", "No")
-                return
+                current_date = decrypt(scooter[12])  # index 12 is LastMaintenanceDate in de DB
+                if is_newer_maintenance_date(new_maintenance_date, current_date):
+                    db.update_scooter_fields(sn, LastMaintenanceDate=new_maintenance_date)
+                    logger.log_entry(f"{updater}", f"Updated scooter {sn}",
+                                     f"Updated the last maintenance date to {new_maintenance_date}", "No")
+                    return
+                else:
+                    print(f"Invalid Date: {new_maintenance_date} is earlier than current maintenance date ({current_date})")
             else:
                 print("Invalid Date: Use YYYY-MM-DD format, not older than 1980, not in the future")
+
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
+
         print("Too many invalid attempts. Update cancelled.")
-        logger.log_entry(f"{updater}", f"Update cancelled for scooter {sn}", "Too many invalid maintenance date attempts", "Yes")
+        logger.log_entry(f"{updater}", f"Update cancelled for scooter {sn}",
+                         "Too many invalid maintenance date attempts", "Yes")
+
     
     elif field_choice == "12":
         print("Update cancelled.")
