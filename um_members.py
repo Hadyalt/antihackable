@@ -49,7 +49,8 @@ def login():
             for (enc_username,) in users:
                 try:
                     dec_username = decrypt(enc_username)
-                    if dec_username == username:
+                    is_valid, dec_username = validate_input_username(dec_username, mode="login")
+                    if is_valid and dec_username.lower() == username.lower():
                         found_enc_username = enc_username
                         break
                 except Exception:
