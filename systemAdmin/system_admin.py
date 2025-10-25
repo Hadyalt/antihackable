@@ -3,7 +3,7 @@ from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_passw
 from DbContext.encrypted_logger import EncryptedLogger
 import getpass
 import sqlite3
-import datetime
+from datetime import datetime
 from valid_in_out_put import validate_input_username, validate_input_pass, validate_username
 from validation.isValidName import is_valid_name
 
@@ -29,18 +29,18 @@ class systemAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (username, role))
+                cursor.execute("SELECT ResettedPasswordCheck, role FROM User WHERE Username = ?", (username,))
                 result = cursor.fetchone()
                 connection.close()
                 if result is None:
                     print(f"No user found with username '{username}'.")
                     return None
-                if result[0] == "1":
+                if decrypt(result[0]) == "1" and decrypt(result[1]) == role:
                     return True
-                elif result[0] == "0":
+                elif decrypt(result[0]) == "0" or decrypt(result[1]) != role:
                     return False
                 else:
-                    print(f"No user found with username '{username}'.")
+                    print(f"No user found with username '{username}' and correct role.")
                     return None
         except sqlite3.OperationalError as e:
             print("Operational Error: database or SQL issue.")

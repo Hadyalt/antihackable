@@ -262,7 +262,7 @@ def show_main_menu(role, username):
         elif role == "systemadmin":
             sysAd = systemAdmin()
             user = sysAd.get_username(username)
-            if sysAd.check_reset_password(user, "systemadmin"):
+            if sysAd.check_reset_password(user, role):
                 print(
                     sanitize_output(
                         "You have a reset password, please reset it before proceeding."

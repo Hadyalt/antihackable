@@ -4,7 +4,7 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 import getpass
-import datetime
+from datetime import datetime
 from valid_in_out_put import validate_input_username, validate_input_pass
 from validation.isValidName import is_valid_name
 
