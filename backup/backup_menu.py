@@ -44,6 +44,7 @@ def backup_menu(role, username=None):
                         logger.log_entry(username or "system", "Backup Menu", "Chose not to add recovery code after backup.", "No")
                         break
                     admins = get_system_admins()
+
                     if not admins:
                         print("No active System Admins found.")
                         logger.log_entry(username or "system", "Backup Menu", "No active System Admins found for recovery code.", "No")

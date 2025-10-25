@@ -98,11 +98,11 @@ class DbContext:
         self.create_table("Scooter", scooter_schema)
         # Create the backup_recovery_list table
         backup_recovery_list_schema = """
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT PRIMARY KEY ,
             backup_name TEXT NOT NULL,
             system_admin TEXT NOT NULL,
             recovery_code TEXT NOT NULL,
-            used INTEGER NOT NULL DEFAULT 0,
+            used TEXT NOT NULL DEFAULT '0',
             used_at TEXT DEFAULT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         """
