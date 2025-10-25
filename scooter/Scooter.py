@@ -431,7 +431,7 @@ def update_scooter(updater):
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the mileage to {new_mileage}", "No")
                 return
             else:
-                print("Invalid Mileage: Cannot be negative")
+                print("Invalid Mileage")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
