@@ -174,11 +174,7 @@ class Traveller:
             logger.log_entry("System", "Unexpected Error on Traveller Insertion", f"{e}", "Yes")
             self.connection.rollback()
             return False
-        
-        finally:
-            # Always close cursor to prevent resource leaks
-            if cursor:
-                cursor.close()
+    
         
 
     def get_all_travellers(self):
@@ -213,10 +209,6 @@ class Traveller:
                 print(f"Unexpected Exception occurred.")
                 logger.log_entry("System", "Unexpected Error on getting all travellers", f"{e}", "Yes")
                 return None
-            finally:
-                # Always close cursor to prevent resource leaks
-                if cursor:
-                    cursor.close()
 
     def search_travellers(self, search_term=""):
         try:
