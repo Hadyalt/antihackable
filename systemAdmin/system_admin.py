@@ -130,6 +130,7 @@ class systemAdmin:
         return user_name
     
     def view_all_users(self, viewer):
+        logger = EncryptedLogger()
         try:
             connection = self.db_context.connect()
             if connection:
@@ -139,13 +140,18 @@ class systemAdmin:
                 if users:
                     print("\nAll User Accounts:")
                     for user in users:
-                        print(f"- {decrypt(user[0])} ({user[1]})")
+                        is_valid, username = validate_username(decrypt(user[0]))
+                        if is_valid:
+                            print(f"- {username} ({decrypt(user[1])})")
+                        else:
+                            print("Invalid username found in database. Contact Administrator. Process cancelled")
+                            logger.log_entry("System", "Decrypted username failed validation", f"Decrypted username: {decrypt(user[0])}", "Yes")
+                            return
                 else:
                     print("No user accounts found.")
                 connection.close()
             else:
                 print("Failed to connect to the database.")
-            logger = EncryptedLogger()
             logger.log_entry(f"{viewer}", "Viewed all users", f" ", "No")
             return users
         except sqlite3.OperationalError as e:
