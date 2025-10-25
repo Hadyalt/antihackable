@@ -90,17 +90,25 @@ class systemAdmin:
         verified_username = False
         while not verified_username:
             verified_username, user_name = validate_input_username(input("Enter username: "))
+            if not verified_username:
+                print("Invalid username format. Please try again.")
         verified_password = False
         while not verified_password:
             verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
+            if not verified_password:
+                print("Invalid password format. Please try again.")
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
             verified_first_name = is_valid_name(firstname)
+            if not verified_first_name:
+                print("Invalid first name format. Please try again.")
         verified_last_name = False
         while not verified_last_name:
             lastname = input("Enter last name: ")
             verified_last_name = is_valid_name(lastname)
+            if not verified_last_name:
+                print("Invalid last name format. Please try again.")
 
         hashed = hash_password(password)
         system_data = {
@@ -643,9 +651,6 @@ class systemAdmin:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
     def reset_password_service_engineer(self, resetter):
         service_engineers = self.view_all_service_engineers()

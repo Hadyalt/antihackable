@@ -344,10 +344,6 @@ class SuperAdmin:
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error on getting all system_admins", f"{e}", "Yes")
             return None
-        finally:
-            # Always close cursor to prevent resource leaks
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
     def view_all_service_engineers(self):
         try:
@@ -394,10 +390,6 @@ class SuperAdmin:
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error on getting all service engineers", f"{e}", "Yes")
             return None
-        finally:
-            # Always close cursor to prevent resource leaks
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
     def set_new_username(self, old_username, new_username):
         try:
@@ -430,9 +422,6 @@ class SuperAdmin:
             print("Unexpected error occurred while updating username.")
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in set_new_username", f"{e}", "Yes")
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
 
     def set_new_first_name(self, username, new_first_name):
@@ -466,9 +455,6 @@ class SuperAdmin:
             print("Unexpected error occurred while updating first name.")
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in set_new_first_name", f"{e}", "Yes")
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
 
     def set_new_last_name(self, username, new_last_name):
@@ -502,9 +488,6 @@ class SuperAdmin:
             print("Unexpected error occurred while updating last name.")
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in set_new_last_name", f"{e}", "Yes")
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
 
     def reset_password_function(self, username, new_password, role):
@@ -537,9 +520,6 @@ class SuperAdmin:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
 
     def activate_inactive_account(self):
@@ -592,9 +572,6 @@ class SuperAdmin:
             print("Unexpected error occurred while activating account.")
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in activate_inactive_account", f"{e}", "Yes")
-        finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
 
 
     def confirm_password(self):
