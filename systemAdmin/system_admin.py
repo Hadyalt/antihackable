@@ -93,7 +93,7 @@ class systemAdmin:
         while not verified_username:
             verified_username, user_name = validate_input_username(input("Enter username: "))
             if not verified_username:
-                print("Invalid username format. Please try again.")
+                print("Invalid username format or already exists. Please try again.")
         verified_password = False
         while not verified_password:
             verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
@@ -287,6 +287,7 @@ class systemAdmin:
                         logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
                         break
                     else:
+                        print("Invalid username or already exists format.")
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
                 logger = EncryptedLogger()
@@ -310,6 +311,7 @@ class systemAdmin:
                         logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
                         break
                     else:
+                        print("Invalid password format.")
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
                 logger = EncryptedLogger()
@@ -329,6 +331,7 @@ class systemAdmin:
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer First Name", f"New First Name: {new_first_name}", "No")
                     break
+                print("Invalid first name format.")
                 tries += 1
                 print(f"You have {3 - tries} tries left.")
             logger = EncryptedLogger()
@@ -343,6 +346,7 @@ class systemAdmin:
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer Last Name", f"New Last Name: {new_last_name}", "No")
                     break
+                print("Invalid last name format.")
                 tries += 1
                 print(f"You have {3 - tries} tries left.")
             logger = EncryptedLogger()
