@@ -46,6 +46,7 @@ class SuperAdmin:
                 "Password": hashed,
                 "FirstName": encrypt(firstname),
                 "LastName": encrypt(lastname),
+                "resettedPasswordCheck": 1,
                 "Role": "systemadmin",
                 "IsActive": 1
             }

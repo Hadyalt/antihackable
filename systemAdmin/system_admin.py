@@ -108,6 +108,7 @@ class systemAdmin:
             "Password": hashed,
             "FirstName": encrypt(firstname),
             "LastName": encrypt(lastname),
+            "ResettedPasswordCheck": 1,
             "Role": "serviceengineer",
             "IsActive": 1
         }

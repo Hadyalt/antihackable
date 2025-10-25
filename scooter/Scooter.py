@@ -478,7 +478,7 @@ def print_scooter_table(scooters):
             decrypt(s[5]),  # StateOfCharge
             f"{decrypt(s[6])}-{decrypt(s[7])}",  # TargetRangeSocMin-Max
             f"{decrypt(s[8])},{decrypt(s[9])}",  # LocationLat, LocationLong
-            "Yes" if s[10] else "No",  # OutOfService
+            "Yes" if decrypt(s[10]) == '1' else "No",  # OutOfService
             decrypt(s[11]),  # Mileage
             decrypt(s[12]),  # LastMaintenanceDate
             decrypt(s[13]),  # InServiceDate
