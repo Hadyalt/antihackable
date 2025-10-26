@@ -199,7 +199,7 @@ def edit_account_menu(username):
                     sysAd.set_new_first_name(user, new_first_name)
                     print("First name updated successfully.")
                     logger = EncryptedLogger()
-                    logger.log_entry(f"{username}", "Updated his own first name", f"Old: {username}, New: {new_first_name}", "No")
+                    logger.log_entry(f"{username}", "Updated his own first name", f"New: {new_first_name}", "No")
                     break
                 else:
                     print("Invalid first name format.")
@@ -208,7 +208,7 @@ def edit_account_menu(username):
             if tries == 3:
                 print("Failed to update first name after 3 invalid attempts.")
                 logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
+                logger.log_entry(f"{username}", "Tried to update first name with wrong format 3 times", f" ", "Yes")
 
         elif choice == "4":
             tries = 0
@@ -219,7 +219,7 @@ def edit_account_menu(username):
                     sysAd.set_new_last_name(user, new_last_name)
                     print("Last name updated successfully.")
                     logger = EncryptedLogger()
-                    logger.log_entry(f"{username}", "Updated his own last name", f"Old: {username}, New: {new_last_name}", "No")
+                    logger.log_entry(f"{username}", "Updated his own last name", f"New: {new_last_name}", "No")
                     break
                 else:
                     print("Invalid last name format.")
@@ -228,7 +228,7 @@ def edit_account_menu(username):
             if tries == 3:
                 print("Failed to update last name after 3 invalid attempts.")
                 logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
+                logger.log_entry(f"{username}", "Tried to update last name with wrong format 3 times", f" ", "Yes")
 
         elif choice == "5":
             if sysAd.confirm_password(username):
