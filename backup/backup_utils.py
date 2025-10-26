@@ -205,7 +205,6 @@ def revoke_restore_code(backup_name, system_admin, db_path=DB_PATH):
     finally:
         if conn:
             conn.close()
-        return False
             
 
 def validate_restore_code(backup_name, system_admin, code, db_path=DB_PATH):
