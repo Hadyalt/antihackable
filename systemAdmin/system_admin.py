@@ -1,9 +1,11 @@
 from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
-from Login.verification import Verification
 import getpass
-from valid_in_out_put import validate_input_user, validate_input_pass
+import sqlite3
+from datetime import datetime
+from valid_in_out_put import validate_input_username, validate_input_pass, validate_username
+from validation.isValidName import is_valid_name
 
 
 class systemAdmin:
@@ -23,60 +25,105 @@ class systemAdmin:
 
     # check if the user has a reset password variable called ResettedPasswordCheck using only the username
     def check_reset_password(self, username, role):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?", (username, role))
-            result = cursor.fetchone()
-            connection.close()
-            if result is None:
-                print(f"No user found with username '{username}'.")
-                return None
-            if result[0] == 1:
-                return True
-            elif result[0] == 0:
-                return False
-            else:
-                print(f"No user found with username '{username}'.")
-                return None
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT ResettedPasswordCheck, role FROM User WHERE Username = ?", (username,))
+                result = cursor.fetchone()
+                connection.close()
+                if result is None:
+                    print(f"No user found with username '{username}'.")
+                    return None
+                if decrypt(result[0]) == "1" and decrypt(result[1]) == role:
+                    return True
+                elif decrypt(result[0]) == "0" or decrypt(result[1]) != role:
+                    return False
+                else:
+                    print(f"No user found with username '{username}' and correct role.")
+                    return None
+        except sqlite3.OperationalError as e:
+            print("Operational Error: database or SQL issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.DatabaseError as e:
+            print("Database Error: possible corruption or I/O issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.InterfaceError as e:
+            print("Interface Error: invalid SQL parameters.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error in reset_password_function", f"{e}", "Yes")
+        except Exception as e:
+            print("Unexpected error occurred while resetting password.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
 
-    def reset_resetted_password_check(self, username, role):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?", (username, role))
-            connection.commit()
-            connection.close()
-            
-        else:
-            print("Failed to connect to the database.")
+    def reset_resetted_password_check(self, username):
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                ResettedPasswordCheck = encrypt("0")
+                cursor.execute("UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ?", (ResettedPasswordCheck, username))
+                connection.commit()
+                connection.close()
+            else:
+                print("Failed to connect to the database.")
+        except sqlite3.OperationalError as e:
+            print("Operational Error: database or SQL issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.DatabaseError as e:
+            print("Database Error: possible corruption or I/O issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.InterfaceError as e:
+            print("Interface Error: invalid SQL parameters.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error in reset_password_function", f"{e}", "Yes")
+        except Exception as e:
+            print("Unexpected error occurred while resetting password.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+        
 
     def create_service_engineer(self, creator):
         verified_username = False
         while not verified_username:
-            verified_username, user_name = validate_input_user(input("Enter username: ").strip())
-            verified_username = Verification.verify_username(user_name)
+            verified_username, user_name = validate_input_username(input("Enter username: "))
+            if not verified_username:
+                print("Invalid username format or already exists. Please try again.")
         verified_password = False
         while not verified_password:
             verified_password, password = validate_input_pass(getpass.getpass("Enter password: "))
-            #verified_password = Verification.verify_Password(password)
+            if not verified_password:
+                print("Invalid password format. Please try again.")
         verified_first_name = False
         while not verified_first_name:
             firstname = input("Enter first name: ")
-            verified_first_name = Verification.verify_name(firstname)
+            verified_first_name = is_valid_name(firstname)
+            if not verified_first_name:
+                print("Invalid first name format. Please try again.")
         verified_last_name = False
         while not verified_last_name:
             lastname = input("Enter last name: ")
-            verified_last_name = Verification.verify_name(lastname)
-    
+            verified_last_name = is_valid_name(lastname)
+            if not verified_last_name:
+                print("Invalid last name format. Please try again.")
+
         hashed = hash_password(password)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         system_data = {
-            "Username": user_name,
+            "Username": encrypt(user_name),
             "Password": hashed,
             "FirstName": encrypt(firstname),
             "LastName": encrypt(lastname),
-            "Role": "serviceengineer",
-            "IsActive": 1
+            "RegistrationDate": encrypt(current_time),
+            "ResettedPasswordCheck": encrypt("1"),
+            "Role": encrypt("serviceengineer"),
+            "IsActive": encrypt("1")
         }
         self.db_context.insert_User(system_data)
         logger = EncryptedLogger()
@@ -84,66 +131,148 @@ class systemAdmin:
         return user_name
     
     def view_all_users(self, viewer):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
-            users = cursor.fetchall()
-            if users:
-                print("\nAll User Accounts:")
-                for user in users:
-                    print(f"- {decrypt(user[0])} ({user[1]})")
-            else:
-                print("No user accounts found.")
-            connection.close()
-        else:
-            print("Failed to connect to the database.")
         logger = EncryptedLogger()
-        logger.log_entry(f"{viewer}", "Viewed all users", f" ", "No")
-        return users
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT Username, Role FROM User")
+                users = cursor.fetchall()
+                if users:
+                    print("\nAll User Accounts:")
+                    for user in users:
+                        is_valid, username = validate_username(decrypt(user[0]))
+                        if is_valid:
+                            print(f"- {username} ({decrypt(user[1])})")
+                        else:
+                            print("Invalid username found in database. Contact Administrator. Process cancelled")
+                            logger.log_entry("System", "Decrypted username failed validation", f"Decrypted username: {decrypt(user[0])}", "Yes")
+                            return
+                else:
+                    print("No user accounts found.")
+                connection.close()
+            else:
+                print("Failed to connect to the database.")
+            logger.log_entry(f"{viewer}", "Viewed all users", f" ", "No")
+            return users
+        except sqlite3.OperationalError as e:
+            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger.log_entry("System", "Operational Error on viewing all users", f"{e}", "Yes")
+            return None
+        except sqlite3.DatabaseError as e:
+            # Base class for all database-related errors (corrupted DB, etc.)
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger.log_entry("System", "Database Error on viewing all users", f"{e}", "Yes")
+            return None
+        except sqlite3.InterfaceError as e:
+            # Raised if wrong data types or bindings are passed to SQL placeholders
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger.log_entry("System", "Interface Error on viewing all users", f"{e}", "Yes")
+            return None
+        except Exception as e:
+            # Catch-all for anything unexpected
+            print(f"Unexpected Exception occurred.")
+            logger.log_entry("System", "Unexpected Error on viewing all users", f"{e}", "Yes")
+            return None
 
     def view_all_users_no_print(self):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
-            users = cursor.fetchall()
-            if users:
-                return users
+        logger = EncryptedLogger()
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT Username FROM User")
+                users = cursor.fetchall()
+                if users:
+
+                    return users
+                else:
+                    print("No user accounts found.")
+                connection.close()
             else:
-                print("No user accounts found.")
-            connection.close()
-        else:
-            print("Failed to connect to the database.")
+                print("Failed to connect to the database.")
+        
+        except sqlite3.OperationalError as e:
+            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger.log_entry("System", "Operational Error on viewing all users", f"{e}", "Yes")
+            return None
+        except sqlite3.DatabaseError as e:
+            # Base class for all database-related errors (corrupted DB, etc.)
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger.log_entry("System", "Database Error on viewing all users", f"{e}", "Yes")
+            return None
+        except sqlite3.InterfaceError as e:
+            # Raised if wrong data types or bindings are passed to SQL placeholders
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger.log_entry("System", "Interface Error on viewing all users", f"{e}", "Yes")
+            return None
+        except Exception as e:
+            # Catch-all for anything unexpected
+            print(f"Unexpected Exception occurred.")
+            logger.log_entry("System", "Unexpected Error on viewing all users", f"{e}", "Yes")
+            return None
     
     def view_all_service_engineers(self):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT Username FROM User WHERE Role = ? AND IsActive = 1", ("serviceengineer",))
-            users = cursor.fetchall()
-            
-            if users:
-                print(f"Retrieved {len(users)} service engineer(s):")
-                for user in users:
-                    print(f"- {decrypt(user[0])}")
-                return users
+        logger = EncryptedLogger()
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT Username, Role, IsActive FROM User")
+                users = cursor.fetchall()
+                if users:
+                    service_engineers = [user for user in users if decrypt(user[1]) == "serviceengineer"]
+                    if service_engineers:
+                        service_engineers_active = [user for user in service_engineers if decrypt(user[2]) == "1"]
+                        if service_engineers_active:
+                            print(f"Retrieved {len(service_engineers_active)} active service engineer(s):")
+                            for user in service_engineers_active:
+                                print(f"- {decrypt(user[0])}")
+                            return service_engineers_active
+                        else:
+                            print("No service engineer accounts found.")
+                            return []
+                    else:
+                        print("No service engineer accounts found.")
+                        return []
+                else:
+                    print("No service engineer accounts found.")
+                    return []
             else:
-                print("No service engineer accounts found.")
-                return []
-        else:
-            print("No database connection.")
-            return "Error"
+                print("No database connection.")
+                return "Error"
+        except sqlite3.OperationalError as e:
+            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger.log_entry("System", "Operational Error on getting all Service Engineers", f"{e}", "Yes")
+            return None
+        except sqlite3.DatabaseError as e:
+            # Base class for all database-related errors (corrupted DB, etc.)
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger.log_entry("System", "Database Error on getting all Service Engineers", f"{e}", "Yes")
+            return None
+        except sqlite3.InterfaceError as e:
+            # Raised if wrong data types or bindings are passed to SQL placeholders
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger.log_entry("System", "Interface Error on getting all Service Engineers", f"{e}", "Yes")
+            return None
+        except Exception as e:
+            # Catch-all for anything unexpected
+            print(f"Unexpected Exception occurred.")
+            logger.log_entry("System", "Unexpected Error on getting all Service Engineers", f"{e}", "Yes")
+            return None
         
     def update_service_engineer(self, updater):
         servEng = self.view_all_service_engineers()
         if not servEng:
             print("No service engineers available to update.")
             return
-        username_to_update = input("Enter the username of the service engineer you want to update: ").strip().lower()
+        username_to_update = input("Enter the username of the service engineer you want to update: ")
 
         # Check if the username exists in the servEng list
-        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update]
+        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_update.lower()]
         if not matching_users:
             print(f"No service engineer found with username '{username_to_update}'.")
             return
@@ -153,214 +282,442 @@ class systemAdmin:
         print("[3] Update First Name")
         print("[4] Update Last Name")
         print("[5] Go Back")
-        choice = input("Enter your choice [1, 2, 3, 4 or 5]: ").strip()
+        choice = input("Enter your choice [1, 2, 3, 4 or 5]: ")
+        
         if choice == "1":
             if (self.confirm_password(updater)):
                 tries = 0
                 while tries < 3:
-                    new_username = input("Enter the new username: ").strip()
-                    if Verification.verify_username(new_username):
+                    new_username = input("Enter the new username: ")
+                    verified, new_username = validate_input_username(new_username)
+                    if verified:
                         self.set_new_username(matching_users[0][0], new_username)
                         print(f"Service Engineer {decrypt(matching_users[0][0])} updated to {new_username}.")
                         logger = EncryptedLogger()
                         logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
                         break
                     else:
+                        print("Invalid username format or already exists.")
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
+                if tries == 3:
+                    print("Failed to update username after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 from um_members import pre_login_menu
                 pre_login_menu()
+        
         elif choice == "2":
             if (self.confirm_password(updater)):
                 tries = 0
                 while tries < 3:
-                    new_password = getpass.getpass("Enter the new password: ").strip()
-                    if Verification.verify_Password(new_password):
+                    new_password = getpass.getpass("Enter the new password: ")
+                    verified_password, new_password = validate_input_pass(new_password)
+                    if verified_password:
                         hashed = hash_password(new_password)
-                        self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
+                        self.reset_password_function(matching_users[0][0], hashed)
                         print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
                         logger = EncryptedLogger()
                         logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
                         break
                     else:
+                        print("Invalid password format.")
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
+                if tries == 3:
+                    print("Failed to update password after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 from um_members import pre_login_menu
                 pre_login_menu()
+        
         elif choice == "3":
             tries = 0
             while tries < 3:
-                new_first_name = input("Enter the new first name: ").strip()
-                if Verification.verify_name(new_first_name):
+                new_first_name = input("Enter the new first name: ")
+                if is_valid_name(new_first_name):
                     self.set_new_first_name(matching_users[0][0], new_first_name)
                     print(f"First name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_first_name}.")
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer First Name", f"New First Name: {new_first_name}", "No")
                     break
-                tries += 1
-                print(f"You have {3 - tries} tries left.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{updater}", "Too many wrong first name attempts", f" ", "Yes")
+                else:
+                    print("Invalid first name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update first name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong first name attempts", f" ", "Yes")
+        
         elif choice == "4":
             tries = 0
             while tries < 3:
-                new_last_name = input("Enter the new last name: ").strip()
-                if Verification.verify_name(new_last_name):
+                new_last_name = input("Enter the new last name: ")
+                if is_valid_name(new_last_name):
                     self.set_new_last_name(matching_users[0][0], new_last_name)
                     print(f"Last name for service engineer {decrypt(matching_users[0][0])} has been updated to {new_last_name}.")
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer Last Name", f"New Last Name: {new_last_name}", "No")
                     break
-                tries += 1
-                print(f"You have {3 - tries} tries left.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{updater}", "Too many wrong last name attempts", f" ", "Yes")
+                else:
+                    print("Invalid last name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update last name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong last name attempts", f" ", "Yes")
+        
         elif choice == "5":
             print("Going back to the previous menu.")
             return
         else:
             print("Invalid choice. Please try again.")
     
-    def delete_service_engineer(self, deletor): 
-        servEng = self.view_all_service_engineers()
-        if not servEng:
-            print("No service engineers available to delete.")
+    def delete_service_engineer(self, deletor):
+        try:
+            servEng = self.view_all_service_engineers()
+            if not servEng:
+                print("No service engineers available to delete.")
+                return
+            is_valid, username_to_delete = validate_username(input("Enter the username of the service engineer you want to delete: "))
+            if not is_valid:
+                print("Invalid username format.")
+                return
+            # Check if the username exists in the servEng list
+            matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_delete.lower()]  # assumes username is in column 0
+            if not matching_users:
+                print(f"No service engineer found with username '{username_to_delete}'.")
+                return
+            if self.confirm_password(deletor):
+                connection = self.db_context.connect()
+                if connection:
+                    cursor = connection.cursor()
+                    enc_username = matching_users[0][0]
+                    cursor.execute("DELETE FROM User WHERE Username = ?", (enc_username,))
+                    connection.commit()
+                    print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {decrypt(matching_users[0][0])} is deleted", "No")
+                else:
+                    print("Failed to connect to the database.")
+            else:
+                logger = EncryptedLogger()
+                logger.log_entry(f"{deletor}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
+                from um_members import pre_login_menu
+                pre_login_menu()
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on deleting service engineer", f"{e}", "Yes")
             return
-        username_to_delete = input("Enter the username of the service engineer you want to delete: ").strip()
-
-        # Check if the username exists in the servEng list
-        matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_delete.lower()]  # assumes username is in column 0
-        if not matching_users:
-            print(f"No service engineer found with username '{username_to_delete}'.")
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on deleting service engineer", f"{e}", "Yes")
             return
-        if self.confirm_password(deletor):
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on deleting service engineer", f"{e}", "Yes")
+            return
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on deleting service engineer", f"{e}", "Yes")
+            return
+        except ValueError as e:
+            print(f"Value Error: {e}")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Value Error on deleting service engineer", f"{e}", "Yes")
+            return
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on deleting service engineer", f"{e}", "Yes")
+            return
+    
+    def delete_account(self, username):
+        try:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                enc_username = matching_users[0][0]
-                cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (enc_username, "serviceengineer"))
+                cursor.execute("DELETE FROM User WHERE Username = ?", (username,))
                 connection.commit()
-                print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{deletor}", "Deleted a Service Engineer Account", f"username: {decrypt(matching_users[0][0])} is deleted", "No")
+                return True
             else:
                 print("Failed to connect to the database.")
-        else:
+                return False
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
             logger = EncryptedLogger()
-            logger.log_entry(f"{deletor}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
-            from um_members import pre_login_menu
-            pre_login_menu()
-    
-    def delete_account(self, username):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (username, "systemadmin"))
-            connection.commit()
-            return True
-        else:
-            print("Failed to connect to the database.")
-            return False
+            logger.log_entry("System", "Operational Error on deleting own account", f"{e}", "Yes")
+            return
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on deleting own account", f"{e}", "Yes")
+            return
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on deleting own account", f"{e}", "Yes")
+            return
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on deleting own account", f"{e}", "Yes")
+            return
+        except ValueError as e:
+            print(f"Value Error: {e}")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Value Error on deleting own account", f"{e}", "Yes")
+            return
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on deleting own account", f"{e}", "Yes")
+            return
 
     def set_new_username(self, old_username, new_username):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            enc_new = encrypt(new_username)
-            cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_new, old_username, "serviceengineer"))
-            connection.commit()
-            return True
-        else:
-            print("Failed to connect to the database.")
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                enc_new = encrypt(new_username)
+                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?)", (enc_new, old_username,))
+                connection.commit()
+                return True
+            else:
+                print("Failed to connect to the database.")
+                return False
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on updating username", f"{e}", "Yes")
+            return False
+        except sqlite3.InterfaceError as e:
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error on updating username", f"{e}", "Yes")
+            return False
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on updating username", f"{e}", "Yes")
+            return False
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on updating username", f"{e}", "Yes")
+            return False
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on updating username", f"{e}", "Yes")
+            return False
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on updating username", f"{e}", "Yes")
             return False
     
     def set_new_username_system(self, old_username, new_username):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            enc_username = encrypt(new_username)
-            cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, old_username, "systemadmin"))
-            connection.commit()
-            return True
-        else:
-            print("Failed to connect to the database.")
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                enc_username = encrypt(new_username)
+                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?)", (enc_username, old_username))
+                connection.commit()
+                return True
+            else:
+                print("Failed to connect to the database.")
+                return False
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on updating username", f"{e}", "Yes")
+            return False
+        except sqlite3.InterfaceError as e:
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error on updating username", f"{e}", "Yes")
+            return False
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on updating username", f"{e}", "Yes")
+            return False
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on updating username", f"{e}", "Yes")
+            return False
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on updating username", f"{e}", "Yes")
+            return False
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on updating username", f"{e}", "Yes")
             return False
     
     def set_new_first_name(self, username, new_first_name):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            enc_first_name = encrypt(new_first_name)
-            cursor.execute("UPDATE User SET FirstName = ? WHERE Username = ? AND Role = ?", (enc_first_name, username, "serviceengineer"))
-            connection.commit()
-        else:
-            print("Failed to connect to the database.")
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                enc_first_name = encrypt(new_first_name)
+                cursor.execute("UPDATE User SET FirstName = ? WHERE Username = ?", (enc_first_name, username))
+                connection.commit()
+            else:
+                print("Failed to connect to the database.")
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on updating first name", f"{e}", "Yes")
+            return False
+        except sqlite3.InterfaceError as e:
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error on updating first name", f"{e}", "Yes")
+            return False
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on updating first name", f"{e}", "Yes")
+            return False
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on updating first name", f"{e}", "Yes")
+            return False
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on updating first name", f"{e}", "Yes")
+            return False
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on updating first name", f"{e}", "Yes")
+            return False
     
     def set_new_last_name(self, username, new_last_name):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            enc_last_name = encrypt(new_last_name)
-            cursor.execute("UPDATE User SET LastName = ? WHERE Username = ? AND Role = ?", (enc_last_name, username, "serviceengineer"))
-            connection.commit()
-        else:
-            print("Failed to connect to the database.")
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                enc_last_name = encrypt(new_last_name)
+                cursor.execute("UPDATE User SET LastName = ? WHERE Username = ?", (enc_last_name, username))
+                connection.commit()
+            else:
+                print("Failed to connect to the database.")
+        except sqlite3.OperationalError as e:
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error on updating last name", f"{e}", "Yes")
+            return False
+        except sqlite3.InterfaceError as e:
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error on updating last name", f"{e}", "Yes")
+            return False
+        except sqlite3.IntegrityError as e:
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Integrity Error on updating last name", f"{e}", "Yes")
+            return False
+        except sqlite3.DatabaseError as e:
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error on updating last name", f"{e}", "Yes")
+            return False
+        except TypeError as e:
+            print(f"Type Error: invalid argument type.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Type Error on updating last name", f"{e}", "Yes")
+            return False
+        except Exception as e:
+            print(f"Unexpected Exception occurred.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error on updating last name", f"{e}", "Yes")
+            return False
     
-    def reset_password_function(self, username, new_password, role):
+    def reset_password_function(self, username, new_password):
         connection = self.db_context.connect()
         if connection:
             cursor = connection.cursor()
             cursor.execute(
-                "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
-                (new_password, username, role)
+                "UPDATE User SET Password = ?, ResettedPasswordCheck = ? WHERE Username = ?",
+                (new_password, encrypt("1"), username)
             )
             connection.commit()
         else:
             print("Failed to connect to the database.")
     
     def reset_password_system(self, username, new_password):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("UPDATE User SET Password = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (new_password, username, "systemadmin"))
-            connection.commit()
-            return True
-        else:
-            print("Failed to connect to the database.")
-            return False
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("UPDATE User SET Password = ? WHERE Username = ?", (new_password, username))
+                connection.commit()
+                return True
+            else:
+                print("Failed to connect to the database.")
+                return False
+        except sqlite3.OperationalError as e:
+            print("Operational Error: database or SQL issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.DatabaseError as e:
+            print("Database Error: possible corruption or I/O issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.InterfaceError as e:
+            print("Interface Error: invalid SQL parameters.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error in reset_password_function", f"{e}", "Yes")
+        except Exception as e:
+            print("Unexpected error occurred while resetting password.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
 
     def reset_password_service_engineer(self, resetter):
         service_engineers = self.view_all_service_engineers()
         if not service_engineers:
             print("No service engineers available to reset password.")
             return
-        username_to_reset = input("Enter the username of the service engineer whose password you want to reset: ").strip()
+        username_to_reset = input("Enter the username of the service engineer whose password you want to reset: ")
+        is_valid, username_to_reset = validate_username(username_to_reset)
+        if is_valid:
+            # Check if the username exists in the service_engineers list
+            matching_users = [user for user in service_engineers if user[0].lower() == username_to_reset.lower()]
+            if not matching_users:
+                print(f"No service engineer found with username '{username_to_reset}'.")
+                return
 
-        # Check if the username exists in the service_engineers list
-        matching_users = [user for user in service_engineers if user[0].lower() == username_to_reset.lower()]
-        if not matching_users:
-            print(f"No service engineer found with username '{username_to_reset}'.")
-            return
-
-        new_password = getpass.getpass("Enter the new temporary password: ").strip()
-        if Verification.verify_Password(new_password):
-            hashed_password = hash_password(new_password)
-            self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
-            print(f"Password for service engineer {username_to_reset} has been reset.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{resetter}", "Resetted the password of a Service Engineer Account", f"username: {username_to_reset} had his password reset", "No")
-        else:
-            print("Invalid password format. Please try again.")
+            new_password = getpass.getpass("Enter the new temporary password: ")
+            verified_password, new_password = validate_input_pass(new_password)
+            if verified_password:
+                hashed_password = hash_password(new_password)
+                self.reset_password_function(username_to_reset, hashed_password)
+                print(f"Password for service engineer {username_to_reset} has been reset.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{resetter}", "Resetted the password of a Service Engineer Account", f"username: {username_to_reset} had his password reset", "No")
+            else:
+                print("Invalid password format. Please try again.")
  
     def confirm_password(self, username):
         tries = 0
@@ -406,19 +763,41 @@ class systemAdmin:
             return False  
     
     def get_hashed_password(self, username):
-        connection = self.db_context.connect()
-        if connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT Password FROM User WHERE Username = ?", (username, ))
-            result = cursor.fetchone()
-            connection.close()
-            if result:
-                return result[0]
+        logger = EncryptedLogger()
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                cursor.execute("SELECT Password FROM User WHERE Username = ?", (username, ))
+                result = cursor.fetchone()
+                connection.close()
+                if result:
+                    return result[0]
+                else:
+                    print(f"No user found with username '{username}'.")
+                    return None
             else:
-                print(f"No user found with username '{username}'.")
+                print("Failed to connect to the database.")
                 return None
-        else:
-            print("Failed to connect to the database.")
+        except sqlite3.OperationalError as e:
+            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger.log_entry("System", "Operational Error on getting password", f"{e}", "Yes")
+            return None
+        except sqlite3.DatabaseError as e:
+            # Base class for all database-related errors (corrupted DB, etc.)
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger.log_entry("System", "Database Error on getting password", f"{e}", "Yes")
+            return None
+        except sqlite3.InterfaceError as e:
+            # Raised if wrong data types or bindings are passed to SQL placeholders
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger.log_entry("System", "Interface Error on getting password", f"{e}", "Yes")
+            return None
+        except Exception as e:
+            # Catch-all for anything unexpected
+            print(f"Unexpected Exception occurred.")
+            logger.log_entry("System", "Unexpected Error on getting password", f"{e}", "Yes")
             return None
 
 

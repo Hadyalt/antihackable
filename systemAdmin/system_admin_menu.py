@@ -1,13 +1,14 @@
 from DbContext.crypto_utils import hash_password
 from DbContext.encrypted_logger import EncryptedLogger, fernet
 import os
-from Login.verification import Verification
-from Login.verification import Verification
 from systemAdmin.system_admin import systemAdmin
 from traveller.Traveller_menu import traveller_menu
 from um_members import pre_login_menu
 from scooter.Scooter import main
 import getpass
+
+from valid_in_out_put import validate_input_pass, validate_input_username
+from validation.isValidName import is_valid_name
 
 def system_admin_menu(username):
     current_user = username  # Replace with actual logged-in username
@@ -126,46 +127,110 @@ def edit_account_menu(username):
         print(f"\nEDIT ACCOUNT MENU FOR {username}")
         print("[1] Change Username")
         print("[2] Change Password")
-        print("[3] Delete Account")
-        print("[4] Go Back")
+        print("[3] Change First Name")
+        print("[4] Change Last Name")
+        print("[5] Delete Account")
+        print("[6] Go Back")
         choice = input("\nEnter your choice: ")
+
         if choice == "1":
             if sysAd.confirm_password(username):
-                verified_username = False
-                while not verified_username:
+                tries = 0
+                while tries < 3:
                     new_username = input("Enter username: ")
-                    verified_username = Verification.verify_username(new_username)
-                user = sysAd.get_username(username)
-                if sysAd.set_new_username_system(user, new_username):
-                    print("Username updated successfully.")
-                    logger = EncryptedLogger()
-                    logger.log_entry(f"{username}", "Updated his own username", f"Old: {username}, New: {new_username}", "No")
-                    username = new_username
-                else:
-                    print("Failed to update username.")
+                    verified_username, new_username = validate_input_username(new_username)
+                    if verified_username:
+                        user = sysAd.get_username(username)
+                        if sysAd.set_new_username_system(user, new_username):
+                            print("Username updated successfully.")
+                            logger = EncryptedLogger()
+                            logger.log_entry(f"{username}", "Updated his own username", f"Old: {username}, New: {new_username}", "No")
+                            username = new_username
+                            break
+                        else:
+                            print("Failed to update username.")
+                    else:
+                        print("Invalid username format or already exists.")
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                if tries == 3:
+                        print("Failed to update username after 3 invalid attempts.")
+                        logger = EncryptedLogger()
+                        logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 pre_login_menu()
+
         elif choice == "2":
             if sysAd.confirm_password(username):
-                verified_password = False
-                while not verified_password:
+                tries = 0
+                while tries < 3:
                     new_password = getpass.getpass("Enter new password: ")
-                    verified_password = Verification.verify_Password(new_password)
-                hashed_password = hash_password(new_password)
-                user = sysAd.get_username(username)
-                if sysAd.reset_password_system(user, hashed_password):
-                    print("Password updated successfully.")
-                    logger = EncryptedLogger()
-                    logger.log_entry(f"{username}", "Updated his own password", f" ", "No")
-                else:
-                    print("Failed to update password.")
+                    verified_password, new_password = validate_input_pass(new_password)
+                    if verified_password:
+                        hashed_password = hash_password(new_password)
+                        user = sysAd.get_username(username)
+                        if sysAd.reset_password_system(user, hashed_password):
+                            print("Password updated successfully.")
+                            logger = EncryptedLogger()
+                            logger.log_entry(f"{username}", "Updated his own password", f" ", "No")
+                            break
+                        else:
+                            print("Failed to update password.")
+                    else:
+                        print("Invalid password format.")
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                if tries == 3:
+                        print("Failed to update password after 3 invalid attempts.")
+                        logger = EncryptedLogger()
+                        logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 pre_login_menu()
         elif choice == "3":
+            tries = 0
+            while tries < 3:
+                new_first_name = input("Enter new first name: ")
+                user = sysAd.get_username(username)
+                if is_valid_name(new_first_name):
+                    sysAd.set_new_first_name(user, new_first_name)
+                    print("First name updated successfully.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{username}", "Updated his own first name", f"New: {new_first_name}", "No")
+                    break
+                else:
+                    print("Invalid first name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update first name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Tried to update first name with wrong format 3 times", f" ", "Yes")
+
+        elif choice == "4":
+            tries = 0
+            while tries < 3:
+                new_last_name = input("Enter new last name: ")
+                user = sysAd.get_username(username)
+                if is_valid_name(new_last_name):
+                    sysAd.set_new_last_name(user, new_last_name)
+                    print("Last name updated successfully.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{username}", "Updated his own last name", f"New: {new_last_name}", "No")
+                    break
+                else:
+                    print("Invalid last name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update last name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Tried to update last name with wrong format 3 times", f" ", "Yes")
+
+        elif choice == "5":
             if sysAd.confirm_password(username):
                 user = sysAd.get_username(username)
                 sysAd.delete_account(user)
@@ -177,7 +242,7 @@ def edit_account_menu(username):
                 logger = EncryptedLogger()
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 pre_login_menu()
-        elif choice == "4":
+        elif choice == "6":
             return username  # Go back to the previous menu
         else:
             print("Invalid choice. Please try again.")

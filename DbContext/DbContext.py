@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from DbContext.crypto_utils import encrypt, decrypt
+from DbContext.encrypted_logger import EncryptedLogger
 
 class DbContext:
     def __init__(self, db_name="data.db"):
@@ -12,9 +13,22 @@ class DbContext:
         self.connection = None
 
     def connect(self):
-        """Establish a connection to the SQLite database."""
-        self.connection = sqlite3.connect(self.db_name)
-        return self.connection
+        try:
+            self.connection = sqlite3.connect(self.db_name)
+            return self.connection
+        except sqlite3.OperationalError as e:
+            print(f"SQLite operational error: {e}")
+            return self.connection
+        except sqlite3.DatabaseError as e:
+            print(f"SQLite database error: {e}")
+            return self.connection
+        except FileNotFoundError as e:
+            print(f"Database file not found: {e}")
+            return self.connection
+        except Exception as e:
+            print(f"Unexpected error while connecting to the database: {e}")
+            return self.connection
+
 
     def create_table(self, table_name, schema):
         # Whitelist allowed table names to prevent SQL injection
@@ -38,17 +52,17 @@ class DbContext:
             Password TEXT NOT NULL,
             FirstName TEXT NOT NULL,
             LastName TEXT NOT NULL,
-            RegistrationDate TEXT NOT NULL DEFAULT (datetime('now')),
-            ResettedPasswordCheck INTEGER NOT NULL DEFAULT 0,
-            Role TEXT NOT NULL DEFAULT 'user',
-            IsActive INTEGER NOT NULL DEFAULT 1
+            RegistrationDate TEXT NOT NULL,
+            ResettedPasswordCheck TEXT NOT NULL,
+            Role TEXT NOT NULL,
+            IsActive TEXT NOT NULL
         """
 
         # Create the User table
         self.create_table("User", user_schema)
         # create the traveller table
         traveller_schema = """
-            TravellerID INTEGER PRIMARY KEY AUTOINCREMENT,
+            TravellerID TEXT PRIMARY KEY,
             FirstName TEXT NOT NULL,
             LastName TEXT NOT NULL,
             Birthday TEXT NOT NULL,
@@ -60,7 +74,7 @@ class DbContext:
             Email TEXT UNIQUE NOT NULL,
             Phone TEXT NOT NULL,
             DrivingLicenseNumber TEXT NOT NULL,
-            RegisteredDate TEXT NOT NULL DEFAULT (datetime('now'))
+            RegisteredDate TEXT NOT NULL 
         """
         self.create_table("Traveller", traveller_schema)
 
@@ -76,19 +90,19 @@ class DbContext:
             TargetRangeSocMax REAL,
             LocationLat REAL,
             LocationLong REAL,
-            OutOfService INTEGER,
+            OutOfService TEXT,
             Mileage REAL,
             LastMaintenanceDate TEXT,
-            InServiceDate TEXT NOT NULL DEFAULT (datetime('now'))
+            InServiceDate TEXT NOT NULL 
         """
         self.create_table("Scooter", scooter_schema)
         # Create the backup_recovery_list table
         backup_recovery_list_schema = """
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT PRIMARY KEY ,
             backup_name TEXT NOT NULL,
             system_admin TEXT NOT NULL,
             recovery_code TEXT NOT NULL,
-            used INTEGER NOT NULL DEFAULT 0,
+            used TEXT NOT NULL DEFAULT '0',
             used_at TEXT DEFAULT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         """
@@ -111,22 +125,72 @@ class DbContext:
             print("No database connection. Call connect() first.")
 
     def insert_User(self, user_data):
-        self.connection = sqlite3.connect(self.db_name)
-        """Insert a new User record into the database (encrypt Username)."""
-        if self.connection:
-            cursor = self.connection.cursor()
-            user_data = user_data.copy()
-            if 'Username' in user_data:
-                user_data['Username'] = encrypt(user_data['Username'])
-            columns = ", ".join(user_data.keys())
-            placeholders = ", ".join(["?"] * len(user_data))
-            sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
-            cursor.execute(sql, list(user_data.values()))
-            self.connection.commit()
-            print(f"Inserted new User record")
-        else:
-            print("No database connection. Call connect() first.")
-        self.connection.close()        
+        logger = EncryptedLogger()
+        try:
+            self.connection = sqlite3.connect(self.db_name)
+            """Insert a new User record into the database."""
+            if self.connection:
+                cursor = self.connection.cursor()
+                user_data = user_data.copy()
+                
+                columns = ", ".join(user_data.keys())
+                placeholders = ", ".join(["?"] * len(user_data))
+                sql = f"INSERT INTO User ({columns}) VALUES ({placeholders})"
+                cursor.execute(sql, list(user_data.values()))
+                self.connection.commit()
+                print(f"Inserted new User record")
+            else:
+                print("No database connection. Call connect() first.")
+            self.connection.close()
+
+        except sqlite3.IntegrityError as e:
+            # Typically happens on UNIQUE constraint violations (e.g., duplicate email)
+            print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
+            logger.log_entry("System", "Integrity Error on User Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.OperationalError as e:
+            # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
+            print(f"Operational Error: database or SQL issue. Contact Administrator.")
+            logger.log_entry("System", "Operational Error on User Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.InterfaceError as e:
+            # Raised if wrong data types or bindings are passed to SQL placeholders
+            print(f"Interface Error: invalid parameter binding. Contact Administrator.")
+            logger.log_entry("System", "Interface Error on User Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except sqlite3.DatabaseError as e:
+            # Base class for all database-related errors (corrupted DB, etc.)
+            print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
+            logger.log_entry("System", "Database Error on User Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except ValueError as e:
+            # Custom validation issues (e.g. from earlier preprocessing)
+            print(f"Validation Error: {e}")
+            logger.log_entry("System", "Validation Error on User Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except TypeError as e:
+            # When unexpected types are passed (e.g., None where a string is expected)
+            print(f"Type Error: invalid argument type. [DEBUG] {e}")
+            logger.log_entry("System", "Type Error on User Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False
+
+        except Exception as e:
+            # Catch-all for anything unexpected
+            print(f"Unexpected Exception occurred.")
+            logger.log_entry("System", "Unexpected Error on User Insertion", f"{e}", "Yes")
+            self.connection.rollback()
+            return False    
 
 
     def close(self):

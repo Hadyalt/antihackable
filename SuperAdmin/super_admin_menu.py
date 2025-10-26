@@ -105,7 +105,7 @@ def super_admin_system_admin_menu():
         print("[3] Delete System Admin Account")
         print("[4] Go Back")
         
-        choice = input("\nEnter your choice: ").strip()
+        choice = input("\nEnter your choice (1-4): ")
         
         if choice == "1":
             print("\n-- Create System Admin --")
