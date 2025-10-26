@@ -8,6 +8,7 @@ from scooter.Scooter import main
 import getpass
 
 from valid_in_out_put import validate_input_pass, validate_input_username
+from validation.isValidName import is_valid_name
 
 def system_admin_menu(username):
     current_user = username  # Replace with actual logged-in username
@@ -126,9 +127,12 @@ def edit_account_menu(username):
         print(f"\nEDIT ACCOUNT MENU FOR {username}")
         print("[1] Change Username")
         print("[2] Change Password")
-        print("[3] Delete Account")
-        print("[4] Go Back")
+        print("[3] Change First Name")
+        print("[4] Change Last Name")
+        print("[5] Delete Account")
+        print("[6] Go Back")
         choice = input("\nEnter your choice: ")
+
         if choice == "1":
             if sysAd.confirm_password(username):
                 tries = 0
@@ -157,6 +161,7 @@ def edit_account_menu(username):
                 logger = EncryptedLogger()
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 pre_login_menu()
+
         elif choice == "2":
             if sysAd.confirm_password(username):
                 tries = 0
@@ -186,6 +191,46 @@ def edit_account_menu(username):
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 pre_login_menu()
         elif choice == "3":
+            tries = 0
+            while tries < 3:
+                new_first_name = input("Enter new first name: ")
+                user = sysAd.get_username(username)
+                if is_valid_name(new_first_name):
+                    sysAd.set_new_first_name(user, new_first_name)
+                    print("First name updated successfully.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{username}", "Updated his own first name", f"New: {new_first_name}", "No")
+                    break
+                else:
+                    print("Invalid first name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update first name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Tried to update first name with wrong format 3 times", f" ", "Yes")
+
+        elif choice == "4":
+            tries = 0
+            while tries < 3:
+                new_last_name = input("Enter new last name: ")
+                user = sysAd.get_username(username)
+                if is_valid_name(new_last_name):
+                    sysAd.set_new_last_name(user, new_last_name)
+                    print("Last name updated successfully.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{username}", "Updated his own last name", f"New: {new_last_name}", "No")
+                    break
+                else:
+                    print("Invalid last name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update last name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{username}", "Tried to update last name with wrong format 3 times", f" ", "Yes")
+
+        elif choice == "5":
             if sysAd.confirm_password(username):
                 user = sysAd.get_username(username)
                 sysAd.delete_account(user)
@@ -197,7 +242,7 @@ def edit_account_menu(username):
                 logger = EncryptedLogger()
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 pre_login_menu()
-        elif choice == "4":
+        elif choice == "6":
             return username  # Go back to the previous menu
         else:
             print("Invalid choice. Please try again.")
