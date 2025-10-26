@@ -75,11 +75,7 @@ def list_backups(username=None, option=""):
     except Exception as e:
         logger.log_entry(username or "system", "List Backups Failed", f"Unexpected Error: {str(e)}", "Yes")
         raise
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+    
 
 
 def restore_backup(backup_filename, username=None, system_admin=None):
@@ -117,17 +113,14 @@ def restore_backup(backup_filename, username=None, system_admin=None):
                     """, (encrypt("1"), row_id))
                     conn.commit()
             conn.close()
-            logger.log_entry(username or "system", "Mark restore code as used", f"Marked code as used for backup: {decrypted_backup_name}", "No")
+            logger.log_entry(decrypt(username) or "system", "Mark restore code as used", f"Marked code as used for backup: {decrypted_backup_name}", "No")
 
         except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
-            logger.log_entry(username or "system", "Mark restore code as used Failed", f"Database Error: {str(e)}", "Yes")
+            logger.log_entry(decrypt(username) or "system", "Mark restore code as used Failed", f"Database Error: {str(e)}", "Yes")
             raise
         except Exception as e:
-            logger.log_entry(username or "system", "Mark restore code as used Failed", str(e), "Yes")
+            logger.log_entry(decrypt(username) or "system", "Mark restore code as used Failed", str(e), "Yes")
             raise
-        finally:
-            if conn:
-                conn.close()
 
     # Step 1: Export backup_recovery_list
     recovery_rows = []
@@ -146,20 +139,18 @@ def restore_backup(backup_filename, username=None, system_admin=None):
     except Exception as e:
         logger.log_entry(username or "system", "Export backup_recovery_list Failed", str(e), "Yes")
         raise
-    finally:
-        if conn:
-            conn.close()
+
 
     # Step 2: Restore the backup (overwrite DB)
     try:
         with zipfile.ZipFile(backup_path, 'r') as zipf:
             zipf.extract("data.db", os.path.dirname(DB_FILE))
-        logger.log_entry(username or "system", "Restore Backup", f"Restored from: {decrypted_backup_name}", "No")
+        logger.log_entry(decrypt(username) or "system", "Restore Backup", f"Restored from: {decrypted_backup_name}", "No")
     except (zipfile.BadZipFile, KeyError, PermissionError) as e:
-        logger.log_entry(username or "system", "Restore Backup Failed", f"Zip/File Error: {str(e)}", "Yes")
+        logger.log_entry(decrypt(username) or "system", "Restore Backup Failed", f"Zip/File Error: {str(e)}", "Yes")
         raise
     except Exception as e:
-        logger.log_entry(username or "system", "Restore Backup Failed", str(e), "Yes")
+        logger.log_entry(decrypt(username) or "system", "Restore Backup Failed", str(e), "Yes")
         raise
 
     # Step 3: Re-insert backup_recovery_list rows
@@ -174,18 +165,16 @@ def restore_backup(backup_filename, username=None, system_admin=None):
             placeholders = ','.join(['?'] * len(columns))
             cursor.executemany(f"INSERT INTO backup_recovery_list ({', '.join(columns)}) VALUES ({placeholders})", recovery_rows)
         conn.commit()
-        conn.close()
+        conn.close()            
+        return True
+
     except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
-        logger.log_entry(username or "system", "Re-insert backup_recovery_list Failed", f"Database Error: {str(e)}", "Yes")
+        logger.log_entry(decrypt(username) or "system", "Re-insert backup_recovery_list Failed", f"Database Error: {str(e)}", "Yes")
         raise
     except Exception as e:
-        logger.log_entry(username or "system", "Re-insert backup_recovery_list Failed", str(e), "Yes")
+        logger.log_entry(decrypt(username) or "system", "Re-insert backup_recovery_list Failed", str(e), "Yes")
         raise
-    finally:
-        if conn:
-            conn.close()
 
-    return True
 
 def delete_backup(backup_filename, username=None):
     """Delete a backup zip file."""
@@ -238,6 +227,4 @@ def delete_from_recovery_list(backup_name, db_path=DB_FILE):
     except Exception as e:
         EncryptedLogger().log_entry("system", "Delete From Recovery List Failed", f"Unexpected Error: {str(e)}", "Yes")
         raise
-    finally:
-        if conn:
-            conn.close()
+

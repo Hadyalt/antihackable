@@ -62,6 +62,7 @@ def add_restore_code(backup_name, system_admin, db_path=DB_PATH, option=""):
                 enc_code = encrypt(code)
                 enc_used = encrypt("0")
                 enc_created_at = encrypt(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                
             except Exception as e:
                 EncryptedLogger().error(f"Encryption failed while generating new restore code: {e}")
                 print("Error: Could not encrypt restore code data.")
@@ -74,6 +75,7 @@ def add_restore_code(backup_name, system_admin, db_path=DB_PATH, option=""):
                 """, (id, enc_backup_name, enc_system_admin, enc_code, enc_used, enc_created_at))
                 conn.commit()
                 conn.close()
+                return code
             except sqlite3.IntegrityError as e:
                 EncryptedLogger().error(f"Integrity error while inserting new restore code: {e}")
                 print("Error: Duplicate or invalid data detected.")
@@ -83,7 +85,7 @@ def add_restore_code(backup_name, system_admin, db_path=DB_PATH, option=""):
                 print("Error: Could not save restore code to the database.")
                 return None
 
-            return code
+            
 
         elif option == "adding":
             try:
@@ -112,9 +114,9 @@ def add_restore_code(backup_name, system_admin, db_path=DB_PATH, option=""):
                     EncryptedLogger().error(f"Unexpected decryption error: {e}")
                     continue
 
-                if dec_backup_name == backup_name and dec_system_admin == system_admin and dec_used == "0":
+                if dec_backup_name == decrypt(backup_name) and dec_system_admin == system_admin and dec_used == "0":
                     conn.close()
-                    print(f"System Admin '{system_admin}' already has an active recovery code for backup '{backup_name}'.")
+                    print(f"System Admin '{system_admin}' already has an active recovery code for backup '{decrypt(backup_name)}'.")
                     return None
 
             try:
@@ -136,6 +138,7 @@ def add_restore_code(backup_name, system_admin, db_path=DB_PATH, option=""):
                 """, (id, backup_name, enc_system_admin, enc_code, enc_used, enc_created_at))
                 conn.commit()
                 conn.close()
+                return code
             except sqlite3.IntegrityError as e:
                 EncryptedLogger().error(f"Integrity error while inserting restore code: {e}")
                 print("Error: Duplicate or invalid data detected.")
@@ -145,7 +148,6 @@ def add_restore_code(backup_name, system_admin, db_path=DB_PATH, option=""):
                 print("Error: Could not save restore code to the database.")
                 return None
 
-            return code
 
         else:
             print("Invalid option provided. Use 'create' or 'adding'.")
@@ -157,17 +159,7 @@ def add_restore_code(backup_name, system_admin, db_path=DB_PATH, option=""):
         print("An unexpected error occurred while adding restore code.")
         return None
 
-    finally:
-        if cursor:
-            try:
-                cursor.close()
-            except Exception as e:
-                EncryptedLogger().warning(f"Failed to close cursor: {e}")
-        if conn:
-            try:
-                conn.close()
-            except Exception as e:
-                EncryptedLogger().warning(f"Failed to close database connection: {e}")
+    
 
 def revoke_restore_code(backup_name, system_admin, db_path=DB_PATH):
     conn = None
@@ -187,24 +179,22 @@ def revoke_restore_code(backup_name, system_admin, db_path=DB_PATH):
                         WHERE id = ?
                     """, (encrypt("1"), row_id))
                     conn.commit()
-                    EncryptedLogger().log_entry(system_admin, "Revoke Restore Code", f"Revoked code for {backup_name}", "No")
+                    EncryptedLogger().log_entry(decrypt(system_admin), "Revoke Restore Code", f"Revoked code for {decrypt(enc_backup_name)}", "No")
                     return True
             except Exception as inner_e:
-                EncryptedLogger().log_entry(system_admin, "Decryption Error in revoke_restore_code", str(inner_e), "Yes")
+                EncryptedLogger().log_entry(decrypt(system_admin), "Decryption Error in revoke_restore_code", str(inner_e), "Yes")
                 continue
 
-        EncryptedLogger().log_entry(system_admin, "Revoke Restore Code Failed", "No matching active restore code found", "No")
+        EncryptedLogger().log_entry(decrypt(system_admin), "Revoke Restore Code Failed", "No matching active restore code found", "No")
         return False
 
     except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
-        EncryptedLogger().log_entry(system_admin, "Revoke Restore Code Failed", f"Database Error: {str(e)}", "Yes")
+        EncryptedLogger().log_entry(decrypt(system_admin), "Revoke Restore Code Failed", f"Database Error: {str(e)}", "Yes")
         raise
     except Exception as e:
-        EncryptedLogger().log_entry(system_admin, "Revoke Restore Code Failed", f"Unexpected Error: {str(e)}", "Yes")
+        EncryptedLogger().log_entry(decrypt(system_admin), "Revoke Restore Code Failed", f"Unexpected Error: {str(e)}", "Yes")
         raise
-    finally:
-        if conn:
-            conn.close()
+    
             
 
 def validate_restore_code(backup_name, system_admin, code, db_path=DB_PATH):
@@ -221,28 +211,19 @@ def validate_restore_code(backup_name, system_admin, code, db_path=DB_PATH):
                 decrypted_system_admin = decrypt(enc_system_admin)
                 if (decryptedused == "0" and enc_backup_name == backup_name and
                     decrypted_system_admin == system_admin and decrypted_code == code):
-                    # cursor.execute("""
-                    #     UPDATE backup_recovery_list
-                    #     SET used = ?, used_at = datetime('now')
-                    #     WHERE id = ?
-                    # """, (encrypt("1"), row_id))
-                    # conn.commit()
                     conn.close()
                     return True
             except Exception as inner_e:
-                EncryptedLogger().log_entry(system_admin, "Decryption Error in validate_restore_code", str(inner_e), "Yes")
-                continue
+                EncryptedLogger().log_entry(system_admin, "Decryption Error in validate_restore_code", str(inner_e), "Yes")            
+        return False
+
     except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
         EncryptedLogger().log_entry(system_admin, "Validate Restore Code Failed", f"Database Error: {str(e)}", "Yes")
         raise
     except Exception as e:
         EncryptedLogger().log_entry(system_admin, "Validate Restore Code Failed", f"Unexpected Error: {str(e)}", "Yes")
         raise
-    finally:
-        if conn:
-            conn.close()
-    conn.close()
-    return False
+    
 
 def get_system_admins(db_path=DB_PATH):
     try:
@@ -275,10 +256,7 @@ def get_system_admins(db_path=DB_PATH):
     except Exception as e:
         EncryptedLogger().log_entry("system", "Get System Admins Failed", f"Unexpected Error: {str(e)}", "Yes")
         raise
-    finally:
-        if conn:
-            conn.close()
-    conn.close()
+    
     return admins
 
 def get_decrypted_backups():
