@@ -297,7 +297,7 @@ class systemAdmin:
                         logger.log_entry(f"{updater}", "Updated Service Engineer Username", f"Old: {decrypt(matching_users[0][0])}, New: {new_username}", "No")
                         break
                     else:
-                        print("Invalid username or already exists format.")
+                        print("Invalid username format or already exists.")
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
                 if tries == 3:

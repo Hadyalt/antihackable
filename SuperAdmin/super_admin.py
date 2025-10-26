@@ -324,14 +324,23 @@ class SuperAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username FROM User WHERE Role = ? ", ("serviceengineer",))
+                cursor.execute("SELECT Username FROM User ",)
                 users = cursor.fetchall()
                 
                 if users:
-                    print(f"Retrieved {len(users)} service engineer(s):")
+                    service_engineers = []
                     for user in users:
-                        print(f"- {decrypt(user[0])}")
-                    return users
+                        if decrypt(user[1]) == "serviceengineer":
+                            service_engineers.append(user)
+                    if service_engineers:
+                        print(f"Retrieved {len(service_engineers)} service engineer(s):")
+
+                        for user in service_engineers:
+                            print(f"- {decrypt(user[0])}")
+                            return service_engineers
+                    else:
+                        print("No service engineer accounts found.")
+                        return []
                 else:
                     print("No service engineer accounts found.")
                     return []
@@ -519,7 +528,7 @@ class SuperAdmin:
                 return
             print("\nInactive Accounts:")
             for idx, user in enumerate(inactive_users, 1):
-                print(f"[{idx}] Username: {decrypt(user[0])}, Role: {user[1]}")
+                print(f"[{idx}] Username: {decrypt(user[0])}, Role: {decrypt(user[1])}")
 
             try:
                 choice = int(input("Enter the number of the account to activate: "))

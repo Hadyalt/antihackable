@@ -50,12 +50,12 @@ class ServiceEngineer:
                 cursor = connection.cursor()
                 enc_username = encrypt(username)
                 cursor.execute(
-                    "SELECT ResettedPasswordCheck FROM User WHERE Username = ? AND Role = ?",
-                    (enc_username, "serviceengineer")
+                    "SELECT ResettedPasswordCheck FROM User WHERE Username = ?",
+                    (enc_username, )
                 )
                 result = cursor.fetchone()
                 if result:
-                    return result[0] == "1"
+                    return decrypt(result[0]) == "1"
                 else:
                     print("No user found with the given username.")
                     return False
@@ -87,8 +87,8 @@ class ServiceEngineer:
                 cursor = connection.cursor()
                 enc_username = encrypt(username)
                 cursor.execute(
-                    "UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?",
-                    ("0", enc_username, "serviceengineer")
+                    "UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ?",
+                    (encrypt("0"), enc_username)
                 )
                 connection.commit()
             else:
