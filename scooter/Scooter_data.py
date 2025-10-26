@@ -338,6 +338,7 @@ class Scooter_data:
             cursor.execute("SELECT * FROM Scooter")
             all_scooters = cursor.fetchall()
             results = []
+            search_lower = str(search_term).lower()
             for s in all_scooters:
                 decrypted_fields = [
                 decrypt(s[0]),  # serialNumber
@@ -349,7 +350,7 @@ class Scooter_data:
                 decrypt(s[10])  # outOfService
                 ]
                 if any(
-                    search_term in (str(field)) for field in decrypted_fields
+                    search_lower in str(field).lower() for field in decrypted_fields
                 ):
                     results.append(s)
             return results
