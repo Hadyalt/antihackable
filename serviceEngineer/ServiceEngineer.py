@@ -18,8 +18,8 @@ class ServiceEngineer:
                 hashed = hash_password(password)
                 enc_username = user
                 cursor.execute(
-                    "UPDATE User SET Password = ? WHERE Username = ? AND Role = ?",
-                    (hashed, enc_username, "serviceengineer")
+                    "UPDATE User SET Password = ? WHERE Username = ?",
+                    (hashed, enc_username)
                 )
                 connection.commit()
             else:
