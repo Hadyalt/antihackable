@@ -9,6 +9,6 @@ def is_valid_state_of_charge(state_of_charge: str) -> bool:
             if check_control_characters(state_of_charge):
                 if re.fullmatch(r"^\d{1,3}$", state_of_charge):
                     value = int(state_of_charge)
-                    if 0 <= value <= 100: 
+                    if 1 <= value <= 100: 
                         return True
     return False
