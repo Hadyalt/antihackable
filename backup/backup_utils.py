@@ -246,32 +246,50 @@ def validate_restore_code(backup_name, system_admin, code, db_path=DB_PATH):
     return False
 
 def get_system_admins(db_path=DB_PATH):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM User ")
-    rows = cursor.fetchall()
-    admins = []
-    for row in rows:
-        username_enc = row[0]  
-        role = row[6]
-        is_active_enc = row[7]
-        try:
-            username = decrypt(username_enc)
-            role = decrypt(role)
-            is_active = decrypt(is_active_enc)
-            
-        except Exception:
-            continue
-        # this needs to change after steph finishes the user role en is active will be encrypted
-        if role == "systemadmin" and is_active == "1":
-            admins.append(username)
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM User ")
+        rows = cursor.fetchall()
+        admins = []
+        for row in rows:
+            try:
+                username_enc = row[0]  
+                role = row[6]
+                is_active_enc = row[7]
+                try:
+                    username = decrypt(username_enc)
+                    role = decrypt(role)
+                    is_active = decrypt(is_active_enc)
+                    
+                except Exception:
+                    continue
+                # this needs to change after steph finishes the user role en is active will be encrypted
+                if role == "systemadmin" and is_active == "1":
+                    admins.append(username)
+            except Exception as inner_e:
+                    EncryptedLogger().log_entry("system", "Decryption Error in get_system_admins", str(inner_e), "Yes")
+                    continue
+    except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
+        EncryptedLogger().log_entry("system", "Get System Admins Failed", f"Database Error: {str(e)}", "Yes")
+        raise
+    except Exception as e:
+        EncryptedLogger().log_entry("system", "Get System Admins Failed", f"Unexpected Error: {str(e)}", "Yes")
+        raise
+    finally:
+        if conn:
+            conn.close()
     conn.close()
     return admins
 
 def get_decrypted_backups():
     from DbContext.backup_utils import list_backups
-    backups = list_backups()
-    return backups
+    try:
+        backups = list_backups()
+        return backups
+    except Exception as e:
+        EncryptedLogger().log_entry("system", "Get Decrypted Backups Failed", str(e), "Yes")
+        raise
 
 def generate_backup_id():
         """Generate a random backup ID and ensure it does not collide."""
