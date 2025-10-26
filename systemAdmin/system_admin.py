@@ -660,7 +660,7 @@ class systemAdmin:
             cursor = connection.cursor()
             cursor.execute(
                 "UPDATE User SET Password = ?, ResettedPasswordCheck = ? WHERE Username = ?",
-                (new_password, encrypt("0"), username)
+                (new_password, encrypt("1"), username)
             )
             connection.commit()
         else:
@@ -712,7 +712,7 @@ class systemAdmin:
             verified_password, new_password = validate_input_pass(new_password)
             if verified_password:
                 hashed_password = hash_password(new_password)
-                self.reset_password_function(username_to_reset, hashed_password, "serviceengineer")
+                self.reset_password_function(username_to_reset, hashed_password)
                 print(f"Password for service engineer {username_to_reset} has been reset.")
                 logger = EncryptedLogger()
                 logger.log_entry(f"{resetter}", "Resetted the password of a Service Engineer Account", f"username: {username_to_reset} had his password reset", "No")

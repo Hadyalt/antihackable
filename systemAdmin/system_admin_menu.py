@@ -131,36 +131,56 @@ def edit_account_menu(username):
         choice = input("\nEnter your choice: ")
         if choice == "1":
             if sysAd.confirm_password(username):
-                verified_username = False
-                while not verified_username:
+                tries = 0
+                while tries < 3:
                     new_username = input("Enter username: ")
                     verified_username, new_username = validate_input_username(new_username)
-                user = sysAd.get_username(username)
-                if sysAd.set_new_username_system(user, new_username):
-                    print("Username updated successfully.")
-                    logger = EncryptedLogger()
-                    logger.log_entry(f"{username}", "Updated his own username", f"Old: {username}, New: {new_username}", "No")
-                    username = new_username
-                else:
-                    print("Failed to update username.")
+                    if verified_username:
+                        user = sysAd.get_username(username)
+                        if sysAd.set_new_username_system(user, new_username):
+                            print("Username updated successfully.")
+                            logger = EncryptedLogger()
+                            logger.log_entry(f"{username}", "Updated his own username", f"Old: {username}, New: {new_username}", "No")
+                            username = new_username
+                            break
+                        else:
+                            print("Failed to update username.")
+                    else:
+                        print("Invalid username format or already exists.")
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                if tries == 3:
+                        print("Failed to update username after 3 invalid attempts.")
+                        logger = EncryptedLogger()
+                        logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 pre_login_menu()
         elif choice == "2":
             if sysAd.confirm_password(username):
-                verified_password = False
-                while not verified_password:
+                tries = 0
+                while tries < 3:
                     new_password = getpass.getpass("Enter new password: ")
                     verified_password, new_password = validate_input_pass(new_password)
-                hashed_password = hash_password(new_password)
-                user = sysAd.get_username(username)
-                if sysAd.reset_password_system(user, hashed_password):
-                    print("Password updated successfully.")
-                    logger = EncryptedLogger()
-                    logger.log_entry(f"{username}", "Updated his own password", f" ", "No")
-                else:
-                    print("Failed to update password.")
+                    if verified_password:
+                        hashed_password = hash_password(new_password)
+                        user = sysAd.get_username(username)
+                        if sysAd.reset_password_system(user, hashed_password):
+                            print("Password updated successfully.")
+                            logger = EncryptedLogger()
+                            logger.log_entry(f"{username}", "Updated his own password", f" ", "No")
+                            break
+                        else:
+                            print("Failed to update password.")
+                    else:
+                        print("Invalid password format.")
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                if tries == 3:
+                        print("Failed to update password after 3 invalid attempts.")
+                        logger = EncryptedLogger()
+                        logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{username}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")

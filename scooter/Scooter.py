@@ -81,7 +81,6 @@ def main(role, username):
             show_menu(role)
             choice = input("Choose an option: ")
             Scooter_Menu_SerEng(choice, username)
-            break
 
         # INVALID ROLE
         else:
