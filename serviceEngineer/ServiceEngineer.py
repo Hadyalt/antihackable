@@ -41,7 +41,7 @@ class ServiceEngineer:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function7", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
     
     def check_reset_password(self, username):
         try:
@@ -78,7 +78,7 @@ class ServiceEngineer:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function6", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
     
     def reset_resetted_password_check(self, username):
         try:
@@ -110,4 +110,4 @@ class ServiceEngineer:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function5", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")

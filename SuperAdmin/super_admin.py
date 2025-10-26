@@ -502,7 +502,7 @@ class SuperAdmin:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function4", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
 
 
     def activate_inactive_account(self):
