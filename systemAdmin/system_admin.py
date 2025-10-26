@@ -59,33 +59,33 @@ class systemAdmin:
             logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error in reset_password_function1", f"{e}", "Yes")
 
-    # def reset_resetted_password_check(self, username):
-    #     try:
-    #         connection = self.db_context.connect()
-    #         if connection:
-    #             cursor = connection.cursor()
-    #             ResettedPasswordCheck = encrypt("0")
-    #             cursor.execute("UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ?", (ResettedPasswordCheck, username))
-    #             connection.commit()
-    #             connection.close()
-    #         else:
-    #             print("Failed to connect to the database.")
-    #     except sqlite3.OperationalError as e:
-    #         print("Operational Error: database or SQL issue.")
-    #         logger = EncryptedLogger()
-    #         logger.log_entry("System", "Operational Error in reset_password_function", f"{e}", "Yes")
-    #     except sqlite3.DatabaseError as e:
-    #         print("Database Error: possible corruption or I/O issue.")
-    #         logger = EncryptedLogger()
-    #         logger.log_entry("System", "Database Error in reset_password_function", f"{e}", "Yes")
-    #     except sqlite3.InterfaceError as e:
-    #         print("Interface Error: invalid SQL parameters.")
-    #         logger = EncryptedLogger()
-    #         logger.log_entry("System", "Interface Error in reset_password_function", f"{e}", "Yes")
-    #     except Exception as e:
-    #         print("Unexpected error occurred while resetting password.")
-    #         logger = EncryptedLogger()
-    #         logger.log_entry("System", "Unexpected Error in reset_password_function2", f"{e}", "Yes")
+    def reset_resetted_password_check(self, username):
+        try:
+            connection = self.db_context.connect()
+            if connection:
+                cursor = connection.cursor()
+                ResettedPasswordCheck = encrypt("0")
+                cursor.execute("UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ?", (ResettedPasswordCheck, username))
+                connection.commit()
+                connection.close()
+            else:
+                print("Failed to connect to the database.")
+        except sqlite3.OperationalError as e:
+            print("Operational Error: database or SQL issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Operational Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.DatabaseError as e:
+            print("Database Error: possible corruption or I/O issue.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Database Error in reset_password_function", f"{e}", "Yes")
+        except sqlite3.InterfaceError as e:
+            print("Interface Error: invalid SQL parameters.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Interface Error in reset_password_function", f"{e}", "Yes")
+        except Exception as e:
+            print("Unexpected error occurred while resetting password.")
+            logger = EncryptedLogger()
+            logger.log_entry("System", "Unexpected Error in reset_password_function2", f"{e}", "Yes")
         
 
     def create_service_engineer(self, creator):
@@ -220,14 +220,23 @@ class systemAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username FROM User WHERE Role = ? AND IsActive = 1", ("serviceengineer",))
+                cursor.execute("SELECT Username, Role, IsActive FROM User")
                 users = cursor.fetchall()
-                
                 if users:
-                    print(f"Retrieved {len(users)} service engineer(s):")
-                    for user in users:
-                        print(f"- {decrypt(user[0])}")
-                    return users
+                    service_engineers = [user for user in users if decrypt(user[1]) == "serviceengineer"]
+                    if service_engineers:
+                        service_engineers_active = [user for user in service_engineers if decrypt(user[2]) == "1"]
+                        if service_engineers_active:
+                            print(f"Retrieved {len(service_engineers_active)} active service engineer(s):")
+                            for user in service_engineers_active:
+                                print(f"- {decrypt(user[0])}")
+                            return service_engineers_active
+                        else:
+                            print("No service engineer accounts found.")
+                            return []
+                    else:
+                        print("No service engineer accounts found.")
+                        return []
                 else:
                     print("No service engineer accounts found.")
                     return []
@@ -274,6 +283,7 @@ class systemAdmin:
         print("[4] Update Last Name")
         print("[5] Go Back")
         choice = input("Enter your choice [1, 2, 3, 4 or 5]: ")
+        
         if choice == "1":
             if (self.confirm_password(updater)):
                 tries = 0
@@ -290,13 +300,16 @@ class systemAdmin:
                         print("Invalid username or already exists format.")
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
+                if tries == 3:
+                    print("Failed to update username after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 from um_members import pre_login_menu
                 pre_login_menu()
+        
         elif choice == "2":
             if (self.confirm_password(updater)):
                 tries = 0
@@ -305,7 +318,7 @@ class systemAdmin:
                     verified_password, new_password = validate_input_pass(new_password)
                     if verified_password:
                         hashed = hash_password(new_password)
-                        self.reset_password_function(matching_users[0][0], hashed, "serviceengineer")
+                        self.reset_password_function(matching_users[0][0], hashed)
                         print(f"Password for service engineer {decrypt(matching_users[0][0])} has been updated.")
                         logger = EncryptedLogger()
                         logger.log_entry(f"{updater}", "Reset Service Engineer Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
@@ -314,13 +327,16 @@ class systemAdmin:
                         print("Invalid password format.")
                         tries += 1
                         print(f"You have {3 - tries} tries left.")
-                logger = EncryptedLogger()
-                logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
+                if tries == 3:
+                    print("Failed to update password after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry(f"{updater}", "Tried to update with wrong format 3 times", f" ", "Yes")
             else:
                 logger = EncryptedLogger()
                 logger.log_entry(f"{updater}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
                 from um_members import pre_login_menu
                 pre_login_menu()
+        
         elif choice == "3":
             tries = 0
             while tries < 3:
@@ -331,11 +347,15 @@ class systemAdmin:
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer First Name", f"New First Name: {new_first_name}", "No")
                     break
-                print("Invalid first name format.")
-                tries += 1
-                print(f"You have {3 - tries} tries left.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{updater}", "Too many wrong first name attempts", f" ", "Yes")
+                else:
+                    print("Invalid first name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update first name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong first name attempts", f" ", "Yes")
+        
         elif choice == "4":
             tries = 0
             while tries < 3:
@@ -346,11 +366,15 @@ class systemAdmin:
                     logger = EncryptedLogger()
                     logger.log_entry(f"{updater}", "Updated Service Engineer Last Name", f"New Last Name: {new_last_name}", "No")
                     break
-                print("Invalid last name format.")
-                tries += 1
-                print(f"You have {3 - tries} tries left.")
-            logger = EncryptedLogger()
-            logger.log_entry(f"{updater}", "Too many wrong last name attempts", f" ", "Yes")
+                else:
+                    print("Invalid last name format.")
+                    tries += 1
+                    print(f"You have {3 - tries} tries left.")
+            if tries == 3:
+                print("Failed to update last name after 3 invalid attempts.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{updater}", "Too many wrong last name attempts", f" ", "Yes")
+        
         elif choice == "5":
             print("Going back to the previous menu.")
             return
@@ -363,8 +387,10 @@ class systemAdmin:
             if not servEng:
                 print("No service engineers available to delete.")
                 return
-            username_to_delete = input("Enter the username of the service engineer you want to delete: ")
-
+            is_valid, username_to_delete = validate_username(input("Enter the username of the service engineer you want to delete: "))
+            if not is_valid:
+                print("Invalid username format.")
+                return
             # Check if the username exists in the servEng list
             matching_users = [user for user in servEng if decrypt(user[0]).lower() == username_to_delete.lower()]  # assumes username is in column 0
             if not matching_users:
@@ -375,7 +401,7 @@ class systemAdmin:
                 if connection:
                     cursor = connection.cursor()
                     enc_username = matching_users[0][0]
-                    cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (enc_username, "serviceengineer"))
+                    cursor.execute("DELETE FROM User WHERE Username = ?", (enc_username,))
                     connection.commit()
                     print(f"service engineer '{decrypt(matching_users[0][0])}' has been deleted.")
                     logger = EncryptedLogger()
@@ -423,7 +449,7 @@ class systemAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (username, "systemadmin"))
+                cursor.execute("DELETE FROM User WHERE Username = ?", (username,))
                 connection.commit()
                 return True
             else:
@@ -466,7 +492,7 @@ class systemAdmin:
             if connection:
                 cursor = connection.cursor()
                 enc_new = encrypt(new_username)
-                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_new, old_username, "serviceengineer"))
+                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?)", (enc_new, old_username,))
                 connection.commit()
                 return True
             else:
@@ -509,7 +535,7 @@ class systemAdmin:
             if connection:
                 cursor = connection.cursor()
                 enc_username = encrypt(new_username)
-                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?) AND Role = ?", (enc_username, old_username, encrypt("systemadmin")))
+                cursor.execute("UPDATE User SET Username = ? WHERE LOWER(Username) = LOWER(?)", (enc_username, old_username))
                 connection.commit()
                 return True
             else:
@@ -552,7 +578,7 @@ class systemAdmin:
             if connection:
                 cursor = connection.cursor()
                 enc_first_name = encrypt(new_first_name)
-                cursor.execute("UPDATE User SET FirstName = ? WHERE Username = ? AND Role = ?", (enc_first_name, username, "serviceengineer"))
+                cursor.execute("UPDATE User SET FirstName = ? WHERE Username = ?", (enc_first_name, username))
                 connection.commit()
             else:
                 print("Failed to connect to the database.")
@@ -593,7 +619,7 @@ class systemAdmin:
             if connection:
                 cursor = connection.cursor()
                 enc_last_name = encrypt(new_last_name)
-                cursor.execute("UPDATE User SET LastName = ? WHERE Username = ? AND Role = ?", (enc_last_name, username, "serviceengineer"))
+                cursor.execute("UPDATE User SET LastName = ? WHERE Username = ?", (enc_last_name, username))
                 connection.commit()
             else:
                 print("Failed to connect to the database.")
