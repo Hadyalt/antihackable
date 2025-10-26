@@ -80,8 +80,10 @@ def main(role, username):
         elif role == "serviceengineer":
             show_menu(role)
             choice = input("Choose an option: ")
+            if choice == "3":
+                break
             Scooter_Menu_SerEng(choice, username)
-            break
+            
 
         # INVALID ROLE
         else:
@@ -162,7 +164,7 @@ def add_scooter(creator):
         state_of_charge = input("State of Charge (%): ")
         if is_valid_state_of_charge(state_of_charge):
             break
-        print("Invalid state of charge: Must be 0-100%")
+        print("Invalid state of charge: Must be 1-100%")
 
     # Validate Target Range SOC (min < max, both 0-100%)
     while True:
@@ -172,7 +174,7 @@ def add_scooter(creator):
         if is_valid_target_range_soc(min_soc, max_soc):
             target_range_soc = (min_soc, max_soc)
             break
-        print("Invalid target range: Min must be ≤ Max (both 0-100%)")
+        print("Invalid target range: Min must be ≤ Max (both 1-100%)")
 
     # Validate Location (5 decimal places, within Rotterdam)
     while True:
@@ -209,7 +211,7 @@ def add_scooter(creator):
         mileage = input("Mileage (km): ")
         if is_valid_mileage(mileage):
             break
-        print("Invalid mileage: Cannot be negative")
+        print("Invalid mileage: Cannot be negative or more than 9999999999 km")
 
     # Validate Last Maintenance Date (ISO 8601)
     while True:
@@ -361,7 +363,7 @@ def update_scooter(updater):
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the State of Charge to {new_value}", "No")
                 return
             else:
-                print("Invalid State of Charge: Must be between 0% and 100%")
+                print("Invalid State of Charge: Must be between 1% and 100%")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -377,7 +379,7 @@ def update_scooter(updater):
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the target range SOC to {min_val} - {max_val}", "No")
                 return
             else:
-                print("Invalid Target Range SOC: Min must be ≤ Max (both 0-100%)")
+                print("Invalid Target Range SOC: Min must be ≤ Max (both 1-100%)")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")
@@ -431,7 +433,7 @@ def update_scooter(updater):
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the mileage to {new_mileage}", "No")
                 return
             else:
-                print("Invalid Mileage: Cannot be negative")
+                print("Invalid Mileage: Cannot be negative or more than 9999999999 km")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")

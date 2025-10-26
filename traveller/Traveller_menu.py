@@ -183,6 +183,10 @@ def add_traveller(creator):
     while city is None:
         try:
             city_choice = input(f"Select city (1-{len(db.cities)}): ")
+            if not city_choice.isdigit():
+                raise ValueError
+            if int(city_choice) < 1 or int(city_choice) > len(db.cities):
+                raise IndexError
             city_idx = int(city_choice) - 1
             city = db.cities[city_idx]
             logger.log_entry(f"{creator}", "Input accepted", f"City: {city}", "No")
@@ -420,6 +424,10 @@ def update_traveller(updater,tid):
         while True:
             try:
                 city_choice = input("Select city (1-10): ")
+                if not city_choice.isdigit():
+                    raise ValueError
+                if int(city_choice) < 1 or int(city_choice) > len(db.cities):
+                    raise IndexError
                 city_idx = int(city_choice) - 1
                 new_val = db.cities[city_idx]
                 break

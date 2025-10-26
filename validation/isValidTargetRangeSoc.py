@@ -10,6 +10,6 @@ def is_valid_target_range_soc(min_soc: str, max_soc: str) -> bool:
                 if re.fullmatch(r"^\d{1,3}$", min_soc) and re.fullmatch(r"^\d{1,3}$", max_soc):
                     min_value = int(min_soc)
                     max_value = int(max_soc)
-                    if 0 <= min_value <= max_value <= 100: 
+                    if 1 <= min_value <= max_value <= 100: 
                         return True
     return False

@@ -4,7 +4,8 @@ from DbContext.DbContext import DbContext
 from DbContext.crypto_utils import encrypt, decrypt, hash_password, verify_password
 from DbContext.encrypted_logger import EncryptedLogger
 import getpass
-from valid_in_out_put import validate_input_username, validate_input_pass
+from datetime import datetime
+from valid_in_out_put import validate_input_username, validate_input_pass, validate_username
 from validation.isValidName import is_valid_name
 
 
@@ -40,14 +41,17 @@ class SuperAdmin:
                 print("Invalid last name. Please try again.")
 
         hashed = hash_password(password)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         system_data = {
-            "Username": user_name,
+            "Username": encrypt(user_name),
             "Password": hashed,
             "FirstName": encrypt(firstname),
             "LastName": encrypt(lastname),
-            "resettedPasswordCheck": 1,
-            "Role": "systemadmin",
-            "IsActive": 1
+            "RegistrationDate": encrypt(current_time),
+            "ResettedPasswordCheck": encrypt("1"),
+            "Role": encrypt("systemadmin"),
+            "IsActive": encrypt("1")
         }
 
         self.db_context.insert_User(system_data)
@@ -62,7 +66,10 @@ class SuperAdmin:
             if not sysAdmins:
                 print("No system admins available to update.")
                 return
-            username_to_update = input("Enter the username of the system admin you want to update: ")
+            is_valid, username_to_update = validate_username(input("Enter the username of the system admin you want to update: "))
+            if not is_valid:
+                print("Invalid username format.")
+                return
             matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_update.lower()]
             if not matching_users:
                 print(f"No system admin found with username '{username_to_update}'.")
@@ -90,8 +97,10 @@ class SuperAdmin:
                             print("Invalid username format or already exists.")
                             tries += 1
                             print(f"You have {3 - tries} tries left.")
-                    logger = EncryptedLogger()
-                    logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
+                    if tries == 3:
+                        print("Failed to reset password after 3 invalid attempts.")
+                        logger = EncryptedLogger()
+                        logger.log_entry("super_admin", "Tried to update with wrong format 3 times", f" ", "Yes")
                 else:
                     logger = EncryptedLogger()
                     logger.log_entry(f"super_admin", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
@@ -105,7 +114,7 @@ class SuperAdmin:
                         verified_password, password = validate_input_pass(password)
                         if verified_password:
                             hashed = hash_password(password)
-                            self.reset_password_function(matching_users[0][0], hashed, "systemadmin")
+                            self.reset_password_function(matching_users[0][0], hashed)
                             print(f"Password for system admin {decrypt(matching_users[0][0])} has been updated.")
                             logger = EncryptedLogger()
                             logger.log_entry("super_admin", "Reset System Admin Password", f"Username: {decrypt(matching_users[0][0])} had their password reset ", "No")
@@ -133,11 +142,14 @@ class SuperAdmin:
                         logger = EncryptedLogger()
                         logger.log_entry("super_admin", "Updated System Admin First Name", f"New First Name: {new_first_name}", "No")
                         break
-                    print("Invalid first name format.")
-                    tries += 1
-                    print(f"You have {3 - tries} tries left.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Too many wrong first name attempts", f" ", "Yes")
+                    else:
+                        print("Invalid first name format.")
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                if tries == 3:
+                    print("Failed to update first name after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Too many wrong first name attempts", f" ", "Yes")
             elif choice == "4":
                 tries = 0
                 while tries < 3:
@@ -148,11 +160,14 @@ class SuperAdmin:
                         logger = EncryptedLogger()
                         logger.log_entry("super_admin", "Updated System Admin Last Name", f"New Last Name: {new_last_name}", "No")
                         break
-                    print("Invalid last name format.")
-                    tries += 1
-                    print(f"You have {3 - tries} tries left.")
-                logger = EncryptedLogger()
-                logger.log_entry("super_admin", "Too many wrong last name attempts", f" ", "Yes")
+                    else:
+                        print("Invalid last name format.")
+                        tries += 1
+                        print(f"You have {3 - tries} tries left.")
+                if tries == 3:
+                    print("Failed to update last name after 3 invalid attempts.")
+                    logger = EncryptedLogger()
+                    logger.log_entry("super_admin", "Too many wrong last name attempts", f" ", "Yes")
             elif choice == "5":
                 print("Going back to the previous menu.")
                 return
@@ -197,7 +212,10 @@ class SuperAdmin:
             if not sysAdmins:
                 print("No system admins available to delete.")
                 return
-            username_to_delete = input("Enter the username of the system admin you want to delete: ")
+            is_valid, username_to_delete = validate_username(input("Enter the username of the system admin you want to delete: "))
+            if not is_valid:
+                print("Invalid username format.")
+                return
             matching_users = [user for user in sysAdmins if decrypt(user[0]).lower() == username_to_delete.lower()]
             if not matching_users:
                 print(f"No system admin found with username '{username_to_delete}'.")
@@ -207,7 +225,7 @@ class SuperAdmin:
                 if connection:
                     cursor = connection.cursor()
                     enc_username = matching_users[0][0]
-                    cursor.execute("DELETE FROM User WHERE Username = ? AND Role = ?", (enc_username, "systemadmin"))
+                    cursor.execute("DELETE FROM User WHERE Username = ?", (enc_username,))
                     connection.commit()
                     print(f"System admin '{decrypt(matching_users[0][0])}' has been deleted.")
                     logger = EncryptedLogger()
@@ -257,14 +275,17 @@ class SuperAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username FROM User WHERE Role = ? AND IsActive = 1", ("systemadmin",))
+                cursor.execute("SELECT Username, Role FROM User")
                 users = cursor.fetchall()
-                
-                if users:
-                    print(f"Retrieved {len(users)} system admin(s):")
-                    for user in users:
+                system_admins = []
+                for user in users:
+                    if decrypt(user[1]) == "systemadmin":
+                        system_admins.append(user)
+                if system_admins:
+                    print(f"Retrieved {len(system_admins)} system admin(s):")
+                    for user in system_admins:
                         print(f"- {decrypt(user[0])}")
-                    return users
+                    return system_admins
                 else:
                     print("No system admin accounts found.")
                     return []
@@ -303,14 +324,23 @@ class SuperAdmin:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
-                cursor.execute("SELECT Username FROM User WHERE Role = ? AND IsActive = 1", ("serviceengineer",))
+                cursor.execute("SELECT Username FROM User ",)
                 users = cursor.fetchall()
                 
                 if users:
-                    print(f"Retrieved {len(users)} service engineer(s):")
+                    service_engineers = []
                     for user in users:
-                        print(f"- {decrypt(user[0])}")
-                    return users
+                        if decrypt(user[1]) == "serviceengineer":
+                            service_engineers.append(user)
+                    if service_engineers:
+                        print(f"Retrieved {len(service_engineers)} service engineer(s):")
+
+                        for user in service_engineers:
+                            print(f"- {decrypt(user[0])}")
+                            return service_engineers
+                    else:
+                        print("No service engineer accounts found.")
+                        return []
                 else:
                     print("No service engineer accounts found.")
                     return []
@@ -351,8 +381,8 @@ class SuperAdmin:
                 cursor = connection.cursor()
                 enc_new = encrypt(new_username)
                 cursor.execute(
-                    "UPDATE User SET Username = ? WHERE Username = ? AND Role = ?",
-                    (enc_new, old_username, "systemadmin")
+                    "UPDATE User SET Username = ? WHERE Username = ?",
+                    (enc_new, old_username)
                 )
                 connection.commit()
             else:
@@ -384,8 +414,8 @@ class SuperAdmin:
                 cursor = connection.cursor()
                 enc_first_name = encrypt(new_first_name)
                 cursor.execute(
-                    "UPDATE User SET FirstName = ? WHERE Username = ? AND Role = ?",
-                    (enc_first_name, username, "systemadmin")
+                    "UPDATE User SET FirstName = ? WHERE Username = ?",
+                    (enc_first_name, username)
                 )
                 connection.commit()
             else:
@@ -417,8 +447,8 @@ class SuperAdmin:
                 cursor = connection.cursor()
                 enc_last_name = encrypt(new_last_name)
                 cursor.execute(
-                    "UPDATE User SET LastName = ? WHERE Username = ? AND Role = ?",
-                    (enc_last_name, username, "systemadmin")
+                    "UPDATE User SET LastName = ? WHERE Username = ?",
+                    (enc_last_name, username)
                 )
                 connection.commit()
             else:
@@ -443,14 +473,14 @@ class SuperAdmin:
             logger.log_entry("System", "Unexpected Error in set_new_last_name", f"{e}", "Yes")
 
 
-    def reset_password_function(self, username, new_password, role):
+    def reset_password_function(self, username, new_password):
         try:
             connection = self.db_context.connect()
             if connection:
                 cursor = connection.cursor()
                 cursor.execute(
-                    "UPDATE User SET Password = ?, ResettedPasswordCheck = 1 WHERE Username = ? AND Role = ?",
-                    (new_password, username, role)
+                    "UPDATE User SET Password = ?, ResettedPasswordCheck = ? WHERE Username = ?",
+                    (new_password, encrypt("1"), username)
                 )
                 connection.commit()
             else:
@@ -472,7 +502,7 @@ class SuperAdmin:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function4", f"{e}", "Yes")
 
 
     def activate_inactive_account(self):
@@ -483,22 +513,28 @@ class SuperAdmin:
                 return
             
             cursor = connection.cursor()
-            cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 0")
+            cursor.execute("SELECT Username, role, isActive FROM User ")
             users = cursor.fetchall()
             
             if not users:
+                print("No accounts found.")
+                return
+            inactive_users = []
+            for user in users:
+                if decrypt(user[2]) == "0":
+                    inactive_users.append(user)
+            if inactive_users == []:
                 print("No inactive accounts found.")
                 return
-            
             print("\nInactive Accounts:")
-            for idx, user in enumerate(users, 1):
-                print(f"[{idx}] Username: {decrypt(user[0])}, Role: {user[1]}")
-            
+            for idx, user in enumerate(inactive_users, 1):
+                print(f"[{idx}] Username: {decrypt(user[0])}, Role: {decrypt(user[1])}")
+
             try:
                 choice = int(input("Enter the number of the account to activate: "))
-                if 1 <= choice <= len(users):
-                    username = users[choice-1][0]
-                    cursor.execute("UPDATE User SET IsActive = 1 WHERE Username = ?", (username,))
+                if 1 <= choice <= len(inactive_users):
+                    username = inactive_users[choice-1][0]
+                    cursor.execute("UPDATE User SET IsActive = ? WHERE Username = ?", (encrypt("1"), username))
                     connection.commit()
                     print(f"Account '{decrypt(username)}' has been activated.")
                     logger = EncryptedLogger()

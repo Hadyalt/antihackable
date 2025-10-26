@@ -170,6 +170,7 @@ class Scooter_data:
                 return s
 
     def update_scooter_fields(self, serial_number, **fields):
+        logger = EncryptedLogger()
         if not self.connection:
             print("No connection.")
             return False
@@ -245,32 +246,26 @@ class Scooter_data:
             return True
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
-            logger = EncryptedLogger()
             logger.log_entry("System", "Operational Error on updating scooter", f"{e}", "Yes")
             return False
         except sqlite3.InterfaceError as e:
             print(f"Interface Error: invalid parameter binding. Contact Administrator.")
-            logger = EncryptedLogger()
             logger.log_entry("System", "Interface Error on updating scooter", f"{e}", "Yes")
             return False
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
-            logger = EncryptedLogger()
             logger.log_entry("System", "Integrity Error on updating scooter", f"{e}", "Yes")
             return False
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
-            logger = EncryptedLogger()
             logger.log_entry("System", "Database Error on updating scooter", f"{e}", "Yes")
             return False
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
-            logger = EncryptedLogger()
             logger.log_entry("System", "Type Error on updating scooter", f"{e}", "Yes")
             return False
         except Exception as e:
             print(f"Unexpected Exception occurred.")
-            logger = EncryptedLogger()
             logger.log_entry("System", "Unexpected Error on updating scooter", f"{e}", "Yes")
             return False
 
@@ -297,33 +292,27 @@ class Scooter_data:
             logger.log_entry(f"{deletor}", f"Deleted scooter {serial_number}", " ", "No")
         except sqlite3.OperationalError as e:
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Operational Error on deleting own account", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on deleting scooter", f"{e}", "Yes")
             return False
         except sqlite3.DatabaseError as e:
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Database Error on deleting own account", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on deleting scooter", f"{e}", "Yes")
             return False
         except sqlite3.IntegrityError as e:
             print(f"Integrity Error: There was a data integrity issue. Contact Administrator.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Integrity Error on deleting own account", f"{e}", "Yes")
+            logger.log_entry("System", "Integrity Error on deleting scooter", f"{e}", "Yes")
             return False
         except TypeError as e:
             print(f"Type Error: invalid argument type.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Type Error on deleting own account", f"{e}", "Yes")
+            logger.log_entry("System", "Type Error on deleting scooter", f"{e}", "Yes")
             return False
         except ValueError as e:
             print(f"Value Error: {e}")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Value Error on deleting own account", f"{e}", "Yes")
+            logger.log_entry("System", "Value Error on deleting scooter", f"{e}", "Yes")
             return False
         except Exception as e:
             print(f"Unexpected Exception occurred.")
-            logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error on deleting own account", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on deleting scooter", f"{e}", "Yes")
             return False
 
 
@@ -349,29 +338,29 @@ class Scooter_data:
                 decrypt(s[10])  # outOfService
                 ]
                 if any(
-                    search_term in (str(field).lower()) for field in decrypted_fields
+                    search_term in (str(field)) for field in decrypted_fields
                 ):
                     results.append(s)
             return results
         except sqlite3.OperationalError as e:
             # Happens if table doesn't exist, DB is locked, or SQL syntax is wrong
             print(f"Operational Error: database or SQL issue. Contact Administrator.")
-            logger.log_entry("System", "Operational Error on viewing all scooters", f"{e}", "Yes")
+            logger.log_entry("System", "Operational Error on viewing scooters", f"{e}", "Yes")
             return []
         except sqlite3.DatabaseError as e:
             # Base class for all database-related errors (corrupted DB, etc.)
             print(f"Database Error: possible corruption or I/O issue. Contact Administrator.")
-            logger.log_entry("System", "Database Error on viewing all scooters", f"{e}", "Yes")
+            logger.log_entry("System", "Database Error on viewing scooters", f"{e}", "Yes")
             return []
         except sqlite3.InterfaceError as e:
             # Raised if wrong data types or bindings are passed to SQL placeholders
             print(f"Interface Error: invalid parameter binding. Contact Administrator.")
-            logger.log_entry("System", "Interface Error on viewing all scooters", f"{e}", "Yes")
+            logger.log_entry("System", "Interface Error on viewing scooters", f"{e}", "Yes")
             return []
         except Exception as e:
             # Catch-all for anything unexpected
             print(f"Unexpected Exception occurred.")
-            logger.log_entry("System", "Unexpected Error on viewing all scooters", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error on viewing scooters", f"{e}", "Yes")
             return []
 
 
