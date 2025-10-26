@@ -120,7 +120,7 @@ def backup_menu(role, username=None):
                     try:
                         restore_backup(backups[sel_idx], encusername, username)
                         print("Restore complete. Please log in again.")
-                        logger.log_entry(username or "system", "Backup Menu", f"Restored backup: {backups[sel_idx]}", "No")
+                        logger.log_entry(username or "system", "Backup Menu", f"Restored backup: {decrypt(backups[sel_idx])}", "No")
                         from um_members import pre_login_menu
                         pre_login_menu()                        
                     except Exception as e:
@@ -131,7 +131,7 @@ def backup_menu(role, username=None):
                         
                         restore_backup(backups[sel_idx])
                         print("Restore complete. Please log in again.")
-                        logger.log_entry(username or "system", "Backup Menu", f"Restored backup: {backups[sel_idx]}", "No")
+                        logger.log_entry(username or "system", "Backup Menu", f"Restored backup: {decrypt(backups[sel_idx])}", "No")
                         from um_members import pre_login_menu
                         pre_login_menu()
                     except Exception as e:
@@ -163,14 +163,17 @@ def backup_menu(role, username=None):
                     try:
                         delete_backup(backups[sel_idx], username)
                         print(f"Backup deleted: {decrypt(backups[sel_idx])}")
+                        break  
                     except Exception as e:
                         print(f"Delete failed: {e}")
                         logger.log_entry(username or "system", "Backup Menu", f"Delete failed: {e}", "Yes")
-                    break
+                        tries += 1
+                        print(f"You have {max_tries - tries} attempts left.")
                 if tries >= max_tries:
                     print("Maximum attempts reached. Returning to menu.")
                     logger.log_entry(username or "system", "Backup Menu", "Maximum attempts reached for delete selection.", "No")
                     break
+                break
         elif role == "superadmin" and choice == "5":
             backups = list_backups()
             if not backups:
@@ -232,10 +235,12 @@ def backup_menu(role, username=None):
                         tries += 1
                         print(f"You have {max_tries - tries} attempts left.")
                         continue
+                    break
                 if tries >= max_tries:
                     print("Maximum attempts reached. Returning to menu.")
                     logger.log_entry(username or "system", "Backup Menu", "Maximum attempts reached for revoke selection.", "No")
                     break
+                    
                 
                 sel_idx = int(sel) - 1
                
