@@ -349,7 +349,7 @@ class Scooter_data:
                 decrypt(s[10])  # outOfService
                 ]
                 if any(
-                    search_term in (str(field).lower()) for field in decrypted_fields
+                    search_term in (str(field)) for field in decrypted_fields
                 ):
                     results.append(s)
             return results

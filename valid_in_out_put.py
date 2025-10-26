@@ -77,12 +77,12 @@ def check_username_uniqueness(value, existing_usernames):
         return True
     return False
 
-def check_username_exists_simple(username: str):
+def check_username_exists_simple(username: str) -> bool:
     try:
         db = DbContext()
         connection = db.connect()
         cursor = connection.cursor()
-        cursor.execute("SELECT Username, Role FROM User WHERE IsActive = 1")
+        cursor.execute("SELECT Username FROM User ")
         all_users = cursor.fetchall()
         username_lowered = username.lower()
         matching_users = [user for user in all_users if decrypt(user[0]).lower() == username_lowered]

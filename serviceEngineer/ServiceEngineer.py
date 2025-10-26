@@ -18,8 +18,8 @@ class ServiceEngineer:
                 hashed = hash_password(password)
                 enc_username = user
                 cursor.execute(
-                    "UPDATE User SET Password = ? WHERE Username = ? AND Role = ?",
-                    (hashed, enc_username, "serviceengineer")
+                    "UPDATE User SET Password = ? WHERE Username = ?",
+                    (hashed, enc_username)
                 )
                 connection.commit()
             else:
@@ -41,7 +41,7 @@ class ServiceEngineer:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function7", f"{e}", "Yes")
     
     def check_reset_password(self, username):
         try:
@@ -55,7 +55,7 @@ class ServiceEngineer:
                 )
                 result = cursor.fetchone()
                 if result:
-                    return result[0] == 1
+                    return result[0] == "1"
                 else:
                     print("No user found with the given username.")
                     return False
@@ -78,7 +78,7 @@ class ServiceEngineer:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function6", f"{e}", "Yes")
     
     def reset_resetted_password_check(self, username):
         try:
@@ -87,8 +87,8 @@ class ServiceEngineer:
                 cursor = connection.cursor()
                 enc_username = encrypt(username)
                 cursor.execute(
-                    "UPDATE User SET ResettedPasswordCheck = 0 WHERE Username = ? AND Role = ?",
-                    (enc_username, "serviceengineer")
+                    "UPDATE User SET ResettedPasswordCheck = ? WHERE Username = ? AND Role = ?",
+                    ("0", enc_username, "serviceengineer")
                 )
                 connection.commit()
             else:
@@ -110,4 +110,4 @@ class ServiceEngineer:
         except Exception as e:
             print("Unexpected error occurred while resetting password.")
             logger = EncryptedLogger()
-            logger.log_entry("System", "Unexpected Error in reset_password_function", f"{e}", "Yes")
+            logger.log_entry("System", "Unexpected Error in reset_password_function5", f"{e}", "Yes")

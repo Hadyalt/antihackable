@@ -49,7 +49,8 @@ def login():
             for (enc_username,) in users:
                 try:
                     dec_username = decrypt(enc_username)
-                    if dec_username == username:
+                    is_valid, dec_username = validate_input_username(dec_username, mode="login")
+                    if is_valid and dec_username.lower() == username.lower():
                         found_enc_username = enc_username
                         break
                 except Exception:
@@ -73,6 +74,8 @@ def login():
                 result = cursor.fetchone()
                 if result:
                     stored_hash, role, is_active = result
+                    role = decrypt(role)
+                    is_active = decrypt(is_active) == "1"
                     if not is_active:
                         print(
                             sanitize_output(
@@ -156,8 +159,8 @@ def login():
                                 "Yes",
                             )
                             cursor.execute(
-                                "UPDATE User SET IsActive = 0 WHERE Username = ?",
-                                (found_enc_username,),
+                                "UPDATE User SET IsActive = ? WHERE Username = ?",
+                                (encrypt("0"), found_enc_username),
                             )
                             conn.commit()
                             conn.close()
@@ -260,7 +263,7 @@ def show_main_menu(role, username):
         elif role == "systemadmin":
             sysAd = systemAdmin()
             user = sysAd.get_username(username)
-            if sysAd.check_reset_password(user, "systemadmin"):
+            if sysAd.check_reset_password(user, role):
                 print(
                     sanitize_output(
                         "You have a reset password, please reset it before proceeding."
@@ -273,8 +276,8 @@ def show_main_menu(role, username):
                     )
                     
                 hashed_password = hash_password(password)
-                sysAd.reset_password_function(user, hashed_password, "systemadmin")
-                sysAd.reset_resetted_password_check(user, "systemadmin")
+                sysAd.reset_password_function(user, hashed_password,)
+                sysAd.reset_resetted_password_check(user)
                 print(
                     sanitize_output(
                         "Password reset completed. You can now proceed with the menu options."

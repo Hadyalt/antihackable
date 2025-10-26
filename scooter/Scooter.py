@@ -81,7 +81,8 @@ def main(role, username):
             show_menu(role)
             choice = input("Choose an option: ")
             Scooter_Menu_SerEng(choice, username)
-            break
+            if choice == "3":
+                break
 
         # INVALID ROLE
         else:
@@ -209,7 +210,7 @@ def add_scooter(creator):
         mileage = input("Mileage (km): ")
         if is_valid_mileage(mileage):
             break
-        print("Invalid mileage: Cannot be negative")
+        print("Invalid mileage: Cannot be negative or more than 9999999999 km")
 
     # Validate Last Maintenance Date (ISO 8601)
     while True:
@@ -431,7 +432,7 @@ def update_scooter(updater):
                 logger.log_entry(f"{updater}", f"Updated scooter {sn}", f"Updated the mileage to {new_mileage}", "No")
                 return
             else:
-                print("Invalid Mileage")
+                print("Invalid Mileage: Cannot be negative or more than 9999999999 km")
             tries += 1
             print(f"You have {MAX_TRIES - tries} attempts left")
         print("Too many invalid attempts. Update cancelled.")

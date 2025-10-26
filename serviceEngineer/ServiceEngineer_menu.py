@@ -22,19 +22,24 @@ def reset_password_flow(current_user):
     sysAd = systemAdmin()
     if (sysAd.confirm_password(current_user)):
         print("\n** Password Reset **")
-        verified_password = False
-        while not verified_password:
+        tries = 0
+        while tries < 3:
             password = getpass.getpass("Enter new password: ")
             verified_password, password = validate_input_pass(password)
-            confirm_password = getpass.getpass("Confirm new password: ")
-            if confirm_password != password:
-                print("Error: Passwords do not match!")
-                print("Process cancelled.")
+            if verified_password:
+                engineer.reset_password(current_user, password)
+                print("Password reset completed. Check system messages for status.")
+                logger = EncryptedLogger()
+                logger.log_entry(f"{current_user}", "Changed his own password", f" ", "No")
                 break
-        engineer.reset_password(current_user, password)
-        print("Password reset completed. Check system messages for status.")
-        logger = EncryptedLogger()
-        logger.log_entry(f"{current_user}", "Changed his own password", f" ", "No")
+            else:
+                print("Invalid password format. Please try again.")
+                tries += 1
+                print(f"You have {3 - tries} tries left.")
+        if tries == 3:
+            print("Failed to reset password after 3 invalid attempts.")
+            logger = EncryptedLogger()
+            logger.log_entry(f"{current_user}", "Tried to reset password with wrong format 3 times", f" ", "Yes")
     else:
         logger = EncryptedLogger()
         logger.log_entry(f"{current_user}", "Too many wrong password attempts", f"Could not confirm his own identity", "Yes")
@@ -54,8 +59,8 @@ def main(username):
             password = getpass.getpass("Enter password: ")
             verified_password, password = validate_input_pass(password)
         hashed_password = hash_password(password)
-        sysAd.reset_password_function(user, hashed_password, "serviceengineer")
-        sysAd.reset_resetted_password_check(user, "serviceengineer")
+        sysAd.reset_password_function(user, hashed_password)
+        sysAd.reset_resetted_password_check(user)
         print("Password reset completed. You can now proceed with the menu options.")
         logger = EncryptedLogger()
         logger.log_entry(f"{username}", "Reset his own password", f"Username: {username} picked a new password after it was changed by a higher account", "No")
